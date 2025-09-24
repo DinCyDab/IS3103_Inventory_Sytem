@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table Exercise</title>
+    <!-- Link to CSS -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Link To get Icons -->
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+</head> 
+<body>
+    <div class="mainContent">
+        <h1>Account Page</h1>
+
+        <!-- Button to open the form -->
+        <button class="btn" onclick="openForm()">Add Contacts</button>
+
+        <!-- Table -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Last Name</th>
+                    <th>First Name</th>
+                    <th>Email Address</th>
+                    <th>Contact number</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <!-- Inputs from form goes here -->
+            <tbody id="contactInfo">
+
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Popup Form -->
+    <div class="popupForm" id="myForm">
+        <form action="" class="formContainer" id="contactForm">
+            <h2>Contact Information</h2>
+
+            <label for="lastName">Lastname
+                <input type="text" id="lastName" placeholder="Enter Lastname" required>
+            </label>
+            
+            <label for="firstName">Firstname
+                <input type="text" id="firstName" placeholder="Enter Firstname" required>
+            </label>
+
+            <label for="mail">Email
+                <input type="email" id="mail" placeholder="johnDoe@example.com" required>
+            </label>
+            
+            <label for="contactNumber">Contact Number
+                <input type="number" id="contactNumber" placeholder="e.g 09123345678" required>
+            </label>
+            
+            <button type="submit" class="submit-btn" id="mySubmit">Submit</button>
+            <button type="button" class="btn-close" onclick="closeForm()"><i class='bx bx-x-circle'></i></button>
+        </form>
+
+    </div>
+
+    <!-- Link to Javascript -->
+    <script src="script.js"></script>
+</body>
+</html>
