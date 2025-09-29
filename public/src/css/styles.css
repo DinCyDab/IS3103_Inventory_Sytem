@@ -5,7 +5,7 @@ body {
     grid-template-columns: auto .9fr;
     grid-template-areas: "header main" "header main";
     height: 100dvh;
-    background-color: #f6f6f9;
+    /* background-color: #f6f6f9; */
     /* overflow: hidden; */
     position: absolute;
     width: 100%;

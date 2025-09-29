@@ -15,6 +15,9 @@
                     <a href="<?php echo "?view=".$view?>"><?php echo $view?></a>
                 <?php
             }
+            ?>
+                <div>Log out</div>
+            <?php
         }
     }
 ?>
