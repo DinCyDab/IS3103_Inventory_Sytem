@@ -3,6 +3,9 @@
     require_once __DIR__ . "/mvc/view/navigation.php";
     require_once __DIR__ . "/mvc/view/dashboard.php";
     require_once __DIR__ . "/mvc/view/accounts.php";
+    require_once __DIR__ . "/mvc/view/products.php";
+    require_once __DIR__ . "/mvc/view/reports.php";
+
 
     session_start();
 
@@ -20,7 +23,7 @@
     <head>
         <meta name="color-scheme" content="dark light">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="/public/src/css/styles.css">
+        <link rel="stylesheet" href="./public/src/css/styles.css">
     </head>
     <body>
         <header>
