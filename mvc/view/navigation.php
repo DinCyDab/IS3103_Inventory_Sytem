@@ -2,7 +2,11 @@
     class Navigation{
         private $nav_items = [
             "Dashboard",
-            "Accounts"
+            "Accounts",
+            "Inventory",
+            "Sales",
+            "Reports",
+            "Settings"
         ];
         public function render(){
             foreach($this->nav_items as $view){

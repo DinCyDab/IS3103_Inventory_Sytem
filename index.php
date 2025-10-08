@@ -3,6 +3,10 @@
     require_once __DIR__ . "/mvc/view/navigation.php";
     require_once __DIR__ . "/mvc/view/dashboard.php";
     require_once __DIR__ . "/mvc/view/accounts.php";
+    require_once __DIR__ . "/mvc/view/inventory.php";
+    require_once __DIR__ . "/mvc/view/sales.php";
+    require_once __DIR__ . "/mvc/view/reports.php";
+    require_once __DIR__ . "/mvc/view/settings.php";
 
     session_start();
 
@@ -25,10 +29,14 @@
     <body>
         <header>
             <!-- Add your view as a list in class Navigation inside navigation.php -->
-            <?php $navigation->render();?>
+            <div class="sidebar">
+                <?php $navigation->render();?>
+            </div>
         </header>
         <main>
             <?php $page->render();?>
         </main>
+
+        <script src="/public/src/js/script.js"></script>
     </body>
 </html>
