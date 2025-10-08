@@ -24,7 +24,7 @@
     <head>
         <meta name="color-scheme" content="dark light">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="/public/src/css/styles.css">
+        <link rel="stylesheet" href="./public/src/css/styles.css">
     </head>
     <body>
         <header>
@@ -37,6 +37,6 @@
             <?php $page->render();?>
         </main>
 
-        <script src="/public/src/js/script.js"></script>
+        <script src="./public/src/js/script.js"></script>
     </body>
 </html>
