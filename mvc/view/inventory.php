@@ -60,7 +60,7 @@
                 <div id="addProductModal" class="modal">
                     <div class="modal-content">
                         <h2>New Product</h2>
-                        <form action="addProductForm" enctype="miltipart/form-data" method="POST" action="add_product.php">
+                        <form id="addProductForm" action="addProductForm" enctype="miltipart/form-data" method="POST" action="add_product.php">
                             <div class="image-upload">
                                 <label for="productImage" class="image-label">
                                     <div id="imagePreview" class="image-preview">Drag image here or <span class="browse-link">Browse image</span></div>
