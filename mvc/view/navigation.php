@@ -5,10 +5,8 @@
             "Reports",
             "Products",
             "Accounts",
-            "Accounts",
             "Inventory",
             "Sales",
-            "Reports",
             "Settings",
             "Logout",
         ];
