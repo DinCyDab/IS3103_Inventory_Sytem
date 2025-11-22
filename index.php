@@ -5,14 +5,26 @@
     require_once __DIR__ . "/mvc/view/accounts.php";
     require_once __DIR__ . "/mvc/view/products.php";
     require_once __DIR__ . "/mvc/view/reports.php";
-
+    require_once __DIR__ . "/mvc/view/login.php";
+    require_once __DIR__ . "/mvc/view/logout.php";
 
     session_start();
 
     $navigation = new Navigation();
 
     //$_GET['view'] comes from navigation.php
-    $view = $_GET["view"] ?? "dashboard";
+
+    if(isset($_SESSION["account"])){
+        $view = "dashboard";
+    }
+    else{
+        // $view = $_GET["view"] ?? "login";
+        $view = "login";
+    }
+
+    if(isset($_GET["view"])){
+        $view = $_GET["view"];
+    }
 
     //This is equivalent to new Dashboard() or new Accounts() but it's dynamic
     $page = new $view();
@@ -28,7 +40,7 @@
     <body>
         <header>
             <!-- Add your view as a list in class Navigation inside navigation.php -->
-            <?php $navigation->render();?>
+            <?php if(isset($_SESSION["account"])) $navigation->render(); ?>
         </header>
         <main>
             <?php $page->render();?>

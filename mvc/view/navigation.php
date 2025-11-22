@@ -4,7 +4,8 @@
             "Dashboard",
             "Reports",
             "Products",
-            "Accounts"
+            "Accounts",
+            "Logout"
         ];
         public function render(){
             ?>
@@ -15,9 +16,6 @@
                     <a href="<?php echo "?view=".$view?>"><?php echo $view?></a>
                 <?php
             }
-            ?>
-                <div>Log out</div>
-            <?php
         }
     }
 ?>
