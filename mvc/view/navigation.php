@@ -5,7 +5,12 @@
             "Reports",
             "Products",
             "Accounts",
-            "Logout"
+            "Accounts",
+            "Inventory",
+            "Sales",
+            "Reports",
+            "Settings",
+            "Logout",
         ];
         public function render(){
             ?>

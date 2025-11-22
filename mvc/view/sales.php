@@ -1,7 +1,7 @@
 <?php 
-    class Reports{
+    class Sales{
         public function render(){
-            echo "Reports View";
+            echo "Sales View";
         }
     }
 ?>
