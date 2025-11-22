@@ -45,9 +45,11 @@
     <body>
         <header>
             <!-- Add your view as a list in class Navigation inside navigation.php -->
-            <div class="sidebar">
-                <?php if(isset($_SESSION["account"])) $navigation->render(); ?>
-            </div>
+            <?php if(isset($_SESSION["account"])){ ?>
+                <div class="sidebar">
+                    <?php $navigation->render(); ?>
+                </div>
+            <?php }?>
         </header>
         <main>
             <?php $page->render();?>
