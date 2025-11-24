@@ -1,5 +1,5 @@
 <?php
-    class Inventory {
+    class InventoryView {
         private $products = [];
         private $overviewStats = [
             ["label" => "Categories", "value" => 0, "footer" => "Last 7 days", "highlight" => "blue"],
@@ -9,6 +9,8 @@
         ];
 
     public function render() { ?>
+    <div class="header"></div>
+
     <div class="topbar">
         <div class="search-wrapper">
             <i class='bx bx-search' ></i>
@@ -115,7 +117,7 @@
         <div class="modal-content">
             <h3 class="modal-title">New Product</h3>
             <!-- SVG close button -->
-            <form id="addProductForm">
+            <form id="addProductForm" method="POST" action="index.php?view=createProduct">
                 <div class="image-upload-section">
                     <label for="productImage" class="image-upload-area">
                         <div id="imagePreview" class="image-preview">
@@ -146,7 +148,7 @@
                 </div>
                 <div class="form-row">
                     <label class="field-label">Buying Price</label>
-                    <input type="text" id="buyingPrice" name="buyingPrice" placeholder="Enter buying price" required>
+                    <input type="text" id="price" name="price" placeholder="Enter buying price" required>
                 </div>
                 <div class="form-row">
                     <label class="field-label">Category</label>

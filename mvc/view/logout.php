@@ -1,5 +1,5 @@
 <?php 
-    class Logout{
+    class LogoutView{
         public function __construct()
         {
             session_destroy();

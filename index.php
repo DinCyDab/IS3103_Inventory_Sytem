@@ -1,10 +1,17 @@
 <?php
-    //Add your view here
+    // Enable PHP errors
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+    
+    session_start();
+
+    // Navigation
     require_once __DIR__ . "/mvc/view/navigation.php";
+
+    //Add your view here
     require_once __DIR__ . "/mvc/view/dashboard.php";
     require_once __DIR__ . "/mvc/view/accounts.php";
-    require_once __DIR__ . "/mvc/view/products.php";
-    require_once __DIR__ . "/mvc/view/reports.php";
     require_once __DIR__ . "/mvc/view/login.php";
     require_once __DIR__ . "/mvc/view/logout.php";
     require_once __DIR__ . "/mvc/view/inventory.php";
@@ -12,26 +19,81 @@
     require_once __DIR__ . "/mvc/view/reports.php";
     require_once __DIR__ . "/mvc/view/settings.php";
 
-    session_start();
+    //Add your controller here
+    require_once "./mvc/controller/inventorycontroller.php";
 
-    $navigation = new Navigation();
-
+    // ROUTER
     //$_GET['view'] comes from navigation.php
 
+    // Check login status
     if(isset($_SESSION["account"])){
-        $view = "dashboard";
-    }
-    else{
+        $isLoggedIn = true;
+        $view =  $_GET['view'];
+    } else{
         // $view = $_GET["view"] ?? "login";
+        $isLoggedIn = false;
         $view = "login";
     }
 
-    if(isset($_GET["view"])){
-        $view = $_GET["view"];
+    // if(isset($_GET["view"])){
+    //     $view = $_GET["view"];
+    // }
+
+
+    // Handle inventory routing only if logged in
+    if($isLoggedIn && in_array($view, ['inventory', 'createProduct', 'updateProduct', 'deleteProduct'])){
+
+        $controller = new ProductController();
+
+        switch($view){
+            case "inventory":
+                $products = $controller->index(); // Get Data
+                $page = new InventoryView($products); // Load View
+                break;
+
+            case "createProduct":
+                $controller->create();
+                exit;
+
+            case "updateProduct":
+                $controller->update();
+                exit;
+
+            case "deleteProduct":
+                $controller->delete();
+                exit;
+        }
+    } else{
+        // Handle other views
+        switch($view){
+            case "dashboard":
+                $page = new DashboardView();
+                break;
+            case "login":
+                $page = new LoginView();
+                break;
+            case "logout":
+                $page = new LogoutView();
+                break;
+            case "accounts":
+                $page = new AccountsView();
+                break;
+            case "sales":
+                $page = new SalesView();
+                break;
+            case "reports":
+                $page = new ReportsView();
+                break;
+            case "settings":
+                $page = new SettingsView();
+                break;
+            default:
+                $page = new LoginView();
+        }
     }
 
-    //This is equivalent to new Dashboard() or new Accounts() but it's dynamic
-    $page = new $view();
+    // Load navigation
+    $navigation = $isLoggedIn ? new Navigation() : null;
 ?>
 
 <!DOCTYPE html>
@@ -45,11 +107,11 @@
     <body>
         <header>
             <!-- Add your view as a list in class Navigation inside navigation.php -->
-            <?php if(isset($_SESSION["account"])){ ?>
+            <?php if($isLoggedIn && $navigation instanceof Navigation): ?>
                 <div class="sidebar">
                     <?php $navigation->render(); ?>
                 </div>
-            <?php }?>
+            <?php endif; ?>
         </header>
         <main>
             <?php $page->render();?>

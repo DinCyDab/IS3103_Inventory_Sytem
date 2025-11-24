@@ -43,7 +43,7 @@
         private $conn;
         //Put these on (dot)env later
         public function __construct($port = 3306,
-                                    $hostname = "localhost", 
+                                    $hostname = "127.0.0.1", 
                                     $username = "root",
                                     $password = "",
                                     $database = "inventory_system"){
@@ -78,6 +78,11 @@
                 return $result->fetch_all(MYSQLI_ASSOC);
             }
             return [];
+        }
+
+        // Added prepare function
+        public function prepare($sql){
+            return $this->conn->prepare($sql);
         }
 
         //Don't forget to close the connection
