@@ -100,7 +100,7 @@
             <button class="prev-btn">Previous</button>
 
             <div class="pages">
-                <span class="page-indicator">Page 1 of 10</span>
+                <span class="page-indicator">Page 1</span>
                 <a href="#" class="view-all">See All</a>
             </div>
 

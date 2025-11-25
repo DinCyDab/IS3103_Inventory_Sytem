@@ -36,6 +36,9 @@ document.addEventListener('DOMContentLoaded', function() {
   // Back Button
   if(backBtn){
     backBtn.addEventListener('click', function(){
+
+      // Clear see all
+      localStorage.removeItem('seeAll');
       // Clear search storage
       localStorage.removeItem('lastSearch');
       if(searchbar) searchbar.value = '';
@@ -115,8 +118,76 @@ document.addEventListener('DOMContentLoaded', function() {
           if(productsSection) productsSection.style.display = '';
           productContainer.style.display = 'none';
         }
-        location.reload();
+        // location.reload();
       }
+    });
+  }
+
+  // Render function to see all products
+  function renderAllProductsAsCards(){
+    const allProducts = getStoredProducts();
+    if(!productContainer) return;
+
+    // Hide default inventory sections
+    const inventorySection = document.querySelector('.overall-inventory-container');
+    const productsSection = document.querySelector('.products');
+    if(inventorySection) inventorySection.style.display = 'none';
+    if(productsSection) productsSection.style.display = 'none';
+
+    // Show overview container and back button
+    productContainer.style.display = 'flex';
+    if(backBtn) backBtn.style.display = 'inline-block';
+
+    // Clear and render all cards
+    productContainer.innerHTML = '';
+    if(allProducts.length === 0){
+      productContainer.innerHTML = '<p style="color:#888;">No products found.</p>';
+      return;
+    }
+
+    allProducts.forEach((prod, idx) => {
+      const card = document.createElement('div');
+      card.className = 'product-card';
+
+      card.innerHTML = `
+        <div class="product-card">
+          <div class="overview-header">
+            <h3>${prod.productName}</h3>
+            <div class="product-actions">
+              <button class="edit-btn"><i class='bx bx-pencil' ></i>Edit</button>
+              <button class="download-btn">Download</button>
+            </div>
+          </div>
+          <div class="overview-tabs">
+            <span>Overview</span>
+          </div>
+          <div class="overview-content">
+            <div class="product-info">
+              <h4>Product Details</h4>
+              <div class="details-row">
+                <label>Product Name</label> 
+                <span>${prod.productName}</span>
+              </div>
+              <div class="details-row">
+                <label>Product ID</label> 
+                <span>${formatProductId(prod.productID)}</span>
+              </div>
+              <div class="details-row">
+                <label>Product category</label> 
+                <span>${prod.category}</span>
+              </div>
+              <div class="details-row">
+                <label>Expiry Date</label> 
+                <span>${prod.expiryDate}</span>
+              </div>
+            </div>
+            <div class="product-img-box">
+              <img src="${prod.image}" alt="${prod.productName}" class="product-img"/>
+            </div>
+          </div>
+        </div>
+      `;
+      productContainer.appendChild(card);
     });
   }
 
@@ -256,7 +327,6 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   // Add Product Form
-  // Edit (update)
   addProductForm.addEventListener('submit', function(e){
     e.preventDefault();
     const product = {
@@ -314,7 +384,28 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Pagination
+  // Items per page in different screen sizes
+  function getItemsPerPage(){
+    const width = window.innerWidth;
+
+    if(width >= 1200) return 12; // Large desktops
+    if(width >= 1024) return 10; // Laptops
+    if(width >= 768) return 7; // Tablets
+    return 4; // Phones
+  }
+
+  // Screen Resize Listener
+  window.addEventListener("resize", () => {
+    const newVal = getItemsPerPage();
+    if(newVal !== productsPerPage){
+      productsPerPage = newVal;
+      currentPage = 1;
+      renderProducts(currentPage, filterStr);
+    }
+  });
+
+  // PAGINATION
+  // Previous button
   if(prevBtn){
     prevBtn.addEventListener('click', function(){
       if(currentPage > 1){
@@ -323,10 +414,13 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
+
+  // Next Button
   if (nextBtn) {
     nextBtn.addEventListener('click', function() {
       const all = getStoredProducts();
       let filtered = all;
+
       if(filterStr.trim()){
           const str = filterStr.toLowerCase();
           filtered = all.filter(p => 
@@ -335,6 +429,7 @@ document.addEventListener('DOMContentLoaded', function() {
             (p.category && p.category.toLowerCase().includes(str))
           );
       }
+
       const totalPages = Math.max(1, Math.ceil(filtered.length / productsPerPage));
       if(currentPage < totalPages){
           currentPage += 1;
@@ -342,13 +437,25 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
+
+  // View All Products Only
   if (viewAll) {
     viewAll.addEventListener('click', function(e) {
       e.preventDefault();
-      currentPage = 1;
-      productsPerPage = getStoredProducts().length || 1;
-      renderProducts(currentPage, filterStr);
+
+      localStorage.setItem('seeAll', 'true');
+
+      renderAllProductsAsCards();
     });
+  }
+
+  // On page load, check See All
+  const seeAllFlag = localStorage.getItem('seeAll');
+
+  if(seeAllFlag === 'true'){
+      renderAllProductsAsCards();
+      productContainer.style.display = 'flex';
+      if(backBtn) backBtn.style.display = 'inline-block';
   }
 
   // Filter Modal
@@ -375,14 +482,16 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-    // Allow modal close with .close-modal anywhere in filter modal:
-    if (filterModal) {
-      filterModal.querySelectorAll('.close-modal').forEach(btn => btn.onclick = closeModal);
-    }
+  // Allow modal close with .close-modal anywhere in filter modal:
+  if (filterModal) {
+    filterModal.querySelectorAll('.close-modal').forEach(btn => btn.onclick = closeModal);
+  }
 
   // Immediately set ProductID, Quantity as Packets, and Price as Peso
   function formatProductId(id){
-    return `PRD-${String(id).padStart(4, '0')}`;
+    // Remove any existing 'PRD-' prefix
+    const numericPart = id.replace(/^PRD-/, '');
+    return `PRD-${String(numericPart).padStart(4, '0')}`;
   }
 
   function formatQuantity(qty, unit){
@@ -393,8 +502,14 @@ document.addEventListener('DOMContentLoaded', function() {
     return `₱${parseFloat(price).toFixed(2)}`;
   }
 
+  // Helper for updatePaginationButtons
+  function updatePaginationButtons(totalPages){
+    if(prevBtn) prevBtn.disabled = currentPage <= 1;
+    if(nextBtn) nextBtn.disabled = currentPage >= totalPages;
+  }
 
-// Main Render Function
+
+  // Main Render Function
   function renderProducts(page = 1, searchTerm = '') {
     const all = getStoredProducts();
     let filtered = all;
@@ -408,7 +523,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     const total = filtered.length;
     const totalPages = Math.max(1, Math.ceil(total / productsPerPage));
+
     if (page > totalPages) page = totalPages;
+    // Update page indicator
+    if(pageIndicator){
+      pageIndicator.textContent = `Page ${page} of ${totalPages}`;
+    }
+
+    // Enable/disable Prev/Next buttons
+    updatePaginationButtons(totalPages);
+
     const start = (page - 1) * productsPerPage, end = start + productsPerPage;
     const sub = filtered.slice(start, end);
     const tbody = document.getElementById('productTableBody');
@@ -495,10 +619,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     setPagination(total, page);
   }
+
+
   function setPagination(total, page) {
       const totalPages = Math.max(1, Math.ceil(total / productsPerPage));
       if(pageIndicator)
         pageIndicator.textContent = `Page ${page} of ${totalPages}`;
+
       if(prevBtn) prevBtn.disabled = page === 1;
       if(nextBtn) nextBtn.disabled = page === totalPages;
   }
