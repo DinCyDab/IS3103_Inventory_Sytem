@@ -28,7 +28,7 @@
     // Check login status
     if(isset($_SESSION["account"])){
         $isLoggedIn = true;
-        $view =  $_GET['view'];
+        $view =  $_GET['view'] ?? "dashboard";
     } else{
         // $view = $_GET["view"] ?? "login";
         $isLoggedIn = false;
@@ -118,6 +118,7 @@
             <?php $page->render();?>
         </main>
 
+        <script src="./public/src/js/inventoryscript.js"></script>
         <script src="./public/src/js/script.js"></script>
     </body>
 </html>

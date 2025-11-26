@@ -28,7 +28,7 @@ class ProductController{
             $targetFile = $publicDir . $filename;
 
             if(move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)){
-                $imagePath = 'images/uploads/' . $filename; // path to store in DB
+                $imagePath = '/public/images/uploads/' . $filename; // path to store in DB
             }
         }
 
@@ -74,7 +74,7 @@ class ProductController{
                 $targetFile = $uploadDir . $filename;
 
                 if(move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)){
-                    $imagePath = 'images/uploads/' . $filename;
+                    $imagePath = '/public/images/uploads/' . $filename;
                 }
             }
 
@@ -91,7 +91,7 @@ class ProductController{
             $this->inventory_model->updateProduct($data);
 
             echo json_encode(["success" => true, "message" => "Product updated successfully"]);
-            
+
         } catch(Exception $e) {
             echo json_encode(["success" => false, "message" => $e->getMessage()]);
         }

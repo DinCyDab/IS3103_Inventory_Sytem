@@ -154,15 +154,21 @@
                     <label class="field-label">Category</label>
                     <select name="category" id="category" class="styled-category">
                         <option value="" disabled selected>Select product category</option>
-                        <optgroup label="Groceries">
-                            <option value="Rice">Rice</option>
-                            <option value="Noodles">Noodles</option>
-                            <option value="Snacks">Snacks</option>
+                        <optgroup label="Food & Beverages">
+                            <option value="Beverage">Softdrinks/Juice/Water</option>
+                            <option value="Snacks">Chips/Cookies/Candies</option>
+                            <option value="Groceries">Instant Noodles/Rice/Canned Goods</option>
+                            <option value="Spices">Spices/Condiments</option>
                         </optgroup>
-                        <optgroup label="Beverages">
-                            <option value="Juice">Juice</option>
-                            <option value="Softdrinks">Softdrinks</option>
-                            <option value="Water">Water</option>
+                        <optgroup label="Household & Personal Care">
+                            <option value="Personal Care">Soap/Shampoo/Toothpaste</option>
+                            <option value="Cleaning Supplies">Detergent/Cleaning Supplies</option>
+                            <option value="Tooilet Sanitaries">Toilet Paper/Sanitary Pad</option>
+                        </optgroup>
+                        <optgroup label="Miscellaneous/Others">
+                            <option value="Cigar/Alcohol">Cigarettes/Alcohol</option>
+                            <option value="Stationaries">Stationary/Batteries/Small Toys</option>
+                            <option value="Frozen Items">Frozen Items or Perishables</option>
                         </optgroup>
                     </select>
                 </div>
