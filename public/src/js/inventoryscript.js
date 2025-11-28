@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function getStoredProducts() {
       return JSON.parse(localStorage.getItem('products') || '[]');
   }
+
   function setStoredProducts(arr) {
       localStorage.setItem('products', JSON.stringify(arr));
   }
@@ -13,7 +14,6 @@ document.addEventListener('DOMContentLoaded', function() {
   let currentPage = 1, productsPerPage = 5, filterStr = '';
 
   // Safe Selectors
-  const searchbar = document.querySelector('.searchbar');
   const addBtn = document.querySelector('.add-product');
   const filterBtn = document.querySelector('.filter-btn');
   const downloadBtn = document.querySelector('.download-btn');
@@ -28,9 +28,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const closeModalBtns = document.querySelectorAll('.close-modal');
   const filterModal = document.getElementById('filterModal');
   const filterModalOptions = document.getElementById('categoryOptions');
-  const productContainer = document.getElementById('productOverview'); 
-  const products = getStoredProducts();
-  const lastSearch = localStorage.getItem('lastSearch') || '';
   const backBtn = document.getElementById('backBtn');
 
   // Back Button
@@ -43,10 +40,6 @@ document.addEventListener('DOMContentLoaded', function() {
       localStorage.removeItem('lastSearch');
       if(searchbar) searchbar.value = '';
 
-      // Sections
-      const inventorySection = document.querySelector('.overall-inventory-container');
-      const productsSection = document.querySelector('.products');
-
       // Show default inventory view
       if(inventorySection) inventorySection.style.display = '';
       if(productsSection) productsSection.style.display = '';
@@ -56,70 +49,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
       // Hide back button in default inventory view
       backBtn.style.display = 'none';
-    });
-  }
-
-  // Restore search on page load
-  if(lastSearch){
-    searchbar.value = lastSearch;
-
-    const inventorySection = document.querySelector('.overall-inventory-container');
-    const productsSection = document.querySelector('.products');
-
-    // Hide default inventory view
-    if(inventorySection) inventorySection.style.display = 'none';
-    if(productsSection) productsSection.style.display = 'none';
-
-    // Show product overview
-    productContainer.style.display = 'flex';
-    if(backBtn) backBtn.style.display = 'inline-block';
-
-    // Filter products
-    const filteredProducts = products.filter(prod =>
-      (prod.productName && prod.productName.toLowerCase().includes(lastSearch)) ||
-      (prod.productID && prod.productID.toLowerCase().includes(lastSearch)) ||
-      (prod.category && prod.category.toLowerCase().includes(lastSearch))
-    );
-    renderProductOverview(filteredProducts);
-  }
-
-  // Search Products
-  if (searchbar) {
-    searchbar.addEventListener('keydown', function(e) {
-
-      if (e.key === 'Enter') {
-        const query = this.value.toLowerCase().trim();
-        localStorage.setItem('lastSearch', query); // Store last search
-
-        const backBtn = document.getElementById('backBtn');
-        const inventorySection = document.querySelector('.overall-inventory-container');
-        const productsSection = document.querySelector('.products');
-
-        if(query){
-          // Hide default inventory view
-          if(backBtn) backBtn.style.display = 'inline-block';
-          if(inventorySection) inventorySection.style.display = 'none';
-          if(productsSection) productsSection.style.display = 'none';
-
-          // Show product overview
-          productContainer.style.display = 'flex';
-
-          // Filter products
-          const filteredProducts = products.filter(prod =>
-            (prod.productName && prod.productName.toLowerCase().includes(query)) ||
-            (prod.productID && prod.productID.toLowerCase().includes(query)) ||
-            (prod.category && prod.category.toLowerCase().includes(query))
-          );
-          renderProductOverview(filteredProducts);
-        } else{
-          // Show default inventory view
-          if(backBtn) backBtn.style.display = 'none';
-          if(inventorySection) inventorySection.style.display = '';
-          if(productsSection) productsSection.style.display = '';
-          productContainer.style.display = 'none';
-        }
-        location.reload();
-      }
     });
   }
 
@@ -194,78 +123,26 @@ document.addEventListener('DOMContentLoaded', function() {
   // Back To Top Button
   const backToTopBtn = document.getElementById('backToTopBtn');
 
-  if(backToTopBtn && productContainer){
-    // Show button when scrolling down
-    productContainer.addEventListener('scroll', () => {
-        if(productContainer.scrollTop > 10){ // Show after 200px
-            backToTopBtn.style.display = 'block';
-        } else{
-            backToTopBtn.style.display = 'none';
-        }
-    });
+  window.addEventListener('scroll', function (){
+    if(!backToTopBtn) return;
 
-    // Scroll to top when clicked
+    // Show button only in SEE ALL or SEARCH mode
+    const overviewVisible = productContainer.style.display !== 'none';
+
+    if(overviewVisible && this.window.scrollY > 300){
+        backToTopBtn.style.display = 'flex';
+    } else{
+        backToTopBtn.style.display = 'none';
+    }
+  });
+
+  // Scroll to top on click
+  if(backToTopBtn){
     backToTopBtn.addEventListener('click', () => {
-        productContainer.scrollTo({
+        window.scrollTo({
             top: 0,
             behavior: 'smooth'
         });
-    });
-  }
-
-  // Render function for overview cards
-  function renderProductOverview(productsList){
-    if(!productContainer) return;
-    productContainer.innerHTML = ''; // Clear existing content
-
-    if(productsList.length === 0){
-      productContainer.innerHTML = '<p style="color:#888;">No products found.</p>';
-      return;
-    }
-
-    productsList.forEach((prod, idx) => {
-      const card = document.createElement('div');
-      card.className = 'product-card';
-
-      card.innerHTML = `
-        <div class="product-card">
-          <div class="overview-header">
-            <h3>${prod.productName}</h3>
-            <div class="product-actions">
-              <button class="edit-btn"><i class='bx bx-pencil' ></i>Edit</button>
-              <button class="download-btn">Download</button>
-            </div>
-          </div>
-          <div class="overview-tabs">
-            <span>Overview</span>
-          </div>
-          <div class="overview-content">
-            <div class="product-info">
-              <h4>Product Details</h4>
-              <div class="details-row">
-                <label>Product Name</label> 
-                <span>${prod.productName}</span>
-              </div>
-              <div class="details-row">
-                <label>Product ID</label> 
-                <span>${formatProductId(prod.productID)}</span>
-              </div>
-              <div class="details-row">
-                <label>Product category</label> 
-                <span>${prod.category}</span>
-              </div>
-              <div class="details-row">
-                <label>Expiry Date</label> 
-                <span>${prod.expiryDate}</span>
-              </div>
-            </div>
-            <div class="product-img-box">
-              <img src="public/images/uploads/${prod.image}" alt="${prod.productName}" class="product-img"/>
-            </div>
-          </div>
-        </div>
-      `;
-      productContainer.appendChild(card);
     });
   }
 
@@ -519,7 +396,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if(nextBtn) nextBtn.disabled = currentPage >= totalPages;
   }
 
-
   // Main Render Function
   function renderProducts(page = 1, searchTerm = '') {
     const all = getStoredProducts();
@@ -630,7 +506,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     setPagination(total, page);
   }
-
 
   function setPagination(total, page) {
       const totalPages = Math.max(1, Math.ceil(total / productsPerPage));

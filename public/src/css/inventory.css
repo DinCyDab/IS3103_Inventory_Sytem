@@ -776,13 +776,13 @@ main{
 
 /* See all Back To Top Button */
 .bTopButton{
-    /* display: none; */
+    display: none;
     position: fixed;
     border-radius: 50%;
-    background: #656488;
+    background: #9796b4;
     bottom: 30px;
     right: 30px;
-    padding: 10px 15px;
+    padding: 15px;
     font-size: 20px;
     cursor: pointer;
     z-index: 1000;
