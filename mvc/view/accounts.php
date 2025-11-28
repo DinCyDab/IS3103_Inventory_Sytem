@@ -6,25 +6,9 @@
         public function __construct(){
             $this->account_controller = new AccountController();
 
-            if(isset($_POST["create_account"])){
-                $account_ID = $_POST["account_ID"];
-                $first_name = $_POST["first_name"];
-                $last_name = $_POST["last_name"];
-                $email = $_POST["email"];
-                $contact_number = $_POST["contact_number"];
-                $role = $_POST["role"];
-                
-                $this->account_controller->createAccount($account_ID,
-                                                        $first_name, 
-                                                        $last_name,
-                                                        $email,
-                                                        $email,
-                                                        $contact_number,
-                                                        $role);
-
-                header("Location: index.php?view=Accounts");
-                exit();
-            }
+            $this->handleAccountCreation();
+            $this->handleDeleteAccount();
+            $this->handleUpdateAccount();
 
             $this->accounts = $this->account_controller->loadAccount();
 
@@ -32,6 +16,7 @@
         }
         public function render(){
             ?>
+                <div class="header"></div>
                 <div class="main-wrapper">
                     <?php 
                         $this->searchTab();
@@ -41,6 +26,8 @@
 
                 <?php
                     $this->modal();
+                    $this->logicHolder();
+                    $this->editModal();
                 ?>
 
                 <link href="./public/src/css/account.css" rel="stylesheet">
@@ -51,7 +38,10 @@
         public function searchTab(){
             ?>
                 <div class="topbar">
-                    <input type="search" class="searchbar" placeholder="Search accounts">
+                    <div class="search-wrapper">
+                        <i class="bx bx-search"></i>
+                        <input type="search" class="searchbar" placeholder="Search product or order">
+                    </div>
                 </div>
             <?php
         }
@@ -70,7 +60,7 @@
                     </div>
 
                     <div class="account-body">
-                        <table class="accounts-table">
+                        <table class="products-table">
                             <thead>
                                 <tr>
                                     <th>Account ID</th>
@@ -88,15 +78,31 @@
                                     $list_of_accounts = $this->accounts;
 
                                     foreach($list_of_accounts as $account){
+                                        $account_ID = $account["account_ID"];
+                                        $role = $account["role"];
+                                        $first_name = $account["first_name"];
+                                        $last_name = $account["last_name"];
+                                        $email = $account["email"];
+                                        $contact_number = $account["contact_number"];
+                                        $status = $account["status"];
                                         ?>
                                             <tr>
-                                                <td><?php echo $account["account_ID"]?></td>
-                                                <td><?php echo $account["first_name"]?></td>
-                                                <td><?php echo $account["last_name"]?></td>
-                                                <td><?php echo $account["email"]?></td>
-                                                <td><?php echo $account["contact_number"]?></td>
-                                                <td><?php echo $account["role"]?></td>
-                                                <td><?php echo $account["status"]?></td>
+                                                <td><?php echo $account_ID?></td>
+                                                <td><?php echo $first_name?></td>
+                                                <td><?php echo $last_name?></td>
+                                                <td><?php echo $email?></td>
+                                                <td><?php echo $contact_number?></td>
+                                                <td><?php echo $role?></td>
+                                                <td><?php echo $status?></td>
+                                                <td>
+                                                    <button class="action-btn edit" title="Edit" onclick="editAccount(<?php printf('\'%s\', \'%s\', \'%s\', \'%s\', \'%s\', \'%s\'', $account_ID, $first_name, $last_name, $email, $contact_number, $role) ?>)">
+                                                        <i class="bx bxs-edit"></i>
+                                                    </button>
+                                                    <button class="action-btn delete" title="Delete" 
+                                                        onclick="deleteAccount(<?php echo $account['account_ID'] . ', \'' . $role . '\''; ?>)">
+                                                        <i class="bx bx-trash-alt"></i>
+                                                    </button>
+                                                </td>
                                             </tr>
                                         <?php
                                     }
@@ -106,14 +112,20 @@
                         </table>
                         <div class="table-nav">
                             <button>Previous</button>
-                            <span>Page 1 of 10 <a href="#" class="view-all">See All</a></span>
+                            <span>Page 1 of 1 <a href="#" class="view-all">See All</a></span>
                             <button>Next</button>
                         </div>
                     </div>
                 </div>
             <?php
         }
-
+        public function logicHolder(){
+            ?>
+                <form method="POST" id="delete_form">
+                    <input id="selected_ID" type="hidden" name="delete_ID">
+                </form>
+            <?php
+        }
         public function modal(){
             ?>
                 <div id="addAccountModal" class="account-modal">
@@ -138,7 +150,7 @@
                             </div>
                             <div class="form-row">
                                 <label for="phone">Phone Number</label>
-                                <input type="tel" id="phone" name="contact_number"
+                                <input type="tel" name="contact_number"
                                     maxlength="13"
                                     placeholder="09xx xxx xxxx"
                                     pattern="[0-9]{4}\s[0-9]{3}\s[0-9]{4}"
@@ -161,6 +173,108 @@
                     </div>
                 </div>
             <?php
+        }
+
+        public function editModal(){
+            ?>
+                <div id="editAccountModal" class="account-modal">
+                    <div class="modal-content">
+                        <h3 class="modal-title">Edit Account</h3>
+                        <form method="POST" id="addProductForm">
+                            <input type="hidden" id="account_ID" name="account_ID">
+                            <div class="form-row">
+                                <label class="field-label">First Name</label>
+                                <input id="first_name" type="text" name="first_name" placeholder="Enter first name" required="">
+                            </div>
+                            <div class="form-row">
+                                <label class="field-label">Last Name</label>
+                                <input id="last_name" type="text" name="last_name" placeholder="Enter last name" required="">
+                            </div>
+                            <div class="form-row">
+                                <label class="field-label">Email</label>
+                                <input id="email" type="email" name="email" placeholder="Enter email" required="">
+                            </div>
+                            <small style="color: red; font-size: 10px;">Note: Leave the password field empty if you do not want to change the current password.</small>
+                            <div class="form-row">
+                                <label class="field-label">New Password</label>
+                                <input id="password" type="password" name="password" placeholder="*********">
+                            </div>
+                            <div class="form-row">
+                                <label for="phone">Phone Number</label>
+                                <input id="phone" type="tel" id="phone" name="contact_number"
+                                    maxlength="13"
+                                    placeholder="09xx xxx xxxx"
+                                    pattern="[0-9]{4}\s[0-9]{3}\s[0-9]{4}"
+                                    required>
+                            </div>
+                            <div class="form-row">
+                                <label class="field-label">Role</label>
+                                <select name="role" required="">
+                                    <option value="staff">Staff</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                            <div class="modal-actions">
+                                <button type="button" class="discard-btn" onclick="closeEditModal()">Discard</button>
+                                <input type="submit" class="add-product-btn" name="update_account" value="Update Account">
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            <?php
+        }
+        public function handleAccountCreation(){
+            if(isset($_POST["create_account"])){
+                $account_ID = $_POST["account_ID"];
+                $first_name = $_POST["first_name"];
+                $last_name = $_POST["last_name"];
+                $email = $_POST["email"];
+                $contact_number = $_POST["contact_number"];
+                $role = $_POST["role"];
+                
+                $this->account_controller->createAccount($account_ID,
+                                                        $first_name, 
+                                                        $last_name,
+                                                        $email,
+                                                        $email,
+                                                        $contact_number,
+                                                        $role);
+
+                header("Location: index.php?view=accounts");
+                exit();
+            }
+        }
+        public function handleDeleteAccount(){
+            if(isset($_POST["delete_ID"])){
+                $account_ID = $_POST["delete_ID"];
+                
+                $this->account_controller->deleteAccount($account_ID);
+
+                header("Location: index.php?view=accounts");
+                exit();
+            }
+        }
+        public function handleUpdateAccount(){
+            if(isset($_POST["update_account"])){
+                $account_ID = $_POST["account_ID"];
+                $first_name = $_POST["first_name"];
+                $last_name = $_POST["last_name"];
+                $email = $_POST["email"];
+                $contact_number = $_POST["contact_number"];
+                $role = $_POST["role"];
+                $password = $_POST["password"];
+
+                $this->account_controller->updateAccount($account_ID,
+                                                        $first_name,
+                                                        $last_name,
+                                                        $password, 
+                                                        $email, 
+                                                        $contact_number, 
+                                                        $role);
+
+                header("Location: index.php?view=accounts");
+                exit();
+            }
         }
     }
 ?>

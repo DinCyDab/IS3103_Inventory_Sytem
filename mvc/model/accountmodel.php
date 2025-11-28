@@ -19,10 +19,42 @@
             return $this->config->query($sql);
         }
 
+        public function deleteAccount($account_ID){
+            $sql = "DELETE FROM account
+                    WHERE account_ID = $account_ID";
+                    
+            return $this->config->query($sql);
+        }
+
         public function loadAccount(){
             $sql = "SELECT * FROM Account";
 
             return $this->config->read($sql);
+        }
+
+        public function updateAccount($account_ID, $first_name, $last_name, $hashed_password, $email, $contact_number, $role){
+            $sql = "UPDATE Account
+                    SET first_name = '$first_name',
+                    last_name = '$last_name',
+                    password = '$hashed_password',
+                    email = '$email',
+                    contact_number = '$contact_number',
+                    role = '$role'
+                    WHERE account_ID = $account_ID";
+            
+            return $this->config->query($sql);
+        }
+
+        public function updateAccountWithoutPassword($account_ID, $first_name, $last_name, $email, $contact_number, $role){
+            $sql = "UPDATE Account
+                    SET first_name = '$first_name',
+                    last_name = '$last_name',
+                    email = '$email',
+                    contact_number = '$contact_number',
+                    role = '$role'
+                    WHERE account_ID = $account_ID";
+            
+            return $this->config->query($sql);
         }
 
         //Don't forget to close the connection
