@@ -1,5 +1,5 @@
 <?php
-    class Inventory {
+    class InventoryView {
         private $products = [];
         private $overviewStats = [
             ["label" => "Categories", "value" => 0, "footer" => "Last 7 days", "highlight" => "blue"],
@@ -9,6 +9,8 @@
         ];
 
     public function render() { ?>
+    <div class="header"></div>
+
     <div class="topbar">
         <div class="search-wrapper">
             <i class='bx bx-search' ></i>
@@ -98,7 +100,7 @@
             <button class="prev-btn">Previous</button>
 
             <div class="pages">
-                <span class="page-indicator">Page 1 of 10</span>
+                <span class="page-indicator">Page 1</span>
                 <a href="#" class="view-all">See All</a>
             </div>
 
@@ -109,13 +111,16 @@
     <!-- Product Overview -->
     <button id="backBtn" class="back-btn" style="display:none;"><i class='bx bx-arrow-back' ></i></button>
     <div id="productOverview" class="product-overview-container" style="display:none;"></div>
+    <button id="backToTopBtn" class="bTopButton" style="display:none;">
+        <i class='bx bx-up-arrow-alt'></i>
+    </button>
 
     <!-- Add Product Modal -->
     <div id="addProductModal" class="modal">
         <div class="modal-content">
             <h3 class="modal-title">New Product</h3>
             <!-- SVG close button -->
-            <form id="addProductForm">
+            <form id="addProductForm" method="POST" action="index.php?view=createProduct">
                 <div class="image-upload-section">
                     <label for="productImage" class="image-upload-area">
                         <div id="imagePreview" class="image-preview">
@@ -146,21 +151,27 @@
                 </div>
                 <div class="form-row">
                     <label class="field-label">Buying Price</label>
-                    <input type="text" id="buyingPrice" name="buyingPrice" placeholder="Enter buying price" required>
+                    <input type="text" id="price" name="price" placeholder="Enter buying price" required>
                 </div>
                 <div class="form-row">
                     <label class="field-label">Category</label>
                     <select name="category" id="category" class="styled-category">
                         <option value="" disabled selected>Select product category</option>
-                        <optgroup label="Groceries">
-                            <option value="Rice">Rice</option>
-                            <option value="Noodles">Noodles</option>
-                            <option value="Snacks">Snacks</option>
+                        <optgroup label="Food & Beverages">
+                            <option value="Beverage">Softdrinks/Juice/Water</option>
+                            <option value="Snacks">Chips/Cookies/Candies</option>
+                            <option value="Groceries">Instant Noodles/Rice/Canned Goods</option>
+                            <option value="Spices">Spices/Condiments</option>
                         </optgroup>
-                        <optgroup label="Beverages">
-                            <option value="Juice">Juice</option>
-                            <option value="Softdrinks">Softdrinks</option>
-                            <option value="Water">Water</option>
+                        <optgroup label="Household & Personal Care">
+                            <option value="Personal Care">Soap/Shampoo/Toothpaste</option>
+                            <option value="Cleaning Supplies">Detergent/Cleaning Supplies</option>
+                            <option value="Tooilet Sanitaries">Toilet Paper/Sanitary Pad</option>
+                        </optgroup>
+                        <optgroup label="Miscellaneous/Others">
+                            <option value="Cigar/Alcohol">Cigarettes/Alcohol</option>
+                            <option value="Stationaries">Stationary/Batteries/Small Toys</option>
+                            <option value="Frozen Items">Frozen Items or Perishables</option>
                         </optgroup>
                     </select>
                 </div>
@@ -193,6 +204,7 @@
         </div>
     </div>
 
-
+    <link rel="stylesheet" href="./public/src/css/inventory.css">
+    <script src="./public/src/js/inventoryscript.js"></script>
 <?php } }
 ?>
