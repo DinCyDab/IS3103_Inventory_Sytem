@@ -12,11 +12,17 @@
             $this->config = new Config();
         }
 
-        public function createAccount($first_name, $last_name, $password, $email, $contact_number, $role){
-            $sql = "INSERT INTO account(first_name, last_name, password, email, contact_number, role)
-                    VALUES('$first_name', '$last_name', '$password', '$email', '$contact_number', '$role')";
+        public function createAccount($account_ID, $first_name, $last_name, $password, $email, $contact_number, $role){
+            $sql = "INSERT INTO account(account_ID, first_name, last_name, password, email, contact_number, role)
+                    VALUES('$account_ID', '$first_name', '$last_name', '$password', '$email', '$contact_number', '$role')";
 
             return $this->config->query($sql);
+        }
+
+        public function loadAccount(){
+            $sql = "SELECT * FROM Account";
+
+            return $this->config->read($sql);
         }
 
         //Don't forget to close the connection

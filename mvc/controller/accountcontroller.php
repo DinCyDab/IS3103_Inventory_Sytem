@@ -10,11 +10,21 @@
             $this->model = new AccountModel();
         }
         
-        public function createAccount($first_name, $last_name, $password, $email, $contact_number, $role){
+        public function createAccount($account_ID, $first_name, $last_name, $password, $email, $contact_number, $role){
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-            $this->model->createAccount($first_name, $last_name, $hashed_password, $email, $contact_number, $role);
+            $this->model->createAccount($account_ID, $first_name, $last_name, $hashed_password, $email, $contact_number, $role);
 
+            $this->model->close();
+        }
+
+        public function loadAccount(){
+            $results = $this->model->loadAccount();
+
+            return $results;
+        }
+
+        public function closeConnection(){
             $this->model->close();
         }
     }

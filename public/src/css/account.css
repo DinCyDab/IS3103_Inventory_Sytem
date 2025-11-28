@@ -1,0 +1,118 @@
+.topbar{
+    margin-bottom: 22px;
+}
+
+.searchbar{
+    width: 490px;
+    padding: 13px 17px;
+    border: 1.5px solid #e1e3ed;
+    border-radius: 9px;
+    font-size: 1rem;
+    background: #fff;
+    color: #494676;
+    box-shadow: 0 1px 7px rgba(188,188,208,0.03);
+    transition: border-color 0.2s;
+}
+
+.searchbar:focus{
+    outline: none;
+    border-color: #7e6ceb;
+    box-shadow: 0 0 7px rgba(120, 90, 255, 0.07);
+}
+
+.account-container{
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 22px rgba(120,120,170,0.09);
+    padding: 24px;
+    margin-bottom: 28px;
+    max-width: 99vw;
+    width: 100%;
+}
+
+.account-header{
+    display: flex;
+    justify-content: space-between;
+}
+
+.account-header h3{
+    font-size: 1.24rem;
+    color: #2c2760;
+    font-weight: 700;
+    margin-bottom: 30px;
+}
+
+.account-btn{
+    background: #7e6ceb;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.18s;
+    font-size: .75rem;
+    box-shadow: 0 1px 2px rgba(108,92,231,0.10);
+}
+
+.filter-btn{
+    background: #f7f7fb;
+    color: #666;
+    border: 1px solid #e0e1ed;
+    padding: 12px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.accounts-table{
+    background: white;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    box-shadow: 0 2px 20px rgba(160, 160, 190, 0.06);
+    border-radius: 16px;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.accounts-table th{
+    background: #f8f9fa;
+    font-weight: 500;
+    color: #666;
+    font-size: .9rem;
+    border-bottom: 1px solid #e0e1ed;
+    text-align: left;
+    padding: 0.85rem 0.95rem;
+}
+
+.accounts-table td{
+    padding: 0.82rem 0.8rem;
+    text-align: left;
+    font-size: 1rem;
+}
+
+.accounts-table tbody tr:hover{
+    background: #f3f0fc;
+}
+
+.accounts-table tbody .no-products td{
+    text-align: center;
+    color: #aaa;
+    padding: 2.5rem 0;
+}
+
+/* Modal */
+
+.account-modal{
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.4);
+    justify-content: center;
+    align-items: center;
+}
