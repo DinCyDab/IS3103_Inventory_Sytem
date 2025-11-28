@@ -102,7 +102,6 @@
         <meta name="color-scheme" content="dark light">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="./public/src/css/styles.css">
-        <link rel="stylesheet" href="./public/src/css/inventory.css">
         <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     </head>
     <body>
@@ -118,7 +117,6 @@
             <?php $page->render();?>
         </main>
 
-        <script src="./public/src/js/inventoryscript.js"></script>
         <script src="./public/src/js/script.js"></script>
     </body>
 </html>

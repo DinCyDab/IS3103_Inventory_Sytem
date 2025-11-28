@@ -111,6 +111,9 @@
     <!-- Product Overview -->
     <button id="backBtn" class="back-btn" style="display:none;"><i class='bx bx-arrow-back' ></i></button>
     <div id="productOverview" class="product-overview-container" style="display:none;"></div>
+    <button id="backToTopBtn" class="bTopButton" style="display:none;">
+        <i class='bx bx-up-arrow-alt'></i>
+    </button>
 
     <!-- Add Product Modal -->
     <div id="addProductModal" class="modal">
@@ -201,6 +204,7 @@
         </div>
     </div>
 
-
+    <link rel="stylesheet" href="./public/src/css/inventory.css">
+    <script src="./public/src/js/inventoryscript.js"></script>
 <?php } }
 ?>

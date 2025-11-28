@@ -182,12 +182,34 @@ document.addEventListener('DOMContentLoaded', function() {
               </div>
             </div>
             <div class="product-img-box">
-              <img src="${prod.image}" alt="${prod.productName}" class="product-img"/>
+              <img src="public/images/uploads/${prod.image}" alt="${prod.productName}" class="product-img"/>
             </div>
           </div>
         </div>
       `;
       productContainer.appendChild(card);
+    });
+  }
+
+  // Back To Top Button
+  const backToTopBtn = document.getElementById('backToTopBtn');
+
+  if(backToTopBtn && productContainer){
+    // Show button when scrolling down
+    productContainer.addEventListener('scroll', () => {
+        if(productContainer.scrollTop > 10){ // Show after 200px
+            backToTopBtn.style.display = 'block';
+        } else{
+            backToTopBtn.style.display = 'none';
+        }
+    });
+
+    // Scroll to top when clicked
+    backToTopBtn.addEventListener('click', () => {
+        productContainer.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
     });
   }
 

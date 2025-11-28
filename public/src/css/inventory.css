@@ -808,3 +808,17 @@ main{
 .filter-btn:disabled svg{
     fill: #bbb;
 }
+
+/* See all Back To Top Button */
+.bTopButton{
+    /* display: none; */
+    position: fixed;
+    border-radius: 50%;
+    background: #656488;
+    bottom: 30px;
+    right: 30px;
+    padding: 10px 15px;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 1000;
+}
