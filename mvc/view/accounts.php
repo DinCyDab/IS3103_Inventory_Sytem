@@ -1,6 +1,6 @@
 <?php 
     require_once __DIR__ . "/../controller/accountcontroller.php";
-    class Accounts{
+    class AccountsView{
         private $account_controller;
         private $accounts = [];
         public function __construct(){
