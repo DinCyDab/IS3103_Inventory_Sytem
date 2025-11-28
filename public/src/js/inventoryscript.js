@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', function() {
   let currentPage = 1, productsPerPage = 5, filterStr = '';
 
   // Safe Selectors
+  const searchbar = document.querySelector('.searchbar');
+  const productContainer = document.getElementById('productOverview'); 
   const addBtn = document.querySelector('.add-product');
   const filterBtn = document.querySelector('.filter-btn');
   const downloadBtn = document.querySelector('.download-btn');
@@ -29,6 +31,8 @@ document.addEventListener('DOMContentLoaded', function() {
   const filterModal = document.getElementById('filterModal');
   const filterModalOptions = document.getElementById('categoryOptions');
   const backBtn = document.getElementById('backBtn');
+  const inventorySection = document.querySelector('.overall-inventory-container');
+  const productsSection = document.querySelector('.products');
 
   // Back Button
   if(backBtn){
