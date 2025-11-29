@@ -85,6 +85,11 @@
             return $this->conn->prepare($sql);
         }
 
+        // Adding a public getter
+        public function getConnection(){
+            return $this->conn;
+        }
+
         //Don't forget to close the connection
         //close() function closes the connection
         public function close(){

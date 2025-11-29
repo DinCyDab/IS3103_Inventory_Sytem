@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const inventorySection = document.querySelector('.overall-inventory-container');
   const productsSection = document.querySelector('.products');
   const products = getStoredProducts();
+  
 
   // Immediately set ProductID, Quantity as Packets, and Price as Peso
   function formatProductId(id){
@@ -28,14 +29,6 @@ document.addEventListener("DOMContentLoaded", () => {
     numericPart = numericPart.padStart(4, '0');
 
     return `PRD-${numericPart}`;
-  }
-
-  function formatQuantity(qty, unit){
-    return `${qty} ${unit}`;
-  }
-
-  function formatPrice(price){
-    return `₱${parseFloat(price).toFixed(2)}`;
   }
 
   // Render function for overview cards
@@ -56,10 +49,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="product-card">
           <div class="overview-header">
             <h3>${prod.productName}</h3>
-            <div class="product-actions">
-              <button class="edit-btn"><i class='bx bx-pencil' ></i>Edit</button>
-              <button class="download-btn">Download</button>
-            </div>
           </div>
           <div class="overview-tabs">
             <span>Overview</span>

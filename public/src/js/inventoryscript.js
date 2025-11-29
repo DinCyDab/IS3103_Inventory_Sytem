@@ -10,8 +10,9 @@ document.addEventListener('DOMContentLoaded', function() {
   function setStoredProducts(arr) {
       localStorage.setItem('products', JSON.stringify(arr));
   }
-
-  let currentPage = 1, productsPerPage = 5, filterStr = '';
+ 
+  let currentPage = 1, productsPerPage = 5;
+  let filterArr = [];
 
   // Safe Selectors
   const searchbar = document.querySelector('.searchbar');
@@ -86,10 +87,6 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="product-card">
           <div class="overview-header">
             <h3>${prod.productName}</h3>
-            <div class="product-actions">
-              <button class="edit-btn"><i class='bx bx-pencil' ></i>Edit</button>
-              <button class="download-btn">Download</button>
-            </div>
           </div>
           <div class="overview-tabs">
             <span>Overview</span>
@@ -260,7 +257,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if(editingIndex !== null) prods[editingIndex] = product;
             else prods.unshift(product);
             setStoredProducts(prods);
-            renderProducts(currentPage, filterStr);
+            renderProducts(currentPage, filterArr);
             closeModal();
         } else alert(json.message);
     });
@@ -293,7 +290,7 @@ document.addEventListener('DOMContentLoaded', function() {
     prevBtn.addEventListener('click', function(){
       if(currentPage > 1){
         currentPage -= 1;
-        renderProducts(currentPage, filterStr);
+        renderProducts(currentPage, filterArr);
       }
     });
   }
@@ -304,19 +301,14 @@ document.addEventListener('DOMContentLoaded', function() {
       const all = getStoredProducts();
       let filtered = all;
 
-      if(filterStr.trim()){
-          const str = filterStr.toLowerCase();
-          filtered = all.filter(p => 
-            (p.productName && p.productName.toLowerCase().includes(str)) ||
-            (p.productID && p.productID.toLowerCase().includes(str)) ||
-            (p.category && p.category.toLowerCase().includes(str))
-          );
-      }
+    if(Array.isArray(filterArr) && filterArr.length > 0){
+      filtered = all.filter(p => p.category && filterArr.includes(p.category));
+    }
 
       const totalPages = Math.max(1, Math.ceil(filtered.length / productsPerPage));
       if(currentPage < totalPages){
           currentPage += 1;
-          renderProducts(currentPage, filterStr);
+          renderProducts(currentPage, filterArr);
       }
     });
   }
@@ -341,29 +333,71 @@ document.addEventListener('DOMContentLoaded', function() {
       if(backBtn) backBtn.style.display = 'inline-block';
   }
 
+  // Load last filter from localStorage on page load
+  let savedFilter = JSON.parse(localStorage.getItem('productFilter') || '[]');
+  if(savedFilter.length){
+    filterArr = savedFilter;
+    renderProducts(currentPage, filterArr);
+  }
+
+  // Global filter variable
+  // let filterArr = JSON.parse(localStorage.getItem('productFilter') || '[]');
+
   // Filter Modal
   if (filterBtn && filterModal && filterModalOptions) {
-    filterBtn.addEventListener('click', function () {
-      // Populate options
-      const categories = [...new Set(getStoredProducts().map(p => p.category).filter(Boolean))];
-      filterModalOptions.innerHTML = categories.length
-        ? categories.map(cat =>
-          `<button type="button" class="category-option">${cat}</button>`
-        ).join('')
-        : '<em style="color:#aaa;">No categories found</em>';
-      filterModal.classList.add('show');
+  filterBtn.addEventListener('click', function () {
+    // Get unique categories
+    const categories = [...new Set(getStoredProducts().map(p => p.category).filter(Boolean))];
 
-      filterModalOptions.querySelectorAll('.category-option').forEach(btn => {
-        btn.onclick = function() {
-          filterStr = btn.textContent;
-          currentPage = 1;
-          renderProducts(currentPage, filterStr);
-          filterModal.classList.remove('show');
-          if (searchbar) searchbar.value = filterStr;
-        }
-      });
-    });
-  }
+    // Clear modal content first
+    filterModalOptions.innerHTML = '';
+
+    // Populate category checkboxes
+    if(categories.length){
+        categories.forEach(cat => {
+            const label = document.createElement('label');
+            label.innerHTML = `
+                <input type="checkbox" value="${cat}" ${filterArr.includes(cat) ? 'checked' : ''}>
+                ${cat}
+            `;
+            filterModalOptions.appendChild(label);
+        });
+    } else{
+        filterModalOptions.innerHTML = '<em style="color:#aaa;">No categories found</em>';
+    }
+
+    // Add Clear Filter button dynamically
+    const actions = document.createElement('div');
+    actions.className = 'filter-actions';
+    actions.innerHTML = `
+        <button type="button" id="clear-filter" class="clear-filter-btn">Clear Filter</button>
+        <button type="button" id="apply-filter" class="apply-filter-btn">Apply Filter</button>
+    `;
+    filterModalOptions.appendChild(actions);
+
+    filterModal.classList.add('show');
+
+    // Handlers
+    document.getElementById('apply-filter').onclick = () => {
+      const checkedBoxes = [...filterModalOptions.querySelectorAll('input[type="checkbox"]:checked')];
+      filterArr = checkedBoxes.map(cb => cb.value);
+      localStorage.setItem('productFilter', JSON.stringify(filterArr));
+      currentPage = 1;
+      renderProducts(currentPage, filterArr);
+      filterModal.classList.remove('show');
+      if(searchbar) searchbar.value = '';
+    }
+
+    document.getElementById('clear-filter').onclick = () => {
+      filterArr = [];
+      localStorage.removeItem('productFilter');
+      currentPage = 1;
+      renderProducts(currentPage, filterArr);
+      filterModal.classList.remove('show');
+      if(searchbar) searchbar.value = '';
+    }
+  });
+}
 
   // Allow modal close with .close-modal anywhere in filter modal:
   if (filterModal) {
@@ -401,17 +435,15 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Main Render Function
-  function renderProducts(page = 1, searchTerm = '') {
+  function renderProducts(page = 1, filter = '') {
     const all = getStoredProducts();
     let filtered = all;
-    if(searchTerm && searchTerm.trim()) {
-        const s = searchTerm.toLowerCase();
-        filtered = all.filter(p => 
-          (p.productName && p.productName.toLowerCase().includes(s)) ||
-          (p.productID && p.productID.toLowerCase().includes(s)) ||
-          (p.category && p.category.toLowerCase().includes(s))
-        );
+    
+    if(Array.isArray(filter) && filter.length > 0){
+        // Category filter
+        filtered = all.filter(p => p.category && filter.includes(p.category));
     }
+
     const total = filtered.length;
     const totalPages = Math.max(1, Math.ceil(total / productsPerPage));
 
@@ -445,10 +477,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     </span>
                     </td>
                     <td>
-                    <button class="action-btn edit" title="Edit">
+                    <button class="action-btn edit" title="Edit" data-pid="${p.productID}">
                         <i class='bx bxs-edit'></i>
                     </button>
-                    <button class="action-btn delete" title="Delete">
+                    <button class="action-btn delete" title="Delete" data-pid="${p.productID}">
                         <i class='bx bx-trash-alt' ></i>
                     </button>
                     </td>
@@ -457,36 +489,38 @@ document.addEventListener('DOMContentLoaded', function() {
       // Edit/Delete Buttons
       tbody.querySelectorAll('.action-btn.delete').forEach((btn, idx) => {
           btn.onclick = function(){
-          const prodIndex = (currentPage-1)*productsPerPage + idx;
-          const prod = getStoredProducts()[prodIndex];
+        //   const prodIndex = (currentPage-1)*productsPerPage + idx;
+          const productID = this.dataset.pid;
 
           fetch('index.php?view=deleteProduct', {
               method: 'POST',
-              body: new URLSearchParams({ productID: prod.productID }),
+              body: new URLSearchParams({ productID }),
               headers: { 'X-Requested-With': 'XMLHttpRequest' }
           })
           .then(res => res.json())
           .then(json => {
               if(json.success){
-                  const all = getStoredProducts();
-                  all.splice(prodIndex, 1);
+                  const all = getStoredProducts().filter(p => p.productID !== productID);
+                //   all.splice(prodIndex, 1);
                   setStoredProducts(all);
-                  renderProducts(currentPage, filterStr);
+                  renderProducts(currentPage, filterArr);
               } else alert(json.message);
           });
         }
       });
       tbody.querySelectorAll('.action-btn.edit').forEach((btn, idx) => {
         btn.onclick = function() {
+            const productID = this.dataset.pid;
             const all = getStoredProducts();
-            const prodIndex = (currentPage - 1) * productsPerPage + idx;
-            const prod = all[prodIndex];
+            // const prodIndex = (currentPage - 1) * productsPerPage + idx;
+            const prod = all.find(p => p.productID === productID);
+            editingIndex = all.findIndex(p => p.productID === productID);
 
             // Change button text to Update
             document.getElementById("submitBtn").textContent = "Update Product";
 
             // Store the index so the form knows it's editing
-            editingIndex = prodIndex;
+            // editingIndex = prodIndex;
 
             // Open the form Popup
             openProductForm();
@@ -521,5 +555,5 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Startup render
-  renderProducts(currentPage, filterStr);
+  renderProducts(currentPage, filterArr);
 });

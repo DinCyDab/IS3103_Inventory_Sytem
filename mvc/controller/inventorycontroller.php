@@ -11,7 +11,12 @@ class ProductController{
     // Show all products
     public function index(){
         $products = $this->inventory_model->getAllProducts();
-        return $products; // return data only
+        $overviewStats = $this->inventory_model->getOverviewStats(); // fetch totals
+
+        return [
+            "products" => $products,
+            "overviewStats" => $overviewStats
+        ];
     }
 
     // Add a new product

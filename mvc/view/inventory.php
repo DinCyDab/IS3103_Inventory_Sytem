@@ -1,12 +1,15 @@
 <?php
     class InventoryView {
         private $products = [];
-        private $overviewStats = [
-            ["label" => "Categories", "value" => 0, "footer" => "Last 7 days", "highlight" => "blue"],
-            ["label" => "Total Products", "value" => 0, "footer" => "Last 7 days", "extra" => "₱0", "highlight" => "orange"],
-            ["label" => "Top Selling", "value" => 0, "footer" => "Last 7 days", "extra" => "₱0", "highlight" => "purple"],
-            ["label" => "Low Stocks", "value" => 0, "footer" => "Ordered", "extra" => "0 Not in stock", "highlight" => "red"],
-        ];
+        private $overviewStats = [];
+
+        public function setProducts(array $products){
+            $this->products = $products;
+        }
+
+        public function setOverviewStats(array $stats){
+            $this->overviewStats = $stats;
+        }
 
     public function render() { ?>
     <div class="header"></div>
@@ -200,7 +203,7 @@
             </svg>
             </button>
             <h3 style="margin-top: 8px;">Select Category</h3>
-            <div id="categoryOptions" style="display: flex; flex-wrap: wrap; gap:10px; margin: 15px 0;"></div>
+            <div id="categoryOptions"></div>
         </div>
     </div>
 
