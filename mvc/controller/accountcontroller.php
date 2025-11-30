@@ -24,20 +24,20 @@
             $this->model->close();
         }
 
-        public function loadAccount(){
-            $results = $this->model->loadAccount();
+        public function loadAccount($filter){
+            $results = $this->model->loadAccount($filter);
 
             return $results;
         }
 
-        public function updateAccount($account_ID, $first_name, $last_name, $password, $email, $contact_number, $role){
+        public function updateAccount($account_ID, $first_name, $last_name, $password, $email, $contact_number, $role, $status){
             if($password != ""){
                 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-                $this->model->updateAccount($account_ID, $first_name, $last_name, $hashed_password, $email, $contact_number, $role);
+                $this->model->updateAccount($account_ID, $first_name, $last_name, $hashed_password, $email, $contact_number, $role, $status);
             }
             else{
-                $this->model->updateAccountWithoutPassword($account_ID, $first_name, $last_name, $email, $contact_number, $role);
+                $this->model->updateAccountWithoutPassword($account_ID, $first_name, $last_name, $email, $contact_number, $role, $status);
             }
         
             $this->model->close();

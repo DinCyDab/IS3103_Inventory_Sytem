@@ -242,9 +242,9 @@
     align-items: center;
 }
 
-.modal.show{
+/* .modal.show{
     display: flex;
-}
+} */
 
 .modal-content{
     background: #fff;
@@ -420,3 +420,50 @@
 .close-modal.modal-x svg:hover path{
     stroke: #333;
 } 
+
+/* Filter modal */
+
+#categoryOptions .category-option{
+    background: #e9e6fc;
+    color: #6c5cef;
+    border: none;
+    border-radius: 5px;
+    padding: 6px 16px;
+    cursor: pointer;
+    font-weight: 500;
+    margin: 2px 4px;
+    transition: background 0.2s;
+}
+
+/* Filter Design */
+
+.filter-design form{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 10px;
+}
+
+.filter-design form button{
+    background: #7e6ceb;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.18s;
+    font-size: .75rem;
+    box-shadow: 0 1px 2px rgba(108, 92, 231, 0.10);
+}
+
+.filter-design h3{
+    font-size: 1.24rem;
+    color: #7e6ceb;
+    font-weight: 550;
+}
+
+.filter-design p{
+    color: #e74c3c;
+    font-size: 12px;
+}

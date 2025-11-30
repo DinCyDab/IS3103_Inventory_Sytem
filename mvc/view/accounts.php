@@ -3,6 +3,9 @@
     class AccountsView{
         private $account_controller;
         private $accounts = [];
+        private $upper_limit;
+        private $lower_limit;
+        private $next_disabled;
         public function __construct(){
             $this->account_controller = new AccountController();
 
@@ -10,7 +13,49 @@
             $this->handleDeleteAccount();
             $this->handleUpdateAccount();
 
-            $this->accounts = $this->account_controller->loadAccount();
+            // Start here for filter
+
+            $conditions = [];
+
+            if (!empty($_GET["role"])) {
+                $roles = array_map('trim', $_GET["role"]);
+                $rolePlaceholders = implode("','", $roles);
+                $conditions[] = "role IN ('$rolePlaceholders')";
+            }
+
+            if (!empty($_GET["status"])) {
+                $statuses = array_map('trim', $_GET["status"]);
+                $statusPlaceholders = implode("','", $statuses);
+                $conditions[] = "status IN ('$statusPlaceholders')";
+            }
+
+            // ADD THIS
+            if (!empty($_GET["search"])) {
+                $search = addslashes($_GET["search"]);
+                $conditions[] = "(account_ID LIKE '%$search%' 
+                                OR first_name LIKE '%$search%' 
+                                OR last_name LIKE '%$search%' 
+                                OR email LIKE '%$search%' 
+                                OR contact_number LIKE '%$search%')";
+            }
+
+            $this->lower_limit = $_GET["lower_limit"] ?? 0;
+            $this->upper_limit = $_GET["upper_limit"] ?? 7;
+
+            $filter = "";
+
+            if (!empty($conditions)) {
+                $filter = "WHERE " . implode(" AND ", $conditions);
+            }
+
+            $filter .= " LIMIT $this->lower_limit, $this->upper_limit";
+
+            $this->accounts = $this->account_controller->loadAccount($filter);
+
+            // Determine if Next button should be disabled
+            $this->next_disabled = count($this->accounts) < 7;
+
+            // End here for filtering
 
             $this->account_controller->closeConnection();
         }
@@ -28,6 +73,7 @@
                     $this->modal();
                     $this->logicHolder();
                     $this->editModal();
+                    $this->filterModal();
                 ?>
 
                 <link href="./public/src/css/account.css" rel="stylesheet">
@@ -37,12 +83,38 @@
 
         public function searchTab(){
             ?>
-                <div class="topbar">
-                    <div class="search-wrapper">
-                        <i class="bx bx-search"></i>
-                        <input type="search" class="searchbar" placeholder="Search product or order">
+                <form method="GET" class="search-wrapper">
+                    <input type="hidden" name="view" value="accounts">
+
+                    <!-- Preserve filters when searching -->
+                    <?php 
+                        if (!empty($_GET["role"])) {
+                            foreach ($_GET["role"] as $r) {
+                                echo '<input type="hidden" name="role[]" value="'.htmlspecialchars($r).'">';
+                            }
+                        }
+                        if (!empty($_GET["status"])) {
+                            foreach ($_GET["status"] as $s) {
+                                echo '<input type="hidden" name="status[]" value="'.htmlspecialchars($s).'">';
+                            }
+                        }
+                    ?>
+
+                    <div class="topbar">
+                        <div class="search-wrapper">
+                            <i class="bx bx-search"></i>
+                            <input 
+                                type="search"
+                                name="search"
+                                class="searchbar"
+                                placeholder="Search by ID, name, email or number"
+                                value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>"
+                            >
+                        </div>
                     </div>
-                </div>
+
+                </form>
+
             <?php
         }
 
@@ -55,7 +127,7 @@
                         </div>
                         <div>
                             <button class="account-btn" onclick="showAccountModal()">Add Account</button>
-                            <button class="filter-btn">Filter</button>
+                            <button class="filter-btn" onclick="openFilterModal()">Filter</button>
                         </div>
                     </div>
 
@@ -95,7 +167,7 @@
                                                 <td><?php echo $role?></td>
                                                 <td><?php echo $status?></td>
                                                 <td>
-                                                    <button class="action-btn edit" title="Edit" onclick="editAccount(<?php printf('\'%s\', \'%s\', \'%s\', \'%s\', \'%s\', \'%s\'', $account_ID, $first_name, $last_name, $email, $contact_number, $role) ?>)">
+                                                    <button class="action-btn edit" title="Edit" onclick="editAccount(<?php printf('\'%s\', \'%s\', \'%s\', \'%s\', \'%s\', \'%s\'', $account_ID, $first_name, $last_name, $email, $contact_number, $role, $status) ?>)">
                                                         <i class="bx bxs-edit"></i>
                                                     </button>
                                                     <button class="action-btn delete" title="Delete" 
@@ -110,10 +182,49 @@
                                 <!-- <tr class="no-products"><td colspan="7">No accounts yet.</td></tr> -->
                             </tbody>
                         </table>
+                        <?php
+                        $next_lower = $this->lower_limit + 7;
+                        $next_upper = $this->upper_limit + 7;
+
+                        $prev_lower = max($this->lower_limit - 7, 0); // avoid negative
+                        $prev_upper = max($this->upper_limit - 7, 7);
+
+                        // Build query array for Next
+                        $query = [
+                            "view=accounts",
+                            "lower_limit=$next_lower",
+                            "upper_limit=$next_upper"
+                        ];
+
+                        // Preserve role filters
+                        if (!empty($_GET["role"])) {
+                            foreach ($_GET["role"] as $r) {
+                                $query[] = "role[]=" . urlencode($r);
+                            }
+                        }
+
+                        // Preserve status filters
+                        if (!empty($_GET["status"])) {
+                            foreach ($_GET["status"] as $s) {
+                                $query[] = "status[]=" . urlencode($s);
+                            }
+                        }
+
+                        $next_url = "?" . implode("&", $query);
+
+                        // Previous URL
+                        $query[1] = "lower_limit=$prev_lower";
+                        $query[2] = "upper_limit=$prev_upper";
+                        $prev_url = "?" . implode("&", $query);
+                        ?>
                         <div class="table-nav">
-                            <button>Previous</button>
-                            <span>Page 1 of 1 <a href="#" class="view-all">See All</a></span>
-                            <button>Next</button>
+                            <a href="<?=$prev_url?>">
+                                <button <?= $this->lower_limit == 0 ? 'disabled' : '' ?>>Previous</button>
+                            </a>
+
+                            <a href="<?=$next_url?>">
+                                <button <?= $this->next_disabled ? 'disabled' : '' ?>>Next</button>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -174,7 +285,6 @@
                 </div>
             <?php
         }
-
         public function editModal(){
             ?>
                 <div id="editAccountModal" class="account-modal">
@@ -209,9 +319,16 @@
                             </div>
                             <div class="form-row">
                                 <label class="field-label">Role</label>
-                                <select name="role" required="">
+                                <select id="edit_role" name="role" required="">
                                     <option value="staff">Staff</option>
                                     <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                            <div class="form-row">
+                                <label class="field-label">Status</label>
+                                <select id="edit_status" name="status" required="">
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
                                 </select>
                             </div>
                             <div class="modal-actions">
@@ -219,6 +336,80 @@
                                 <input type="submit" class="add-product-btn" name="update_account" value="Update Account">
                             </div>
                         </form>
+                    </div>
+                </div>
+            <?php
+        }
+        public function filterModal(){
+            ?>
+                <div id="filterModal" class="modal show">
+                    <div class="modal-content" style="position:relative;">
+                        <button type="button" class="close-modal modal-x" onclick="closeFilterModal()" aria-label="Close" style="position: absolute; top: 22px; right: 22px; background: none; border: none;">
+                        <svg width="25" height="25" viewBox="0 0 24 24" fill="none">
+                            <path d="M18 6L6 18" stroke="#999" stroke-width="2" stroke-linecap="round"></path>
+                            <path d="M6 6L18 18" stroke="#999" stroke-width="2" stroke-linecap="round"></path>
+                        </svg>
+                        </button>
+                        <h3 style="margin-top: 8px;">Select Filter</h3>
+                        <div class="filter-design">
+                            <form method="GET">
+                                <input type="hidden" name="view" value="accounts">
+
+                                <h3>Role</h3>
+
+                                <!-- Check All (Role) -->
+                                <label style="padding-left: 10px; display: flex; gap: 10px;">
+                                    <input type="checkbox" id="checkAllRole">
+                                    <p>Select All</p>
+                                </label>
+
+                                <hr>
+
+                                <label>
+                                    <input type="checkbox" name="role[]" value="admin" class="role-checkbox">
+                                    Admin
+                                </label>
+
+                                <label>
+                                    <input type="checkbox" name="role[]" value="staff" class="role-checkbox">
+                                    Staff
+                                </label>
+
+                                <h3>Status</h3>
+
+                                <!-- Check All (Status) -->
+                                <label style="padding-left: 10px; display: flex; gap: 10px;">
+                                    <input type="checkbox" id="checkAllStatus">
+                                    <p>Select All</p>
+                                </label>
+
+                                <hr>
+
+                                <label>
+                                    <input type="checkbox" name="status[]" value="active" class="status-checkbox">
+                                    Active
+                                </label>
+
+                                <label>
+                                    <input type="checkbox" name="status[]" value="inactive" class="status-checkbox">
+                                    Inactive
+                                </label>
+
+                                <button type="submit">Apply Filter</button>
+                            </form>
+                            <!-- <a href="index.php?view=accounts&role=admin">
+                                <div id="categoryOptions" style="display: flex; flex-wrap: wrap; gap:10px; margin: 15px 0;"><button type="button" class="category-option">Admin</button></div>
+                            </a>
+                            <a href="index.php?view=accounts&role=staff">
+                                <div id="categoryOptions" style="display: flex; flex-wrap: wrap; gap:10px; margin: 15px 0;"><button type="button" class="category-option">Staff</button></div>
+                            </a>
+                            <a href="index.php?view=accounts&status=active">
+                                <div id="categoryOptions" style="display: flex; flex-wrap: wrap; gap:10px; margin: 15px 0;"><button type="button" class="category-option">Active</button></div>
+                            </a>
+                            <a href="index.php?view=accounts&status=inactive">
+                                <div id="categoryOptions" style="display: flex; flex-wrap: wrap; gap:10px; margin: 15px 0;"><button type="button" class="category-option">Inactive</button></div>
+                            </a> -->
+                        </div>
                     </div>
                 </div>
             <?php
@@ -263,6 +454,7 @@
                 $contact_number = $_POST["contact_number"];
                 $role = $_POST["role"];
                 $password = $_POST["password"];
+                $status = $_POST["status"];
 
                 $this->account_controller->updateAccount($account_ID,
                                                         $first_name,
@@ -270,7 +462,8 @@
                                                         $password, 
                                                         $email, 
                                                         $contact_number, 
-                                                        $role);
+                                                        $role,
+                                                        $status);
 
                 header("Location: index.php?view=accounts");
                 exit();
