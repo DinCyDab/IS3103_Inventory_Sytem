@@ -1,17 +1,10 @@
 document.addEventListener('DOMContentLoaded', function() {
-
   let editingIndex = null;
 
-  // Storage helpers
-  function getStoredProducts() {
-      return JSON.parse(localStorage.getItem('products') || '[]');
-  }
+  let savedPage = parseInt(localStorage.getItem('inventoryCurrentPage')) || 1;
 
-  function setStoredProducts(arr) {
-      localStorage.setItem('products', JSON.stringify(arr));
-  }
- 
-  let currentPage = 1, productsPerPage = 5;
+  let currentPage = savedPage;
+  const productsPerPage = 5;
   let filterArr = [];
 
   // Safe Selectors
@@ -34,6 +27,12 @@ document.addEventListener('DOMContentLoaded', function() {
   const backBtn = document.getElementById('backBtn');
   const inventorySection = document.querySelector('.overall-inventory-container');
   const productsSection = document.querySelector('.products');
+
+  // Back To Top Button
+  const backToTopBtn = document.getElementById('backToTopBtn');
+
+  // Image Preview
+  let uploadedFile = null;
 
   // Back Button
   if(backBtn){
@@ -58,13 +57,11 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Render function to see all products
-  function renderAllProductsAsCards(){
-    const allProducts = getStoredProducts();
+  async function renderAllProductsAsCards(){
     if(!productContainer) return;
+    productContainer.innerHTML = '';
 
     // Hide default inventory sections
-    const inventorySection = document.querySelector('.overall-inventory-container');
-    const productsSection = document.querySelector('.products');
     if(inventorySection) inventorySection.style.display = 'none';
     if(productsSection) productsSection.style.display = 'none';
 
@@ -72,8 +69,14 @@ document.addEventListener('DOMContentLoaded', function() {
     productContainer.style.display = 'flex';
     if(backBtn) backBtn.style.display = 'inline-block';
 
+    try{
+        const res = await fetch('index.php?view=allProducts', {
+            headers: { 'X-Requested-With':'XMLHttpRequest' }
+        });
+        const data = await res.json();
+        const allProducts = data.products;
+
     // Clear and render all cards
-    productContainer.innerHTML = '';
     if(allProducts.length === 0){
       productContainer.innerHTML = '<p style="color:#888;">No products found.</p>';
       return;
@@ -119,16 +122,16 @@ document.addEventListener('DOMContentLoaded', function() {
       `;
       productContainer.appendChild(card);
     });
+    } catch(err){
+        console.error("Error fetching all products:", err);
+    }
   }
-
-  // Back To Top Button
-  const backToTopBtn = document.getElementById('backToTopBtn');
 
   window.addEventListener('scroll', function (){
     if(!backToTopBtn) return;
 
     // Show button only in SEE ALL or SEARCH mode
-    const overviewVisible = productContainer.style.display !== 'none';
+    const overviewVisible = productContainer && productContainer.style.display !== 'none';
 
     if(overviewVisible && this.window.scrollY > 300){
         backToTopBtn.style.display = 'flex';
@@ -147,26 +150,17 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  // Modal Handling
   function openProductForm() {
     addProductModal.classList.add('show');
-  }
-
-  // Add Product Button & Modal
-  if (addBtn) {
-    addBtn.addEventListener('click', function() {
-        editingIndex = null; // ensure ADD mode
-        document.getElementById("submitBtn").textContent = "Add Product";
-        addProductForm.reset(); // clear fields
-        setImagePreview(null); // reset preview
-        openProductForm();
-    });
   }
 
   function closeModal() {
     addProductModal.classList.remove('show');
     if (filterModal) filterModal.classList.remove('show');
   }
-  if (closeModalBtns) {
+
+    if (closeModalBtns) {
     closeModalBtns.forEach(btn => btn.addEventListener('click', closeModal));
   }
 
@@ -176,13 +170,12 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!this.classList.contains('show')) {
         addProductForm.reset();
         setImagePreview(null);
+        document.getElementById('existingImage').value = '';
       }
     });
   }
 
   // Image Preview
-  let uploadedFile = null;
-
   if(imageInput && imagePreview) {
     imageInput.addEventListener('change', function() {
       uploadedFile = this.files[0] || null;
@@ -227,52 +220,88 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   // Add Product Form
-  addProductForm.addEventListener('submit', function(e){
+  // Add Product Button & Modal
+  if (addBtn) {
+    addBtn.addEventListener('click', function() {
+        editingIndex = null; // ensure ADD mode
+        document.getElementById("submitBtn").textContent = "Add Product";
+        addProductForm.reset(); // clear fields
+        setImagePreview(null); // reset preview
+        openProductForm();
+    });
+  }
+
+  addProductForm.addEventListener('submit', async function(e){
     e.preventDefault();
-    const product = {
-        productID: addProductForm.productID.value.trim(),
-        productName: addProductForm.productName.value.trim(),
-        quantity: addProductForm.quantity.value.trim(),
-        unit: addProductForm.unit.value.trim(),
-        price: addProductForm.price.value.trim(),
-        expiryDate: addProductForm.expiryDate.value.trim(),
-        category: addProductForm.category.value.trim(),
-        image: uploadedFile ? uploadedFile.name : document.getElementById("previewImg").src
-    };
+
+    let expiryDate = document.getElementById('expiryDate').value.trim();
+
+    // Normalization
+    if(/^\d{4}$/.test(expiryDate)){              // YYYY → YYYY-01-01
+        expiryDate += '-01-01';
+    } else if(/^\d{4}-\d{2}$/.test(expiryDate)){ // YYYY-MM → YYYY-MM-01
+        expiryDate += '-01';
+    }
+
+    // Validate full YYYY-MM-DD
+    const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+    if(!datePattern.test(expiryDate)){
+        alert('Expiry Date must be in YYYY-MM-DD format!');
+        return;
+    }
+
+    const formData = new FormData(addProductForm);
+    formData.set("expiryDate", expiryDate);
+    console.log("EXPIRY SENT TO SERVER:", expiryDate);
+    
+    // Always include hidden input for old image
+    const oldImage = document.getElementById('existingImage').value;
+    if(!uploadedFile && oldImage){
+        formData.append('existingImage', oldImage);
+    } else if(uploadedFile){
+        formData.append('image', uploadedFile);
+    }
+
+    if(editingIndex !== null) formData.append('productID', editingIndex);
 
     const url = editingIndex !== null ? 'index.php?view=updateProduct' : 'index.php?view=createProduct';
-    const fd = new FormData();
-    for(const k in product) fd.append(k, product[k]);
-    if(uploadedFile) fd.append('image', uploadedFile);
 
-    fetch(url, {
-        method: 'POST',
-        body: fd,
-        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-    .then(res => res.json())
-    .then(json => {
+    try{
+        const res = await fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With':'XMLHttpRequest' }
+        });
+        const json = await res.json();
         if(json.success){
-            const prods = getStoredProducts();
-            if(editingIndex !== null) prods[editingIndex] = product;
-            else prods.unshift(product);
-            setStoredProducts(prods);
             renderProducts(currentPage, filterArr);
+            updateOverallStats();
             closeModal();
-        } else alert(json.message);
-    });
+        } else{
+            alert(json.message);
+        }
+    } catch(err){
+        console.error(err);
+    }
 });
 
   // Download All CSV
   if (downloadBtn) {
-    downloadBtn.addEventListener('click', function() {
-      const prods = getStoredProducts();
+    downloadBtn.addEventListener('click', async function() {
+    try{
+        // Fetch backend products
+        const res = await fetch('index.php?view=allProducts', { headers: {'X-Requested-With':'XMLHttpRequest'} });
+        const data = await res.json();
+        const prods = data.products;
+
       if (prods.length === 0) {
           alert('No products to download!');
           return;
       }
-      let csv = 'Product Name,Product ID,Quantity,Unit,Price,Expiry Date,Category\n' +
-        prods.map(p => `${p.productName},${p.productID},${p.quantity},${p.unit},${p.price},${p.expiryDate},${p.category}`).join('\n');
+
+      const csv = 'Product Name,Product ID,Quantity,Unit,Price,Expiry Date,Category\n' +
+      prods.map(p => `${p.productName},${p.productID},${p.quantity},${p.unit},${p.price},${p.expiryDate},${p.category}`).join('\n');
+
       const blob = new Blob([csv], {type: 'text/csv'});
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -281,35 +310,7 @@ document.addEventListener('DOMContentLoaded', function() {
       document.body.appendChild(a);
       a.click();
       setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 200);
-    });
-  }
-
-  // PAGINATION
-  // Previous button
-  if(prevBtn){
-    prevBtn.addEventListener('click', function(){
-      if(currentPage > 1){
-        currentPage -= 1;
-        renderProducts(currentPage, filterArr);
-      }
-    });
-  }
-
-  // Next Button
-  if (nextBtn) {
-    nextBtn.addEventListener('click', function() {
-      const all = getStoredProducts();
-      let filtered = all;
-
-    if(Array.isArray(filterArr) && filterArr.length > 0){
-      filtered = all.filter(p => p.category && filterArr.includes(p.category));
-    }
-
-      const totalPages = Math.max(1, Math.ceil(filtered.length / productsPerPage));
-      if(currentPage < totalPages){
-          currentPage += 1;
-          renderProducts(currentPage, filterArr);
-      }
+    } catch(err){ console.error(err); }
     });
   }
 
@@ -319,6 +320,9 @@ document.addEventListener('DOMContentLoaded', function() {
       e.preventDefault();
 
       localStorage.setItem('seeAll', 'true');
+
+      // Reset pagination because all products are shown
+      localStorage.removeItem('inventoryCurrentPage');
 
       renderAllProductsAsCards();
     });
@@ -340,14 +344,15 @@ document.addEventListener('DOMContentLoaded', function() {
     renderProducts(currentPage, filterArr);
   }
 
-  // Global filter variable
-  // let filterArr = JSON.parse(localStorage.getItem('productFilter') || '[]');
-
   // Filter Modal
   if (filterBtn && filterModal && filterModalOptions) {
-  filterBtn.addEventListener('click', function () {
+  filterBtn.addEventListener('click', async function () {
+    // Fetch all products first
+    const res = await fetch('index.php?view=allProducts', { headers: {'X-Requested-With':'XMLHttpRequest'} });
+    const data = await res.json();
+
     // Get unique categories
-    const categories = [...new Set(getStoredProducts().map(p => p.category).filter(Boolean))];
+    const categories = [...new Set(data.products.map(p => p.category).filter(Boolean))];
 
     // Clear modal content first
     filterModalOptions.innerHTML = '';
@@ -366,7 +371,11 @@ document.addEventListener('DOMContentLoaded', function() {
         filterModalOptions.innerHTML = '<em style="color:#aaa;">No categories found</em>';
     }
 
-    // Add Clear Filter button dynamically
+    // Clear old action button first
+    const oldActions = filterModalOptions.querySelector('.filter-actions');
+    if(oldActions) oldActions.remove();
+
+    // Add Clear/Apply Filter button dynamically
     const actions = document.createElement('div');
     actions.className = 'filter-actions';
     actions.innerHTML = `
@@ -377,25 +386,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
     filterModal.classList.add('show');
 
-    // Handlers
-    document.getElementById('apply-filter').onclick = () => {
-      const checkedBoxes = [...filterModalOptions.querySelectorAll('input[type="checkbox"]:checked')];
-      filterArr = checkedBoxes.map(cb => cb.value);
-      localStorage.setItem('productFilter', JSON.stringify(filterArr));
-      currentPage = 1;
-      renderProducts(currentPage, filterArr);
-      filterModal.classList.remove('show');
-      if(searchbar) searchbar.value = '';
-    }
+    // Attach Handlers
+    const clearBtn = actions.querySelector('#clear-filter');
+    const applyBtn = actions.querySelector('#apply-filter');
 
-    document.getElementById('clear-filter').onclick = () => {
-      filterArr = [];
-      localStorage.removeItem('productFilter');
-      currentPage = 1;
-      renderProducts(currentPage, filterArr);
-      filterModal.classList.remove('show');
-      if(searchbar) searchbar.value = '';
-    }
+    applyBtn.onclick = () => {
+        const checkedBoxes = [...filterModalOptions.querySelectorAll('input[type="checkbox"]:checked')];
+        filterArr = checkedBoxes.map(cb => cb.value);
+        localStorage.setItem('productFilter', JSON.stringify(filterArr));
+        currentPage = 1;
+        renderProducts(currentPage, filterArr);
+        filterModal.classList.remove('show');
+        if(searchbar) searchbar.value = '';
+    };
+
+    clearBtn.onclick = () => {
+        filterArr = [];
+        localStorage.removeItem('productFilter');
+        currentPage = 1;
+        localStorage.removeItem('inventoryCurrentPage');
+
+        renderProducts(currentPage, filterArr);
+        filterModal.classList.remove('show');
+        if(searchbar) searchbar.value = '';
+    };
   });
 }
 
@@ -421,7 +435,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function formatQuantity(qty, unit){
-    return `${qty} ${unit}`;
+    return `${qty} ${unit || ''}`;
   }
 
   function formatPrice(price){
@@ -434,36 +448,30 @@ document.addEventListener('DOMContentLoaded', function() {
     if(nextBtn) nextBtn.disabled = currentPage >= totalPages;
   }
 
-  // Main Render Function
-  function renderProducts(page = 1, filter = '') {
-    const all = getStoredProducts();
-    let filtered = all;
+  // Main Render Function using backend pagination
+  async function renderProducts(page = 1, filter = []) {
+    try{
+        // Build API URL with pagination and optional filters
+        let url = `index.php?view=paginated&page=${page}&limit=${productsPerPage}`;
+        if(filterArr.length > 0){
+            url += `&categories=${encodeURIComponent(JSON.stringify(filterArr))}`;
+        }
+
+        console.log("Fetching page:", page, "limit:", productsPerPage);
+
+        const res = await fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await res.json();
+
+        const tbody = document.getElementById('productTableBody');
+        if(!tbody) return;
     
-    if(Array.isArray(filter) && filter.length > 0){
-        // Category filter
-        filtered = all.filter(p => p.category && filter.includes(p.category));
-    }
-
-    const total = filtered.length;
-    const totalPages = Math.max(1, Math.ceil(total / productsPerPage));
-
-    if (page > totalPages) page = totalPages;
-    // Update page indicator
-    if(pageIndicator){
-      pageIndicator.textContent = `Page ${page} of ${totalPages}`;
-    }
-
-    // Enable/disable Prev/Next buttons
-    updatePaginationButtons(totalPages);
-
-    const start = (page - 1) * productsPerPage, end = start + productsPerPage;
-    const sub = filtered.slice(start, end);
-    const tbody = document.getElementById('productTableBody');
-    if (tbody) {
-      tbody.innerHTML =
-            sub.length === 0
-                ? '<tr class="no-products"><td colspan="8">No products yet.</td></tr>'
-                : sub.map(p => `
+    // Render rows
+    if (data.products.length === 0) {
+        tbody.innerHTML = '<tr class="no-products"><td colspan="8">No products yet.</td></tr>'
+    } else{
+            tbody.innerHTML = data.products.map((p) => `
                 <tr>
                     <td>${p.productName}</td>
                     <td>${formatProductId(p.productID)}</td>
@@ -485,51 +493,69 @@ document.addEventListener('DOMContentLoaded', function() {
                     </button>
                     </td>
                 </tr>
-                `).join('')
-      // Edit/Delete Buttons
-      tbody.querySelectorAll('.action-btn.delete').forEach((btn, idx) => {
-          btn.onclick = function(){
-        //   const prodIndex = (currentPage-1)*productsPerPage + idx;
-          const productID = this.dataset.pid;
-
-          fetch('index.php?view=deleteProduct', {
-              method: 'POST',
-              body: new URLSearchParams({ productID }),
-              headers: { 'X-Requested-With': 'XMLHttpRequest' }
-          })
-          .then(res => res.json())
-          .then(json => {
-              if(json.success){
-                  const all = getStoredProducts().filter(p => p.productID !== productID);
-                //   all.splice(prodIndex, 1);
-                  setStoredProducts(all);
-                  renderProducts(currentPage, filterArr);
-              } else alert(json.message);
-          });
+            `).join('');
         }
-      });
-      tbody.querySelectorAll('.action-btn.edit').forEach((btn, idx) => {
+
+                // Update pagination indicators
+                const totalPages = data.totalPages || 1;
+                if(pageIndicator) pageIndicator.textContent = `Page ${page} of ${totalPages}`;
+                updatePaginationButtons(totalPages);
+
+                // Attach Edit/Delete events
+                attachEditDeleteButtons(data.products);
+
+                // Update stats if backend returned them
+                if(data.stats) updateStats(data.stats);
+
+                if(data.stats) refreshStats(data.stats);
+        } catch(err){
+            console.error("Error fetching paginated products:", err);
+        }
+    }
+
+    // Attach edit/delete events after rendering rows
+    function attachEditDeleteButtons(products = []){
+        const tbody = document.getElementById('productTableBody');
+        if(!tbody) return;
+
+      // Edit/Delete Buttons
+      tbody.querySelectorAll('.action-btn.delete').forEach(btn => {
+          btn.onclick = async function(){
+          const productID = this.dataset.pid;
+                  
+        // Delete via backend
+        try{
+            const res = await fetch('index.php?view=deleteProduct', {
+                method: 'POST',
+                body: new URLSearchParams({ productID }),
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const json = await res.json();
+            if(json.success){
+                renderProducts(currentPage, filterArr); // refresh page
+                updateOverallStats();
+            } else{
+                alert(json.message);
+            }
+        } catch(err){
+            console.error(err);
+        }
+        };
+    });
+
+      tbody.querySelectorAll('.action-btn.edit').forEach(btn => {
         btn.onclick = function() {
             const productID = this.dataset.pid;
-            const all = getStoredProducts();
-            // const prodIndex = (currentPage - 1) * productsPerPage + idx;
-            const prod = all.find(p => p.productID === productID);
-            editingIndex = all.findIndex(p => p.productID === productID);
+            const prod = products.find(p => p && p.productID === productID);
+            if(!prod) return;
+
+            editingIndex = productID;
 
             // Change button text to Update
             document.getElementById("submitBtn").textContent = "Update Product";
 
-            // Store the index so the form knows it's editing
-            // editingIndex = prodIndex;
-
             // Open the form Popup
             openProductForm();
-
-            if(prod.image){
-              setImagePreview(`public/images/uploads/${prod.image}`);
-            } else{
-              setImagePreview(null);
-            }
 
             // Pre-fill each field
             document.getElementById('productName').value = prod.productName;
@@ -539,21 +565,85 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('expiryDate').value = prod.expiryDate;
             document.getElementById('category').value = prod.category;
             document.getElementById('unit').value = prod.unit;
-            };
+            if(prod.image){
+                setImagePreview(`public/images/uploads/${prod.image}`);
+                document.getElementById('existingImage').value = prod.image; // store old image
+            } else{
+                setImagePreview(null);
+                document.getElementById('existingImage').value = '';
+            } 
+        };
       });
     }
-    setPagination(total, page);
-  }
 
-  function setPagination(total, page) {
-      const totalPages = Math.max(1, Math.ceil(total / productsPerPage));
-      if(pageIndicator)
-        pageIndicator.textContent = `Page ${page} of ${totalPages}`;
+  // Refresh stats when their are changes
+  async function updateOverallStats(){
+    try{
+        const res = await fetch('index.php?view=fetchStats', {
+            headers: { 'X-Requested_with': 'XMLHttpRequest' }
+        });
+        const stats = await res.json();
+        if(!Array.isArray(stats)) return;
 
-      if(prevBtn) prevBtn.disabled = page === 1;
-      if(nextBtn) nextBtn.disabled = page === totalPages;
+            // Loop through stats array from backend
+            stats.forEach(stat => {
+                switch(stat.label){
+                    case "Total Products":
+                        const totalEl = document.querySelector("#total-products");
+                        const revenueEl = document.querySelector("#total-products-revenue");
+                        if(totalEl) totalEl.innerText = stat.value;
+                        if(totalEl) revenueEl.innerText = stat.extra;
+                        break;
+
+                    case "Low Stocks":
+                        const lowEl = document.querySelector("#low-stock");
+                        if(lowEl) lowEl.innerText = stat.value;
+                        break;
+
+                    case "Top Selling":
+                        const topQtyEl = document.querySelector("#top-selling-qty");
+                        const topCostEl = document.querySelector("#top-selling-cost");
+                        if(topQtyEl) topQtyEl.innerText = stat.value;
+                        if(topCostEl) topCostEl.innerText = stat.extra;
+                        break;
+
+                    case "Categories":
+                        const catEl = document.querySelector("#total-categories");
+                        if(catEl) catEl.innerText = stat.value;
+                        break;
+
+                    default:
+                        break;
+                }
+            });
+        } catch(err){
+            console.error("Error fetching overall stats:", err);
+        }
+    }
+
+  // PAGINATION
+  // Previous button
+  if(prevBtn) prevBtn.onclick = () => {
+    if(currentPage > 1){
+        currentPage--;
+        localStorage.setItem('inventoryCurrentPage', currentPage);
+        renderProducts(currentPage, filterArr);
+    }
+  };
+
+  // Next Button
+  if (nextBtn){
+    nextBtn.onclick = () => {
+        currentPage++;
+        localStorage.setItem('inventoryCurrentPage', currentPage);
+        renderProducts(currentPage, filterArr);
+    };
   }
 
   // Startup render
   renderProducts(currentPage, filterArr);
+  updateOverallStats();
+
+  // Auto-refresh overall stats every 5 seconds
+  setInterval(updateOverallStats, 5000);
 });
