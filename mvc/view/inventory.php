@@ -37,7 +37,7 @@
                     <!-- Low Stocks -->
                     <?php if ($stat['label'] === 'Low Stocks'): ?>
                         <div class="inventory-lowstocks-flex">
-                            <div>
+                            <div class="inventory-main-value-wrapper">
                                 <div class="inventory-main-value" id="low-stock"><?= htmlspecialchars($stat['value']) ?></div>
                                 <div class="inventory-main-footer"><?= htmlspecialchars($stat['footer']) ?></div>
                             </div>
@@ -46,12 +46,12 @@
                     <!-- Products -->
                     <?php elseif ($stat['label'] === 'Total Products'): ?>
                         <div class="inventory-paired-flex">
-                            <div>
+                            <div class="inventory-main-value-wrapper">
                                 <div class="inventory-main-value" id="total-products"><?= htmlspecialchars($stat['value']) ?></div>
                                 <div class="inventory-main-footer"><?= htmlspecialchars($stat['footer']) ?></div>
                             </div>
-                            <div>
-                                <div class="inventory-main-value" id="total-products-revenue" data-full="<?= htmlspecialchars($stat['extra']) ?>"><?= htmlspecialchars($stat['extra']) ?></div>
+                            <div class="inventory-main-value-wrapper">
+                                <div class="inventory-main-value tooltip-value" id="total-products-revenue" data-full="<?= htmlspecialchars($stat['extra']) ?>"><?= htmlspecialchars($stat['extra']) ?></div>
                                 <div class="inventory-main-footer">
                                     <?= $stat['label'] === 'Total Products' ? 'Revenue' : 'Cost'; ?>
                                 </div>
@@ -61,12 +61,12 @@
                     <!-- Top Selling Column -->
                     <?php elseif ($stat['label'] === 'Top Selling'): ?>
                         <div class="inventory-paired-flex">
-                            <div>
+                            <div class="inventory-main-value-wrapper">
                                 <div class="inventory-main-value" id="top-selling-qty"><?= htmlspecialchars($stat['value']) ?></div>
                                 <div class="inventory-main-footer"><?= htmlspecialchars($stat['footer']) ?></div>
                             </div>
-                            <div>
-                                <div class="inventory-main-value" id="top-selling-cost" data-full="<?= htmlspecialchars($stat['extra']) ?>"><?= htmlspecialchars($stat['extra']) ?></div>
+                            <div class="inventory-main-value-wrapper">
+                                <div class="inventory-main-value tooltip-value" id="top-selling-cost" data-full="<?= htmlspecialchars($stat['extra']) ?>"><?= htmlspecialchars($stat['extra']) ?></div>
                                 <div class="inventory-main-footer">
                                     <?= $stat['label'] === 'Total Products' ? 'Revenue' : 'Cost'; ?>
                                 </div>

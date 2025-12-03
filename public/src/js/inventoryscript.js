@@ -86,6 +86,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const card = document.createElement('div');
       card.className = 'product-card';
 
+      const imageSrc = prod.image ? `public/images/uploads/${prod.image}` : 'public/images/default.png';
+
       card.innerHTML = `
         <div class="product-card">
           <div class="overview-header">
@@ -327,6 +329,75 @@ document.addEventListener('DOMContentLoaded', function() {
       renderAllProductsAsCards();
     });
   }
+
+if(searchbar){
+    let searchTimeout;
+    searchbar.addEventListener('input', function() {
+        const query = this.value.trim();
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(async () => {
+
+            // If empty, restore normal paginated view
+            if(!query){
+                productContainer.style.display = 'none';
+                if(inventorySection) inventorySection.style.display = '';
+                if(productsSection) productsSection.style.display = '';
+                if(backBtn) backBtn.style.display = 'none';
+                renderProducts(currentPage, filterArr);
+                return;
+            }
+
+            try {
+                const res = await fetch(`index.php?view=searchProducts&q=${encodeURIComponent(query)}`, {
+                    headers: { 'X-Requested-With':'XMLHttpRequest' }
+                });
+                const data = await res.json();
+
+                if(!productContainer) return;
+
+                // Show search container
+                productContainer.style.display = 'flex';
+                if(inventorySection) inventorySection.style.display = 'none';
+                if(productsSection) productsSection.style.display = 'none';
+                if(backBtn) backBtn.style.display = 'inline-block';
+
+                // Render search results
+                productContainer.innerHTML = '';
+                if(data.products.length === 0){
+                    productContainer.innerHTML = '<p style="color:#888;">No products found.</p>';
+                    return;
+                }
+
+                data.products.forEach(prod => {
+                    const card = document.createElement('div');
+                    card.className = 'product-card';
+                    const imageSrc = prod.image ? `public/images/uploads/${prod.image}` : 'public/images/default.png';
+                    card.innerHTML = `
+                        <div class="product-card">
+                          <div class="overview-header"><h3>${prod.productName}</h3></div>
+                          <div class="overview-tabs"><span>Overview</span></div>
+                          <div class="overview-content">
+                            <div class="product-info">
+                              <h4>Product Details</h4>
+                              <div class="details-row"><label>Product Name</label><span>${prod.productName}</span></div>
+                              <div class="details-row"><label>Product ID</label><span>${formatProductId(prod.productID)}</span></div>
+                              <div class="details-row"><label>Category</label><span>${prod.category}</span></div>
+                              <div class="details-row"><label>Expiry Date</label><span>${prod.expiryDate}</span></div>
+                            </div>
+                            <div class="product-img-box"><img src="${imageSrc}" alt="${prod.productName}" class="product-img"/></div>
+                          </div>
+                        </div>
+                    `;
+                    productContainer.appendChild(card);
+                });
+
+            } catch(err){
+                console.error("Search error:", err);
+            }
+
+        }, 300); // debounce
+    });
+}
 
   // On page load, check See All
   const seeAllFlag = localStorage.getItem('seeAll');

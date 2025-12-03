@@ -41,7 +41,7 @@
 
 
     // Handle inventory routing only if logged in
-    if($isLoggedIn && in_array($view, ['inventory', 'createProduct', 'updateProduct', 'deleteProduct', 'fetchStats', 'paginated', 'allProducts'])){
+    if($isLoggedIn && in_array($view, ['inventory', 'createProduct', 'updateProduct', 'deleteProduct', 'fetchStats', 'paginated', 'allProducts', 'searchProducts'])){
 
         $controller = new ProductController();
 
@@ -77,6 +77,10 @@
 
             case "allProducts":
                 $controller->allProducts();
+                exit;
+
+            case "searchProducts":
+                $controller->search();
                 exit;
         }
     } else{

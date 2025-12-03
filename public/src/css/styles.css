@@ -111,4 +111,132 @@ main{
     color: black;
 }
 
+
+/* FIX ASAP */
 /* For responsiveness of the whole page */
+@media(min-width: 1200px){
+    main{
+        margin-left: 240px;
+    }
+
+    .searchbar{
+        width: 400px;
+    }
+}
+
+@media(min-width: 992px) and (max-width: 1199px){
+    main{
+        margin-left: 200px;
+    }
+
+    .searchbar{
+        width: 350px;
+    }
+
+    .products-table th, .products-table td{
+        font-size: 0.95rem;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    main {
+        margin-left: 0;
+        padding: 20px;
+    }
+
+    .sidebar {
+        width: 200px;
+    }
+
+    .searchbar {
+        width: 80%;
+    }
+
+    .products-table th, .products-table td {
+        font-size: 0.9rem;
+    }
+}
+
+@media (min-width: 576px) and (max-width: 767px) {
+    .header, .topbar, main {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    main {
+        margin-left: 0;
+    }
+
+    .searchbar {
+        width: 90%;
+    }
+
+    .account-container, .overall-inventory-container, .products {
+        padding: 18px;
+    }
+
+    .products-table th, .products-table td {
+        font-size: 0.85rem;
+        padding: 0.6rem 0.6rem;
+    }
+}
+
+@media (max-width: 575px) {
+    .header, .topbar, main {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+    }
+
+    main {
+        margin-left: 0;
+        padding: 16px 16px 0 16px;
+    }
+
+    .searchbar {
+        width: 100%;
+        padding-left: 35px;
+        height: 36px;
+    }
+
+    .products-table th, .products-table td {
+        font-size: 0.8rem;
+        padding: 0.5rem 0.5rem;
+    }
+
+    .account-container, .overall-inventory-container, .products {
+        padding: 16px;
+        margin-top: 60px;
+    }
+
+    .login-image, .login-form-holder {
+        width: 100%;
+    }
+
+    .login-image img {
+        display: none; /* hide for small screens */
+    }
+
+    .back-btn {
+        display: block;
+    }
+
+    .product-card, .product-overview-container {
+        flex-direction: column;
+    }
+
+    .overview-content, .details-row {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .product-img-box {
+        width: 100%;
+        height: auto;
+    }
+}

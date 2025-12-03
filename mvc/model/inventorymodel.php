@@ -223,6 +223,21 @@ class ProductModel{
         return true;
     }
 
+    // Search Product
+    public function searchProducts($q){
+        $sql = "SELECT * FROM inventory WHERE product_name LIKE ? OR category LIKE ? ORDER BY id DESC";
+        $stmt = $this->conn->prepare($sql);
+
+        if(!$stmt){
+            die("Prepare failed: (" . $this->conn->errno . ") " . $this->conn->error);
+        }
+
+        $stmt->bind_param("ss", $searchTerm, $searchTerm);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
+
     // Delete product
     public function deleteProduct($product_id){
         $stmt = $this->config->prepare("DELETE FROM inventory WHERE productID = ?");

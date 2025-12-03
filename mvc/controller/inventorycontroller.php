@@ -58,7 +58,7 @@ class ProductController{
         header('Content-Type: application/json'); // Always JSON
         try{
         // Handle image upload
-        $imagePath = $this->handleImageUpload($_FILES['image'] ?? null);
+        $imagePath = $this->handleImageUpload($_FILES['productImage'] ?? null);
 
         $expiryDate = $this->normalizeExpiryDate($_POST['expiryDate'] ?? null);
 
@@ -90,10 +90,10 @@ class ProductController{
     public function update(){
         header('Content-Type: application/json');
         try {
-            $imagePath = $_POST['image'] ?? ''; // Existing image path
+            $imagePath = $_POST['existingImage'] ?? ''; // Existing image path
 
-            if(isset($_FILES['image']) && $_FILES['image']['error'] === 0){
-                $imagePath = $this->handleImageUpload($_FILES['image']);
+            if(isset($_FILES['productImage']) && $_FILES['productImage']['error'] === 0){
+                $imagePath = $this->handleImageUpload($_FILES['productImage']);
             }
 
             $expiryDate = $this->normalizeExpiryDate($_POST['expiryDate'] ?? null);
@@ -119,6 +119,36 @@ class ProductController{
             echo json_encode(["success" => false, "message" => $e->getMessage()]);
         }
         exit();
+    }
+
+    // Search product/s
+    public function search() {
+        if(!isset($_GET['q'])) {
+            echo json_encode(['products'=>[]]);
+            exit;
+        }
+
+        $query = trim($_GET['q']);
+        $stmt = $this->inventory_model->searchProducts($query); // create this in ProductModel
+        $products = [];
+        if($stmt){
+            $result = $stmt->get_result();
+            while($row = $result->fetch_assoc()){
+                $products[] = [
+                    'productID' => $row['productID'],
+                    'productName' => $row['product_name'],
+                    'category' => $row['category'],
+                    'expiryDate' => $row['expiry_date'],
+                    'image' => $row['image'] ?? '',
+                    'quantity' => $row['stock'],
+                    'unit' => $row['unit'],
+                    'price' => $row['price']
+                ];
+            }
+        }
+
+        echo json_encode(['products'=>$products]);
+        exit;
     }
 
     // Delete a product
