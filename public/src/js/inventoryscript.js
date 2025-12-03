@@ -56,6 +56,18 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  // Normalize image path so that it will not duplicate
+  function normalizeImagePath(img){
+    if(!img) return 'public/images/default.png';
+
+    // If path already contains uploads/, do NOT add folder
+    if(img.includes('uploads/')){
+        return img;
+    }
+
+    return `public/images/uploads/${img}`;
+  }
+
   // Render function to see all products
   async function renderAllProductsAsCards(){
     if(!productContainer) return;
@@ -86,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const card = document.createElement('div');
       card.className = 'product-card';
 
-      const imageSrc = prod.image ? `public/images/uploads/${prod.image}` : 'public/images/default.png';
+      const imageSrc = normalizeImagePath(prod.image);
 
       card.innerHTML = `
         <div class="product-card">
@@ -276,6 +288,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         const json = await res.json();
         if(json.success){
+            currentPage = 1; // reset to first page
+            localStorage.setItem('inventoryCurrentPage', currentPage);
             renderProducts(currentPage, filterArr);
             updateOverallStats();
             closeModal();
@@ -327,75 +341,6 @@ document.addEventListener('DOMContentLoaded', function() {
       localStorage.removeItem('inventoryCurrentPage');
 
       renderAllProductsAsCards();
-    });
-  }
-
-if(searchbar){
-    let searchTimeout;
-    searchbar.addEventListener('input', function() {
-        const query = this.value.trim();
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(async () => {
-
-            // If empty, restore normal paginated view
-            if(!query){
-                productContainer.style.display = 'none';
-                if(inventorySection) inventorySection.style.display = '';
-                if(productsSection) productsSection.style.display = '';
-                if(backBtn) backBtn.style.display = 'none';
-                renderProducts(currentPage, filterArr);
-                return;
-            }
-
-            try {
-                const res = await fetch(`index.php?view=searchProducts&q=${encodeURIComponent(query)}`, {
-                    headers: { 'X-Requested-With':'XMLHttpRequest' }
-                });
-                const data = await res.json();
-
-                if(!productContainer) return;
-
-                // Show search container
-                productContainer.style.display = 'flex';
-                if(inventorySection) inventorySection.style.display = 'none';
-                if(productsSection) productsSection.style.display = 'none';
-                if(backBtn) backBtn.style.display = 'inline-block';
-
-                // Render search results
-                productContainer.innerHTML = '';
-                if(data.products.length === 0){
-                    productContainer.innerHTML = '<p style="color:#888;">No products found.</p>';
-                    return;
-                }
-
-                data.products.forEach(prod => {
-                    const card = document.createElement('div');
-                    card.className = 'product-card';
-                    const imageSrc = prod.image ? `public/images/uploads/${prod.image}` : 'public/images/default.png';
-                    card.innerHTML = `
-                        <div class="product-card">
-                          <div class="overview-header"><h3>${prod.productName}</h3></div>
-                          <div class="overview-tabs"><span>Overview</span></div>
-                          <div class="overview-content">
-                            <div class="product-info">
-                              <h4>Product Details</h4>
-                              <div class="details-row"><label>Product Name</label><span>${prod.productName}</span></div>
-                              <div class="details-row"><label>Product ID</label><span>${formatProductId(prod.productID)}</span></div>
-                              <div class="details-row"><label>Category</label><span>${prod.category}</span></div>
-                              <div class="details-row"><label>Expiry Date</label><span>${prod.expiryDate}</span></div>
-                            </div>
-                            <div class="product-img-box"><img src="${imageSrc}" alt="${prod.productName}" class="product-img"/></div>
-                          </div>
-                        </div>
-                    `;
-                    productContainer.appendChild(card);
-                });
-
-            } catch(err){
-                console.error("Search error:", err);
-            }
-
-        }, 300); // debounce
     });
 }
 
@@ -466,6 +411,7 @@ if(searchbar){
         filterArr = checkedBoxes.map(cb => cb.value);
         localStorage.setItem('productFilter', JSON.stringify(filterArr));
         currentPage = 1;
+        localStorage.setItem('inventoryCurrentPage', currentPage);
         renderProducts(currentPage, filterArr);
         filterModal.classList.remove('show');
         if(searchbar) searchbar.value = '';
@@ -537,6 +483,8 @@ if(searchbar){
 
         const tbody = document.getElementById('productTableBody');
         if(!tbody) return;
+
+        tbody.innerHTML = ''; // clear old rows
     
     // Render rows
     if (data.products.length === 0) {
@@ -603,6 +551,8 @@ if(searchbar){
             });
             const json = await res.json();
             if(json.success){
+                currentPage = 1; // reset to first page
+                localStorage.setItem('inventoryCurrentPage', currentPage);
                 renderProducts(currentPage, filterArr); // refresh page
                 updateOverallStats();
             } else{
@@ -651,7 +601,7 @@ if(searchbar){
   async function updateOverallStats(){
     try{
         const res = await fetch('index.php?view=fetchStats', {
-            headers: { 'X-Requested_with': 'XMLHttpRequest' }
+            headers: { 'X-Requested_With': 'XMLHttpRequest' }
         });
         const stats = await res.json();
         if(!Array.isArray(stats)) return;
@@ -663,7 +613,10 @@ if(searchbar){
                         const totalEl = document.querySelector("#total-products");
                         const revenueEl = document.querySelector("#total-products-revenue");
                         if(totalEl) totalEl.innerText = stat.value;
-                        if(totalEl) revenueEl.innerText = stat.extra;
+                        if(revenueEl){
+                            revenueEl.innerText = stat.extra;
+                            revenueEl.setAttribute('data-full', stat.extra); // Update tooltip
+                        }
                         break;
 
                     case "Low Stocks":
@@ -675,7 +628,10 @@ if(searchbar){
                         const topQtyEl = document.querySelector("#top-selling-qty");
                         const topCostEl = document.querySelector("#top-selling-cost");
                         if(topQtyEl) topQtyEl.innerText = stat.value;
-                        if(topCostEl) topCostEl.innerText = stat.extra;
+                        if(topCostEl){
+                            topCostEl.innerText = stat.extra;
+                            topCostEl.setAttribute('data-full', stat.extra); // Update tooltip
+                        }
                         break;
 
                     case "Categories":

@@ -123,32 +123,18 @@ class ProductController{
 
     // Search product/s
     public function search() {
+        header('Content-Type: application/json');
+
         if(!isset($_GET['q'])) {
             echo json_encode(['products'=>[]]);
             exit;
         }
 
         $query = trim($_GET['q']);
-        $stmt = $this->inventory_model->searchProducts($query); // create this in ProductModel
-        $products = [];
-        if($stmt){
-            $result = $stmt->get_result();
-            while($row = $result->fetch_assoc()){
-                $products[] = [
-                    'productID' => $row['productID'],
-                    'productName' => $row['product_name'],
-                    'category' => $row['category'],
-                    'expiryDate' => $row['expiry_date'],
-                    'image' => $row['image'] ?? '',
-                    'quantity' => $row['stock'],
-                    'unit' => $row['unit'],
-                    'price' => $row['price']
-                ];
-            }
-        }
+        $products = $this->inventory_model->searchProducts($query);
 
-        echo json_encode(['products'=>$products]);
-        exit;
+        echo json_encode(['products' => $products]);
+        exit();
     }
 
     // Delete a product
@@ -193,7 +179,7 @@ class ProductController{
         $targetFile = $uploadDir . $filename;
 
         if(move_uploaded_file($file['tmp_name'], $targetFile)) {
-            return '/public/images/uploads/' . $filename;
+            return $filename;
         }
         return '';
     }

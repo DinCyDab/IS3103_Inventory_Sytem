@@ -131,40 +131,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Search Products
   if (searchbar) {
-    searchbar.addEventListener('keydown', function(e) {
+    searchbar.addEventListener('keydown', async function(e) {
+      if (e.key !== 'Enter') return;
 
-      if (e.key === 'Enter') {
-        const query = this.value.toLowerCase().trim();
-        localStorage.setItem('lastSearch', query); // Store last search
+      const query = this.value.toLowerCase().trim();
+      localStorage.setItem('lastSearch', query); // Store last search
 
-        const backBtn = document.getElementById('backBtn');
-        const inventorySection = document.querySelector('.overall-inventory-container');
-        const productsSection = document.querySelector('.products');
+      // Show back button and hide default inventory
+      if(backBtn) backBtn.style.display = 'inline-block';
+      if(inventorySection) inventorySection.style.display = 'none';
+      if(productsSection) productsSection.style.display = 'none';
+      productContainer.style.display = 'flex';
 
-        if(query){
-          // Hide default inventory view
-          if(backBtn) backBtn.style.display = 'inline-block';
-          if(inventorySection) inventorySection.style.display = 'none';
-          if(productsSection) productsSection.style.display = 'none';
+      try {
+        // Fetch fresh products from backend
+        const res = await fetch('index.php?view=allProducts', {
+          headers: { 'X-Requested-With':'XMLHttpRequest' }
+        });
+        const data = await res.json();
+        const allProducts = data.products || [];
 
-          // Show product overview
-          productContainer.style.display = 'flex';
+        // Filter on the frontend if query exists
+        const filteredProducts = query
+          ? allProducts.filter(prod =>
+              (prod.productName && prod.productName.toLowerCase().includes(query)) ||
+              (prod.productID && prod.productID.toLowerCase().includes(query)) ||
+              (prod.category && prod.category.toLowerCase().includes(query))
+            )
+          : allProducts;
 
-          // Filter products
-          const filteredProducts = products.filter(prod =>
-            (prod.productName && prod.productName.toLowerCase().includes(query)) ||
-            (prod.productID && prod.productID.toLowerCase().includes(query)) ||
-            (prod.category && prod.category.toLowerCase().includes(query))
-          );
-          renderProductOverview(filteredProducts);
-        } else{
-          // Show default inventory view
-          if(backBtn) backBtn.style.display = 'none';
-          if(inventorySection) inventorySection.style.display = '';
-          if(productsSection) productsSection.style.display = '';
-          productContainer.style.display = 'none';
-        }
-        location.reload();
+        renderProductOverview(filteredProducts);
+
+      } catch(err) {
+        console.error("Search error:", err);
+        productContainer.innerHTML = '<p style="color:#888;">Failed to fetch products.</p>';
       }
     });
   }
