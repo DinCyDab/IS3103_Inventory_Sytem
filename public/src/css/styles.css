@@ -1,0 +1,114 @@
+/* Naviagtion */
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body{
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f6f6fa;
+    color: #292742;
+    min-height: 100vh;
+}
+
+a{
+    text-decoration: none;
+    color: inherit;
+}
+
+.header{
+    width: 100%;
+    height: 85px;
+    background-color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    position: fixed;
+    top: 0;
+    left: 243px;
+    z-index: 1000;
+}
+
+/* Sidebar */
+.sidebar{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 240px;
+    height: 100vh;
+    background-color: #fff;
+    box-shadow: 2px 0 14px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    padding: 38px 0 22px 0;
+    z-index: 1000;
+}
+
+.sidebar a{
+    color: #656488;
+    text-decoration: none;
+    padding: 12px 38px 12px 38px;
+    border-radius: 7px;
+    margin-bottom: 6px;
+    transition: background 0.2s, color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 1.1em;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+}
+
+.sidebar a:hover, .sidebar a.active{
+    background: #eeeafd;
+    color: #6c5ce7;
+}
+
+/* Main Content */
+main{
+    margin-left: 240px;
+    padding: 32px 32px 0 32px;
+    min-height: 100vh;
+    background: none;
+}
+
+/* Top Bar */
+.topbar{
+    position: fixed;
+    top: 33px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-bottom: 50px;
+    background: white;
+    z-index: 9998;
+}
+
+.search-wrapper {
+    display: flex;
+    align-items: center;
+    margin-top: -10px;
+    z-index: 9999;
+}
+
+.search-wrapper i {
+    position: absolute;
+    left: 12px;
+    font-size: 18px;
+    color: #888;
+}
+
+.searchbar {
+    background: #f7f7fb;
+    padding-left: 40px;
+    height: 38px;
+    width: 400px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    outline: none;
+    color: black;
+}
+
+/* For responsiveness of the whole page */
