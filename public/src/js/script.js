@@ -364,12 +364,12 @@ document.addEventListener('DOMContentLoaded', function() {
   if (filterBtn && filterModal && filterModalOptions) {
     filterBtn.addEventListener('click', function () {
       // Populate options
-      const categories = [...new Set(getStoredProducts().map(p => p.category).filter(Boolean))];
-      filterModalOptions.innerHTML = categories.length
-        ? categories.map(cat =>
+      const category = [...new Set(getStoredProducts().map(p => p.category).filter(Boolean))];
+      filterModalOptions.innerHTML = category.length
+        ? category.map(cat =>
           `<button type="button" class="category-option">${cat}</button>`
         ).join('')
-        : '<em style="color:#aaa;">No categories found</em>';
+        : '<em style="color:#aaa;">No category found</em>';
       filterModal.classList.add('show');
 
       filterModalOptions.querySelectorAll('.category-option').forEach(btn => {
