@@ -35,3 +35,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 });
+
+function closeModal(){
+    var addAccountModal = document.getElementById("addAccountModal");
+
+    addAccountModal.style.display = "none";
+}
