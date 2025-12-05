@@ -22,6 +22,10 @@ function deleteAccount(account_ID, account_role, current_role){
         return;
     }
 
+    if(current_role == 'staff'){
+        return;
+    }
+
     delete_selected_ID.value = account_ID;
 
     var delete_form = document.getElementById("delete_form");
@@ -40,6 +44,11 @@ function editAccount(account_ID, first_name, last_name, email, contact_number, r
     if(role == 'super admin'){
         return;
     }
+
+    if(current_role == 'staff'){
+        return;
+    }
+
     
     edit_account_modal.style.display = "flex";
 
