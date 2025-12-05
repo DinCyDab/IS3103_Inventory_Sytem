@@ -74,7 +74,7 @@ main{
     background: none;
 }
 
-/* Top Bar */
+/* Top Bar ---- Search Bar */
 .topbar{
     position: fixed;
     top: 33px;
@@ -100,7 +100,8 @@ main{
     color: #888;
 }
 
-.searchbar {
+.searchbar,
+.searchbaraccounts {
     background: #f7f7fb;
     padding-left: 40px;
     height: 38px;
@@ -111,6 +112,90 @@ main{
     color: black;
 }
 
+/* Filter Button */
+.filter-btn{
+    background: #f7f7fb;
+    color: #666;
+    border: 1px solid #e0e1ed;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.filter-btn:hover{
+    background: #e9ecef;
+}
+
+/* Filter Icon CSS */
+.filter-btn svg{
+    vertical-align: middle;
+    margin-right: 4px;
+    width: 20px;
+    height: 20px;
+    fill: #6c5ce7;
+    transition: fill 0.2s;
+}
+
+.filter-btn:hover svg{
+    fill: #5941c6;
+}
+
+.filter-btn:disabled svg{
+    fill: #bbb;
+}
+
+/* Table Navigation */
+.table-nav{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    width: 100%;
+}
+
+.table-nav button{
+    display: flex;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s;
+    color: #666;
+}
+
+.table-nav span a{
+    color: #7e6ceb;
+    text-decoration: none;
+    margin-left: 8px;
+}
+
+.table-nav span a:hover{
+    text-decoration: underline;
+}
+
+.table-nav .page-indicator{
+    min-width: 110px;
+    text-align: center;
+}
+
+.table-nav .view-all{
+    color: #7e6ceb;
+    text-decoration: none;
+    font-size: 1rem;
+}
+
+.table-nav .view-all:hover{
+    text-decoration: underline;
+}
+
+.pages{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
 
 /* FIX ASAP */
 /* For responsiveness of the whole page */

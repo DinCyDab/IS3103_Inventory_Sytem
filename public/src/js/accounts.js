@@ -35,11 +35,11 @@ function editAccount(account_ID, first_name, last_name, email, contact_number, r
     
     edit_account_modal.style.display = "flex";
 
-    var first_name_holder = document.getElementById("first_name");
-    var last_name_holder = document.getElementById("last_name");
-    var email_holder = document.getElementById("email");
-    var contact_number_holder = document.getElementById("phone");
-    var account_ID_holder = document.getElementById("account_ID");
+    var first_name_holder = document.getElementById("edit_first_name");
+    var last_name_holder = document.getElementById("edit_last_name");
+    var email_holder = document.getElementById("edit_email");
+    var contact_number_holder = document.getElementById("edit_phone");
+    var account_ID_holder = document.getElementById("edit_account_ID");
     var edit_role = document.getElementById("edit_role");
     var edit_status = document.getElementById("edit_status");
 

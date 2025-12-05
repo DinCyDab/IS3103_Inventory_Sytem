@@ -106,7 +106,7 @@
                             <input 
                                 type="search"
                                 name="search"
-                                class="searchbar"
+                                class="searchbaraccounts"
                                 placeholder="Search by ID, name, email or number"
                                 value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>"
                             >
@@ -120,19 +120,19 @@
 
         public function accountsTab(){
             ?>
-                <div class="account-container">
-                    <div class="account-header">
+                <div class="accounts-container">
+                    <div class="accounts-header">
                         <div>
                             <h3>Accounts</h3>
                         </div>
-                        <div>
-                            <button class="account-btn" onclick="showAccountModal()">Add Account</button>
-                            <button class="filter-btn" onclick="openFilterModal()">Filter</button>
+                        <div class="button-accounts">
+                            <button class="accounts-btn" onclick="showAccountModal()">Add Account</button>
+                            <button class="filter-btn" onclick="openFilterModal()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(149, 145, 145, 1);transform: ;msFilter:;"><path d="M7 11h10v2H7zM4 7h16v2H4zm6 8h4v2h-4z"></path></svg>Filter</button>
                         </div>
                     </div>
 
-                    <div class="account-body">
-                        <table class="products-table">
+                    
+                        <table class="accounts-table">
                             <thead>
                                 <tr>
                                     <th>Account ID</th>
@@ -145,7 +145,7 @@
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="productTableBody">
+                            <tbody id="accountsTableBody">
                                 <?php 
                                     $list_of_accounts = $this->accounts;
 
@@ -226,7 +226,7 @@
                                 <button <?= $this->next_disabled ? 'disabled' : '' ?>>Next</button>
                             </a>
                         </div>
-                    </div>
+                    
                 </div>
             <?php
         }
@@ -242,7 +242,7 @@
                 <div id="addAccountModal" class="account-modal">
                     <div class="modal-content">
                         <h3 class="modal-title">New Account</h3>
-                        <form method="POST" id="addProductForm">
+                        <form method="POST" id="addProductsForm">
                             <div class="form-row">
                                 <label class="field-label">Account ID</label>
                                 <input type="text" name="account_ID" placeholder="Enter account ID" required="">
@@ -290,19 +290,19 @@
                 <div id="editAccountModal" class="account-modal">
                     <div class="modal-content">
                         <h3 class="modal-title">Edit Account</h3>
-                        <form method="POST" id="addProductForm">
-                            <input type="hidden" id="account_ID" name="account_ID">
+                        <form method="POST" id="addProductsForm">
+                            <input type="hidden" id="edit_account_ID" name="account_ID">
                             <div class="form-row">
                                 <label class="field-label">First Name</label>
-                                <input id="first_name" type="text" name="first_name" placeholder="Enter first name" required="">
+                                <input id="edit_first_name" type="text" name="first_name" placeholder="Enter first name" required="">
                             </div>
                             <div class="form-row">
                                 <label class="field-label">Last Name</label>
-                                <input id="last_name" type="text" name="last_name" placeholder="Enter last name" required="">
+                                <input id="edit_last_name" type="text" name="last_name" placeholder="Enter last name" required="">
                             </div>
                             <div class="form-row">
                                 <label class="field-label">Email</label>
-                                <input id="email" type="email" name="email" placeholder="Enter email" required="">
+                                <input id="edit_email" type="email" name="email" placeholder="Enter email" required="">
                             </div>
                             <small style="color: red; font-size: 10px;">Note: Leave the password field empty if you do not want to change the current password.</small>
                             <div class="form-row">
@@ -311,7 +311,7 @@
                             </div>
                             <div class="form-row">
                                 <label for="phone">Phone Number</label>
-                                <input id="phone" type="tel" id="phone" name="contact_number"
+                                <input id="edit_phone" type="tel" id="phone" name="contact_number"
                                     maxlength="13"
                                     placeholder="09xx xxx xxxx"
                                     pattern="[0-9]{4}\s[0-9]{3}\s[0-9]{4}"
