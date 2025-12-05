@@ -43,7 +43,7 @@
         private $conn;
         //Put these on (dot)env later
         public function __construct($port = 3306,
-                                    $hostname = "localhost", 
+                                    $hostname = "127.0.0.1", 
                                     $username = "root",
                                     $password = "",
                                     $database = "inventory_system"){
@@ -80,8 +80,6 @@
             return [];
         }
 
-<<<<<<< Updated upstream
-=======
         public function readOne($sql) {
              $result = $this->conn->query($sql);
             if ($result && $result->num_rows > 0) {
@@ -95,8 +93,6 @@
         public function prepare($sql){
             return $this->conn->prepare($sql);
         }
-
->>>>>>> Stashed changes
         //Don't forget to close the connection
         //close() function closes the connection
         public function close(){

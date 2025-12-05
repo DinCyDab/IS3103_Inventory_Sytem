@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
       localStorage.setItem('products', JSON.stringify(arr));
   }
 
-  let currentPage = 1, productsPerPage = 10, filterStr = '';
+  let currentPage = 1, productsPerPage = 5, filterStr = '';
 
   // Safe Selectors
   const searchbar = document.querySelector('.searchbar');
@@ -36,6 +36,9 @@ document.addEventListener('DOMContentLoaded', function() {
   // Back Button
   if(backBtn){
     backBtn.addEventListener('click', function(){
+
+      // Clear see all
+      localStorage.removeItem('seeAll');
       // Clear search storage
       localStorage.removeItem('lastSearch');
       if(searchbar) searchbar.value = '';
@@ -69,13 +72,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Show product overview
     productContainer.style.display = 'flex';
-
     if(backBtn) backBtn.style.display = 'inline-block';
 
     // Filter products
     const filteredProducts = products.filter(prod =>
-      (prod.name && prod.name.toLowerCase().includes(lastSearch)) ||
-      (prod.id && prod.id.toLowerCase().includes(lastSearch)) ||
+      (prod.productName && prod.productName.toLowerCase().includes(lastSearch)) ||
+      (prod.productID && prod.productID.toLowerCase().includes(lastSearch)) ||
       (prod.category && prod.category.toLowerCase().includes(lastSearch))
     );
     renderProductOverview(filteredProducts);
@@ -104,8 +106,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
           // Filter products
           const filteredProducts = products.filter(prod =>
-            (prod.name && prod.name.toLowerCase().includes(query)) ||
-            (prod.id && prod.id.toLowerCase().includes(query)) ||
+            (prod.productName && prod.productName.toLowerCase().includes(query)) ||
+            (prod.productID && prod.productID.toLowerCase().includes(query)) ||
             (prod.category && prod.category.toLowerCase().includes(query))
           );
           renderProductOverview(filteredProducts);
@@ -116,7 +118,98 @@ document.addEventListener('DOMContentLoaded', function() {
           if(productsSection) productsSection.style.display = '';
           productContainer.style.display = 'none';
         }
+        location.reload();
       }
+    });
+  }
+
+  // Render function to see all products
+  function renderAllProductsAsCards(){
+    const allProducts = getStoredProducts();
+    if(!productContainer) return;
+
+    // Hide default inventory sections
+    const inventorySection = document.querySelector('.overall-inventory-container');
+    const productsSection = document.querySelector('.products');
+    if(inventorySection) inventorySection.style.display = 'none';
+    if(productsSection) productsSection.style.display = 'none';
+
+    // Show overview container and back button
+    productContainer.style.display = 'flex';
+    if(backBtn) backBtn.style.display = 'inline-block';
+
+    // Clear and render all cards
+    productContainer.innerHTML = '';
+    if(allProducts.length === 0){
+      productContainer.innerHTML = '<p style="color:#888;">No products found.</p>';
+      return;
+    }
+
+    allProducts.forEach((prod, idx) => {
+      const card = document.createElement('div');
+      card.className = 'product-card';
+
+      card.innerHTML = `
+        <div class="product-card">
+          <div class="overview-header">
+            <h3>${prod.productName}</h3>
+            <div class="product-actions">
+              <button class="edit-btn"><i class='bx bx-pencil' ></i>Edit</button>
+              <button class="download-btn">Download</button>
+            </div>
+          </div>
+          <div class="overview-tabs">
+            <span>Overview</span>
+          </div>
+          <div class="overview-content">
+            <div class="product-info">
+              <h4>Product Details</h4>
+              <div class="details-row">
+                <label>Product Name</label> 
+                <span>${prod.productName}</span>
+              </div>
+              <div class="details-row">
+                <label>Product ID</label> 
+                <span>${formatProductId(prod.productID)}</span>
+              </div>
+              <div class="details-row">
+                <label>Product category</label> 
+                <span>${prod.category}</span>
+              </div>
+              <div class="details-row">
+                <label>Expiry Date</label> 
+                <span>${prod.expiryDate}</span>
+              </div>
+            </div>
+            <div class="product-img-box">
+              <img src="public/images/uploads/${prod.image}" alt="${prod.productName}" class="product-img"/>
+            </div>
+          </div>
+        </div>
+      `;
+      productContainer.appendChild(card);
+    });
+  }
+
+  // Back To Top Button
+  const backToTopBtn = document.getElementById('backToTopBtn');
+
+  if(backToTopBtn && productContainer){
+    // Show button when scrolling down
+    productContainer.addEventListener('scroll', () => {
+        if(productContainer.scrollTop > 10){ // Show after 200px
+            backToTopBtn.style.display = 'block';
+        } else{
+            backToTopBtn.style.display = 'none';
+        }
+    });
+
+    // Scroll to top when clicked
+    backToTopBtn.addEventListener('click', () => {
+        productContainer.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
     });
   }
 
@@ -137,51 +230,43 @@ document.addEventListener('DOMContentLoaded', function() {
       card.innerHTML = `
         <div class="product-card">
           <div class="overview-header">
-            <h3>${prod.name}</h3>
+            <h3>${prod.productName}</h3>
             <div class="product-actions">
               <button class="edit-btn"><i class='bx bx-pencil' ></i>Edit</button>
               <button class="download-btn">Download</button>
             </div>
           </div>
-
           <div class="overview-tabs">
             <span>Overview</span>
           </div>
-
           <div class="overview-content">
-
-          <div class="product-info">
-            <h4>Product Details</h4>
-
-            <div class="details-row">
-              <label>Product Name</label> 
-              <span>${prod.name}</span>
+            <div class="product-info">
+              <h4>Product Details</h4>
+              <div class="details-row">
+                <label>Product Name</label> 
+                <span>${prod.productName}</span>
+              </div>
+              <div class="details-row">
+                <label>Product ID</label> 
+                <span>${formatProductId(prod.productID)}</span>
+              </div>
+              <div class="details-row">
+                <label>Product category</label> 
+                <span>${prod.category}</span>
+              </div>
+              <div class="details-row">
+                <label>Expiry Date</label> 
+                <span>${prod.expiryDate}</span>
+              </div>
             </div>
-
-            <div class="details-row">
-              <label>Product ID</label> 
-              <span>${formatProductId(prod.id)}</span>
-            </div>
-
-            <div class="details-row">
-              <label>Product category</label> 
-              <span>${prod.category}</span>
-            </div>
-
-            <div class="details-row">
-              <label>Expiry Date</label> 
-              <span>${prod.expiry}</span>
-            </div>
-          </div>
-
             <div class="product-img-box">
-              <img src="${prod.image}" alt="${prod.name}" class="product-img"/>
+              <img src="public/images/uploads/${prod.image}" alt="${prod.productName}" class="product-img"/>
             </div>
           </div>
         </div>
-        `;
-        productContainer.appendChild(card);
-    })
+      `;
+      productContainer.appendChild(card);
+    });
   }
 
   function openProductForm() {
@@ -218,15 +303,20 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Image Preview
+  let uploadedFile = null;
+
   if(imageInput && imagePreview) {
     imageInput.addEventListener('change', function() {
-      const file = this.files[0];
-      if(file){
+      uploadedFile = this.files[0] || null;
+      if(uploadedFile){
           const reader = new FileReader();
           reader.onload = function(e) {
-              showImage(e.target.result);
+
+            showImage(e.target.result);
           };
-          reader.readAsDataURL(file);
+          reader.readAsDataURL(uploadedFile);
+      } else{
+          setImagePreview(null);
       }
     });
   }
@@ -257,52 +347,45 @@ document.addEventListener('DOMContentLoaded', function() {
       showImage(src);
     }
   }
-
+  
   // Add Product Form
-  if(addProductForm) {
-    addProductForm.addEventListener('submit', function(e){
-      e.preventDefault();
-      const fd = new FormData(this);
-      const product = {
-        name: fd.get('productName') || "",
-        id: fd.get('productID') || "",
-        quantity: fd.get('quantity') || "",
-        price: fd.get('buyingPrice') || "",
-        expiry: fd.get('expiryDate') || "",
-        category: fd.get('category') || "",
-        unit: fd.get('unit') || "",
-        image: ""
-      };
-      const imageFile = imageInput && imageInput.files[0];
-      if(imageFile){
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          product.image = e.target.result;
-          saveAndRender();
-        };
-        reader.readAsDataURL(imageFile);
-      } else {
-        saveAndRender();
-      }
-      function saveAndRender(){
-        const prods = getStoredProducts();
-        if(editingIndex !== null){
-          prods[editingIndex] = product; // update
-          editingIndex = null;
-          document.getElementById("submitBtn").textContent = "Add Product";
-        } else{
-          prods.unshift(product); // add new
-        }
-        setStoredProducts(prods);
-        renderProducts(currentPage, filterStr);
-        closeModal();
-        addProductForm.reset();
-        resetImagePreview();
-      }
-    });
-  }
+  addProductForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    const product = {
+        productID: addProductForm.productID.value.trim(),
+        productName: addProductForm.productName.value.trim(),
+        quantity: addProductForm.quantity.value.trim(),
+        unit: addProductForm.unit.value.trim(),
+        price: addProductForm.price.value.trim(),
+        expiryDate: addProductForm.expiryDate.value.trim(),
+        category: addProductForm.category.value.trim(),
+        image: uploadedFile ? uploadedFile.name : document.getElementById("previewImg").src
+    };
 
-  // Download All (CSV)
+    const url = editingIndex !== null ? 'index.php?view=updateProduct' : 'index.php?view=createProduct';
+    const fd = new FormData();
+    for(const k in product) fd.append(k, product[k]);
+    if(uploadedFile) fd.append('image', uploadedFile);
+
+    fetch(url, {
+        method: 'POST',
+        body: fd,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(res => res.json())
+    .then(json => {
+        if(json.success){
+            const prods = getStoredProducts();
+            if(editingIndex !== null) prods[editingIndex] = product;
+            else prods.unshift(product);
+            setStoredProducts(prods);
+            renderProducts(currentPage, filterStr);
+            closeModal();
+        } else alert(json.message);
+    });
+});
+
+  // Download All CSV
   if (downloadBtn) {
     downloadBtn.addEventListener('click', function() {
       const prods = getStoredProducts();
@@ -311,7 +394,7 @@ document.addEventListener('DOMContentLoaded', function() {
           return;
       }
       let csv = 'Product Name,Product ID,Quantity,Unit,Price,Expiry Date,Category\n' +
-        prods.map(p => `${p.name},${p.id},${p.quantity},${p.unit},${p.price},${p.expiry},${p.category}`).join('\n');
+        prods.map(p => `${p.productName},${p.productID},${p.quantity},${p.unit},${p.price},${p.expiryDate},${p.category}`).join('\n');
       const blob = new Blob([csv], {type: 'text/csv'});
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -323,27 +406,32 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Pagination
-  if (prevBtn) {
-    prevBtn.addEventListener('click', function() {
-      if(currentPage > 1) {
-          currentPage -= 1;
-          renderProducts(currentPage, filterStr);
+  // PAGINATION
+  // Previous button
+  if(prevBtn){
+    prevBtn.addEventListener('click', function(){
+      if(currentPage > 1){
+        currentPage -= 1;
+        renderProducts(currentPage, filterStr);
       }
     });
   }
+
+  // Next Button
   if (nextBtn) {
     nextBtn.addEventListener('click', function() {
       const all = getStoredProducts();
       let filtered = all;
+
       if(filterStr.trim()){
           const str = filterStr.toLowerCase();
           filtered = all.filter(p => 
-            (p.name && p.name.toLowerCase().includes(str)) ||
-            (p.id && p.id.toLowerCase().includes(str)) ||
+            (p.productName && p.productName.toLowerCase().includes(str)) ||
+            (p.productID && p.productID.toLowerCase().includes(str)) ||
             (p.category && p.category.toLowerCase().includes(str))
           );
       }
+
       const totalPages = Math.max(1, Math.ceil(filtered.length / productsPerPage));
       if(currentPage < totalPages){
           currentPage += 1;
@@ -351,25 +439,37 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
+
+  // View All Products Only
   if (viewAll) {
     viewAll.addEventListener('click', function(e) {
       e.preventDefault();
-      currentPage = 1;
-      productsPerPage = getStoredProducts().length || 1;
-      renderProducts(currentPage, filterStr);
+
+      localStorage.setItem('seeAll', 'true');
+
+      renderAllProductsAsCards();
     });
+  }
+
+  // On page load, check See All
+  const seeAllFlag = localStorage.getItem('seeAll');
+
+  if(seeAllFlag === 'true'){
+      renderAllProductsAsCards();
+      productContainer.style.display = 'flex';
+      if(backBtn) backBtn.style.display = 'inline-block';
   }
 
   // Filter Modal
   if (filterBtn && filterModal && filterModalOptions) {
     filterBtn.addEventListener('click', function () {
       // Populate options
-      const category = [...new Set(getStoredProducts().map(p => p.category).filter(Boolean))];
-      filterModalOptions.innerHTML = category.length
-        ? category.map(cat =>
+      const categories = [...new Set(getStoredProducts().map(p => p.category).filter(Boolean))];
+      filterModalOptions.innerHTML = categories.length
+        ? categories.map(cat =>
           `<button type="button" class="category-option">${cat}</button>`
         ).join('')
-        : '<em style="color:#aaa;">No category found</em>';
+        : '<em style="color:#aaa;">No categories found</em>';
       filterModal.classList.add('show');
 
       filterModalOptions.querySelectorAll('.category-option').forEach(btn => {
@@ -391,7 +491,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Immediately set ProductID, Quantity as Packets, and Price as Peso
   function formatProductId(id){
-    return `PRD-${String(id).padStart(4, '0')}`;
+    if(!id) return 'PRD-0000'; // Fallback for empty/undefined
+
+    // Remove any existing 'PRD-' prefix
+    let numericPart = id.toString().replace(/^PRD-/, '');
+
+    // Keep only digits
+    numericPart = numericPart.replace(/\D/g, '');
+
+    // Pad to 4 digits
+    numericPart = numericPart.padStart(4, '0');
+
+    return `PRD-${numericPart}`;
   }
 
   function formatQuantity(qty, unit){
@@ -402,6 +513,13 @@ document.addEventListener('DOMContentLoaded', function() {
     return `₱${parseFloat(price).toFixed(2)}`;
   }
 
+  // Helper for updatePaginationButtons
+  function updatePaginationButtons(totalPages){
+    if(prevBtn) prevBtn.disabled = currentPage <= 1;
+    if(nextBtn) nextBtn.disabled = currentPage >= totalPages;
+  }
+
+
   // Main Render Function
   function renderProducts(page = 1, searchTerm = '') {
     const all = getStoredProducts();
@@ -409,14 +527,23 @@ document.addEventListener('DOMContentLoaded', function() {
     if(searchTerm && searchTerm.trim()) {
         const s = searchTerm.toLowerCase();
         filtered = all.filter(p => 
-          (p.name && p.name.toLowerCase().includes(s)) ||
-          (p.id && p.id.toLowerCase().includes(s)) ||
+          (p.productName && p.productName.toLowerCase().includes(s)) ||
+          (p.productID && p.productID.toLowerCase().includes(s)) ||
           (p.category && p.category.toLowerCase().includes(s))
         );
     }
     const total = filtered.length;
     const totalPages = Math.max(1, Math.ceil(total / productsPerPage));
+
     if (page > totalPages) page = totalPages;
+    // Update page indicator
+    if(pageIndicator){
+      pageIndicator.textContent = `Page ${page} of ${totalPages}`;
+    }
+
+    // Enable/disable Prev/Next buttons
+    updatePaginationButtons(totalPages);
+
     const start = (page - 1) * productsPerPage, end = start + productsPerPage;
     const sub = filtered.slice(start, end);
     const tbody = document.getElementById('productTableBody');
@@ -426,11 +553,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 ? '<tr class="no-products"><td colspan="8">No products yet.</td></tr>'
                 : sub.map(p => `
                 <tr>
-                    <td>${p.name}</td>
-                    <td>${formatProductId(p.id)}</td>
+                    <td>${p.productName}</td>
+                    <td>${formatProductId(p.productID)}</td>
                     <td>${formatQuantity(p.quantity, p.unit)}</td>
                     <td>${formatPrice(p.price)}</td>
-                    <td>${p.expiry}</td>
+                    <td>${p.expiryDate}</td>
                     <td>
                     <span class="category">
                         ${p.category}
@@ -447,15 +574,27 @@ document.addEventListener('DOMContentLoaded', function() {
                     </td>
                 </tr>
                 `).join('')
-
       // Edit/Delete Buttons
       tbody.querySelectorAll('.action-btn.delete').forEach((btn, idx) => {
-          btn.onclick = function() {
-              const all = getStoredProducts();
-              all.splice((currentPage-1)*productsPerPage + idx, 1);
-              setStoredProducts(all);
-              renderProducts(currentPage, filterStr);
-          };
+          btn.onclick = function(){
+          const prodIndex = (currentPage-1)*productsPerPage + idx;
+          const prod = getStoredProducts()[prodIndex];
+
+          fetch('index.php?view=deleteProduct', {
+              method: 'POST',
+              body: new URLSearchParams({ productID: prod.productID }),
+              headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          })
+          .then(res => res.json())
+          .then(json => {
+              if(json.success){
+                  const all = getStoredProducts();
+                  all.splice(prodIndex, 1);
+                  setStoredProducts(all);
+                  renderProducts(currentPage, filterStr);
+              } else alert(json.message);
+          });
+        }
       });
       tbody.querySelectorAll('.action-btn.edit').forEach((btn, idx) => {
         btn.onclick = function() {
@@ -473,29 +612,31 @@ document.addEventListener('DOMContentLoaded', function() {
             openProductForm();
 
             if(prod.image){
-              setImagePreview(prod.image);
+              setImagePreview(`public/images/uploads/${prod.image}`);
             } else{
               setImagePreview(null);
             }
 
             // Pre-fill each field
-            document.getElementById('productName').value = prod.name;
-            document.getElementById('productID').value = prod.id;
+            document.getElementById('productName').value = prod.productName;
+            document.getElementById('productID').value = prod.productID;
             document.getElementById('quantity').value = prod.quantity;
-            document.getElementById('buyingPrice').value = prod.price;
-            document.getElementById('expiryDate').value = prod.expiry;
+            document.getElementById('price').value = prod.price;
+            document.getElementById('expiryDate').value = prod.expiryDate;
             document.getElementById('category').value = prod.category;
             document.getElementById('unit').value = prod.unit;
-        };
+            };
       });
     }
     setPagination(total, page);
   }
 
+
   function setPagination(total, page) {
       const totalPages = Math.max(1, Math.ceil(total / productsPerPage));
       if(pageIndicator)
         pageIndicator.textContent = `Page ${page} of ${totalPages}`;
+
       if(prevBtn) prevBtn.disabled = page === 1;
       if(nextBtn) nextBtn.disabled = page === totalPages;
   }

@@ -1,5 +1,5 @@
 <?php 
-    class Sales{
+    class SalesView{
         public function render(){
             echo "Sales View";
         }

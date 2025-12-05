@@ -1,6 +1,6 @@
 <?php 
     // require_once __DIR__ . "/../controller/dashboardcontroller.php";
-    class Dashboard{
+    class DashboardView{
         public function render(){
             $this->graph();
         }

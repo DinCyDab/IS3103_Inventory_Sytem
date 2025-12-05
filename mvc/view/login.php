@@ -1,7 +1,7 @@
 <?php 
     require_once __DIR__ . "/../controller/logincontroller.php";
     // require_once __DIR__ . "/../controller/accountcontroller.php";
-    class Login{
+    class LoginView{
         public function __construct(){
             if(isset($_POST["login"])){
                 $id = $_POST["account_ID"];
