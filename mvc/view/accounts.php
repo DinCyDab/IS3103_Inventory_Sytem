@@ -6,8 +6,10 @@
         private $upper_limit;
         private $lower_limit;
         private $next_disabled;
+        private $current_user;
         public function __construct(){
             $this->account_controller = new AccountController();
+            $this->current_user = $_SESSION["account"];
 
             $this->handleAccountCreation();
             $this->handleDeleteAccount();
@@ -127,7 +129,7 @@
                         </div>
                         <div class="button-accounts">
                             <button class="accounts-btn" onclick="showAccountModal()">Add Account</button>
-                            <button class="filter-btn" onclick="openFilterModal()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(149, 145, 145, 1);transform: ;msFilter:;"><path d="M7 11h10v2H7zM4 7h16v2H4zm6 8h4v2h-4z"></path></svg>Filter</button>
+                            <button class="filter-btn" onclick="openFilterModal()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(149, 145, 145, 1);transform:msFilter;"><path d="M7 11h10v2H7zM4 7h16v2H4zm6 8h4v2h-4z"></path></svg>Filter</button>
                         </div>
                     </div>
 
@@ -167,11 +169,11 @@
                                                 <td><?php echo $role?></td>
                                                 <td><?php echo $status?></td>
                                                 <td>
-                                                    <button class="action-btn edit" title="Edit" onclick="editAccount(<?php printf('\'%s\', \'%s\', \'%s\', \'%s\', \'%s\', \'%s\'', $account_ID, $first_name, $last_name, $email, $contact_number, $role, $status) ?>)">
+                                                    <button class="action-btn edit" title="Edit" onclick="editAccount(<?php printf('\'%s\', \'%s\', \'%s\', \'%s\', \'%s\', \'%s\', \'%s\', \'%s\'', $account_ID, $first_name, $last_name, $email, $contact_number, $role, $status, $this->current_user['role']) ?>)">
                                                         <i class="bx bxs-edit"></i>
                                                     </button>
                                                     <button class="action-btn delete" title="Delete" 
-                                                        onclick="deleteAccount(<?php echo $account['account_ID'] . ', \'' . $role . '\''; ?>)">
+                                                        onclick="deleteAccount(<?php printf('\'%s\', \'%s\', \'%s\'', $account['account_ID'], $role, $this->current_user['role']); ?>)">
                                                         <i class="bx bx-trash-alt"></i>
                                                     </button>
                                                 </td>
@@ -272,7 +274,13 @@
                                 <select name="role" required="">
                                     <option value="" disabled="" selected="">Select role</option>
                                     <option value="staff">Staff</option>
-                                    <option value="admin">Admin</option>
+                                    <?php 
+                                        if($this->current_user['role'] == 'super admin'){
+                                            ?>
+                                                <option value="admin">Admin</option>
+                                            <?php
+                                        }
+                                    ?>
                                 </select>
                             </div>
                             <small style="color: red; font-size: 10px;">Note: The default password is the user’s email address.</small>
