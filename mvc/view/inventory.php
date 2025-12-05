@@ -2,7 +2,7 @@
     class InventoryView {
         private $products = [];
         private $overviewStats = [
-            ["label" => "Categories", "value" => 0, "footer" => "Last 7 days", "highlight" => "blue"],
+            ["label" => "category", "value" => 0, "footer" => "Last 7 days", "highlight" => "blue"],
             ["label" => "Total Products", "value" => 0, "footer" => "Last 7 days", "extra" => "₱0", "highlight" => "orange"],
             ["label" => "Top Selling", "value" => 0, "footer" => "Last 7 days", "extra" => "₱0", "highlight" => "purple"],
             ["label" => "Low Stocks", "value" => 0, "footer" => "Ordered", "extra" => "0 Not in stock", "highlight" => "red"],
