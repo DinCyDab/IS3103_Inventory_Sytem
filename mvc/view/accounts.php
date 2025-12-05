@@ -372,6 +372,10 @@
                                 </label>
 
                                 <hr>
+                                <label>
+                                    <input type="checkbox" name="role[]" value="super admin" class="role-checkbox">
+                                    Super Admin
+                                </label>
 
                                 <label>
                                     <input type="checkbox" name="role[]" value="admin" class="role-checkbox">
@@ -382,6 +386,8 @@
                                     <input type="checkbox" name="role[]" value="staff" class="role-checkbox">
                                     Staff
                                 </label>
+
+                                
 
                                 <h3>Status</h3>
 
