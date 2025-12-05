@@ -41,14 +41,18 @@
 
 
     // Handle inventory routing only if logged in
-    if($isLoggedIn && in_array($view, ['inventory', 'createProduct', 'updateProduct', 'deleteProduct'])){
+    if($isLoggedIn && in_array($view, ['inventory', 'createProduct', 'updateProduct', 'deleteProduct', 'fetchStats', 'paginated', 'allProducts', 'searchProducts'])){
 
         $controller = new ProductController();
 
         switch($view){
             case "inventory":
-                $products = $controller->index(); // Get Data
-                $page = new InventoryView($products); // Load View
+                $inventoryData = $controller->index(); // Get Data
+                // $stats = $controller->getOverviewStats(); 
+
+                $page = new InventoryView(); // Load View
+                $page->setProducts($inventoryData["products"]);
+                $page->setOverviewStats($inventoryData["overviewStats"]);
                 break;
 
             case "createProduct":
@@ -61,6 +65,22 @@
 
             case "deleteProduct":
                 $controller->delete();
+                exit;
+            
+            case 'fetchStats':
+                $controller->fetchStats();
+                exit;
+
+            case "paginated":
+                $controller->paginated();
+                exit;
+
+            case "allProducts":
+                $controller->allProducts();
+                exit;
+
+            case "searchProducts":
+                $controller->search();
                 exit;
         }
     } else{
@@ -99,7 +119,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <meta name="color-scheme" content="dark light">
+        <meta name="color-scheme" content="light">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="./public/src/css/styles.css">
         <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>

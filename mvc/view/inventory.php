@@ -1,12 +1,15 @@
 <?php
     class InventoryView {
         private $products = [];
-        private $overviewStats = [
-            ["label" => "Categories", "value" => 0, "footer" => "Last 7 days", "highlight" => "blue"],
-            ["label" => "Total Products", "value" => 0, "footer" => "Last 7 days", "extra" => "₱0", "highlight" => "orange"],
-            ["label" => "Top Selling", "value" => 0, "footer" => "Last 7 days", "extra" => "₱0", "highlight" => "purple"],
-            ["label" => "Low Stocks", "value" => 0, "footer" => "Ordered", "extra" => "0 Not in stock", "highlight" => "red"],
-        ];
+        private $overviewStats = [];
+
+        public function setProducts(array $products){
+            $this->products = $products;
+        }
+
+        public function setOverviewStats(array $stats){
+            $this->overviewStats = $stats;
+        }
 
     public function render() { ?>
     <div class="header"></div>
@@ -31,32 +34,47 @@
                         <?= htmlspecialchars($stat['label']) ?>
                     </div>
 
+                    <!-- Low Stocks -->
                     <?php if ($stat['label'] === 'Low Stocks'): ?>
                         <div class="inventory-lowstocks-flex">
-                            <div>
-                                <div class="inventory-main-value"><?= htmlspecialchars($stat['value']) ?></div>
+                            <div class="inventory-main-value-wrapper">
+                                <div class="inventory-main-value" id="low-stock"><?= htmlspecialchars($stat['value']) ?></div>
                                 <div class="inventory-main-footer"><?= htmlspecialchars($stat['footer']) ?></div>
-                            </div>
-                            <div>
-                                <div class="inventory-main-value">0</div>
-                                <div class="inventory-main-footer">Not in stock</div>
                             </div>
                         </div>
-                    <?php elseif ($stat['label'] === 'Total Products' || $stat['label'] === 'Top Selling'): ?>
+                    
+                    <!-- Products -->
+                    <?php elseif ($stat['label'] === 'Total Products'): ?>
                         <div class="inventory-paired-flex">
-                            <div>
-                                <div class="inventory-main-value"><?= htmlspecialchars($stat['value']) ?></div>
+                            <div class="inventory-main-value-wrapper">
+                                <div class="inventory-main-value" id="total-products"><?= htmlspecialchars($stat['value']) ?></div>
                                 <div class="inventory-main-footer"><?= htmlspecialchars($stat['footer']) ?></div>
                             </div>
-                            <div>
-                                <div class="inventory-main-value"><?= htmlspecialchars($stat['extra']) ?></div>
+                            <div class="inventory-main-value-wrapper">
+                                <div class="inventory-main-value tooltip-value" id="total-products-revenue" data-full="<?= htmlspecialchars($stat['extra']) ?>"><?= htmlspecialchars($stat['extra']) ?></div>
                                 <div class="inventory-main-footer">
                                     <?= $stat['label'] === 'Total Products' ? 'Revenue' : 'Cost'; ?>
                                 </div>
                             </div>
                         </div>
+
+                    <!-- Top Selling Column -->
+                    <?php elseif ($stat['label'] === 'Top Selling'): ?>
+                        <div class="inventory-paired-flex">
+                            <div class="inventory-main-value-wrapper">
+                                <div class="inventory-main-value" id="top-selling-qty"><?= htmlspecialchars($stat['value']) ?></div>
+                                <div class="inventory-main-footer"><?= htmlspecialchars($stat['footer']) ?></div>
+                            </div>
+                            <div class="inventory-main-value-wrapper">
+                                <div class="inventory-main-value tooltip-value" id="top-selling-cost" data-full="<?= htmlspecialchars($stat['extra']) ?>"><?= htmlspecialchars($stat['extra']) ?></div>
+                                <div class="inventory-main-footer">
+                                    <?= $stat['label'] === 'Total Products' ? 'Revenue' : 'Cost'; ?>
+                                </div>
+                            </div>
+                        </div>
+
                     <?php else: ?>
-                        <div class="inventory-main-value"><?= htmlspecialchars($stat['value']) ?></div>
+                        <div class="inventory-main-value" id="total-categories"><?= htmlspecialchars($stat['value']) ?></div>
                         <div class="inventory-main-footer"><?= htmlspecialchars($stat['footer']) ?></div>
                     <?php endif; ?>
                 </div>
@@ -111,7 +129,7 @@
     <!-- Product Overview -->
     <button id="backBtn" class="back-btn" style="display:none;"><i class='bx bx-arrow-back' ></i></button>
     <div id="productOverview" class="product-overview-container" style="display:none;"></div>
-    <button id="backToTopBtn" class="bTopButton" style="display:none;">
+    <button id="backToTopBtn" class="bTopButton">
         <i class='bx bx-up-arrow-alt'></i>
     </button>
 
@@ -120,7 +138,7 @@
         <div class="modal-content">
             <h3 class="modal-title">New Product</h3>
             <!-- SVG close button -->
-            <form id="addProductForm" method="POST" action="index.php?view=createProduct">
+            <form id="addProductForm" method="POST" action="index.php?view=createProduct" enctype="multipart/form-data">
                 <div class="image-upload-section">
                     <label for="productImage" class="image-upload-area">
                         <div id="imagePreview" class="image-preview">
@@ -134,7 +152,10 @@
                             </div>
                         </div>
                     </label>
+                    <!-- Actual file input -->
                     <input type="file" id="productImage" name="productImage" accept="image/*" style="display:none;">
+                    <!-- Hidden input to store existing image path -->
+                    <input type="hidden" id="existingImage" name="existingImage" value="">
                 </div>
 
                 <div class="form-row">
@@ -147,7 +168,7 @@
                 </div>
                 <div class="form-row">
                     <label class="field-label">Quantity</label>
-                    <input type="text" id="quantity" name="quantity" placeholder="Enter product quantity" required>
+                    <input type="number" id="quantity" name="quantity" placeholder="Enter product quantity" required>
                 </div>
                 <div class="form-row">
                     <label class="field-label">Buying Price</label>
@@ -200,7 +221,7 @@
             </svg>
             </button>
             <h3 style="margin-top: 8px;">Select Category</h3>
-            <div id="categoryOptions" style="display: flex; flex-wrap: wrap; gap:10px; margin: 15px 0;"></div>
+            <div id="categoryOptions"></div>
         </div>
     </div>
 
