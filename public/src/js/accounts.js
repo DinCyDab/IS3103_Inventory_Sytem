@@ -13,16 +13,8 @@ function showAccountModal(){
 
 var delete_selected_ID = document.getElementById("selected_ID");
 
-function deleteAccount(account_ID, account_role, current_role){
-    if(current_role == 'admin' && account_role == 'admin'){
-        return;
-    }
-
-    if(account_role == 'super admin'){
-        return;
-    }
-
-    if(current_role == 'staff'){
+function deleteAccount(account_ID, account_role){
+    if(account_role == 'admin'){
         return;
     }
 
@@ -36,19 +28,10 @@ function deleteAccount(account_ID, account_role, current_role){
 var edit_account_modal = document.getElementById("editAccountModal");
 
 //Edit Account Logic
-function editAccount(account_ID, first_name, last_name, email, contact_number, role, status, current_role){
-    if(current_role == 'admin' && role == 'admin'){
+function editAccount(account_ID, first_name, last_name, email, contact_number, role, status){
+    if(role == 'admin'){
         return;
     }
-
-    if(role == 'super admin'){
-        return;
-    }
-
-    if(current_role == 'staff'){
-        return;
-    }
-
     
     edit_account_modal.style.display = "flex";
 

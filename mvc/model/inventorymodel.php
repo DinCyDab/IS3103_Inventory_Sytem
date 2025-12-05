@@ -10,7 +10,7 @@ class ProductModel{
 
     // Get all products
     public function getAllProducts(){
-        $stmt = $this->config->prepare("SELECT * FROM inventory ORDER BY inventory_ID DESC");
+        $stmt = $this->config->prepare("SELECT * FROM inventory ORDER BY id DESC");
         $stmt->execute();
         $result = $stmt->get_result();
         return $result->fetch_all(MYSQLI_ASSOC); // Fetch all records as associative array

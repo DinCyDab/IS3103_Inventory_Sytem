@@ -80,19 +80,11 @@
             return [];
         }
 
-        public function readOne($sql) {
-             $result = $this->conn->query($sql);
-            if ($result && $result->num_rows > 0) {
-                return $result->fetch_assoc();  // return single row
-            }
-            return null;
-        }
-
-
         // Added prepare function
         public function prepare($sql){
             return $this->conn->prepare($sql);
         }
+
         //Don't forget to close the connection
         //close() function closes the connection
         public function close(){
