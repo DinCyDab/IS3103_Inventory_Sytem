@@ -13,8 +13,16 @@ function showAccountModal(){
 
 var delete_selected_ID = document.getElementById("selected_ID");
 
-function deleteAccount(account_ID, account_role){
-    if(account_role == 'admin'){
+function deleteAccount(account_ID, account_role, current_role){
+    if(current_role == 'admin' && account_role == 'admin'){
+        return;
+    }
+
+    if(account_role == 'super admin'){
+        return;
+    }
+
+    if(current_role == 'staff'){
         return;
     }
 
@@ -28,18 +36,27 @@ function deleteAccount(account_ID, account_role){
 var edit_account_modal = document.getElementById("editAccountModal");
 
 //Edit Account Logic
-function editAccount(account_ID, first_name, last_name, email, contact_number, role, status){
-    if(role == 'admin'){
+function editAccount(account_ID, first_name, last_name, email, contact_number, role, status, current_role){
+    if(current_role == 'admin' && role == 'admin'){
         return;
     }
+
+    if(role == 'super admin'){
+        return;
+    }
+
+    if(current_role == 'staff'){
+        return;
+    }
+
     
     edit_account_modal.style.display = "flex";
 
-    var first_name_holder = document.getElementById("edit_first_name");
-    var last_name_holder = document.getElementById("edit_last_name");
-    var email_holder = document.getElementById("edit_email");
-    var contact_number_holder = document.getElementById("edit_phone");
-    var account_ID_holder = document.getElementById("edit_account_ID");
+    var first_name_holder = document.getElementById("first_name");
+    var last_name_holder = document.getElementById("last_name");
+    var email_holder = document.getElementById("email");
+    var contact_number_holder = document.getElementById("phone");
+    var account_ID_holder = document.getElementById("account_ID");
     var edit_role = document.getElementById("edit_role");
     var edit_status = document.getElementById("edit_status");
 
