@@ -66,11 +66,6 @@
     font-size: .9rem;
 }
 
-.accounts-table td:first-child,
-.accounts-table th:first-child{
-    text-align: left;
-}
-
 .accounts-table tr{
     border-bottom: 1px solid #e0e1ed;
 }

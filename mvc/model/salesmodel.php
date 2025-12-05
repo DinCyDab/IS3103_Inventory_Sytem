@@ -3,7 +3,7 @@ class SalesModel {
 	private $db;
 
 	public function __construct() {
-		$this->db = new mysqli('localhost', 'root', '', 'inventory_system');
+		$this->db = new mysqli('127.0.0.1', 'root', '', 'inventory_system');
 		if ($this->db->connect_error) {
 			die("Connection failed: " . $this->db->connect_error);
 		}

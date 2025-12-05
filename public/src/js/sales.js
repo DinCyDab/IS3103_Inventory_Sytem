@@ -6,6 +6,118 @@ document.addEventListener('DOMContentLoaded', function () {
 	const tbody = document.getElementById('transactionsTbody');
 	const modalError = document.getElementById('modalError');
 
+	const paymentFilterModal = document.getElementById('paymentFilterModal');
+	const applyPaymentFilter = document.getElementById('applyPaymentFilter');
+	const clearPaymentFilter = document.getElementById('clearPaymentFilter');
+	const filterBtn = document.querySelector('.filter-btn');
+	const checkboxes = document.querySelectorAll('#paymentOptions input');
+
+	const downloadBtn = document.querySelector('.download-btn');
+	const table = document.getElementById('transactionsTable');
+
+	// Download All
+	if(downloadBtn) {
+		downloadBtn.addEventListener('click', () => {
+			if(!table) return;
+
+			// Prepare CSV content
+			let csvContent = '';
+			const headers = Array.from(table.querySelectorAll('thead th'))
+				.map(th => `"${th.textContent.trim()}"`)
+				.join(',');
+			csvContent += headers + '\n';
+
+			const rows = Array.from(tbody.querySelectorAll('tr'));
+			rows.forEach(row => {
+				const cols = Array.from(row.querySelectorAll('td')).map(td => {
+					let text = td.textContent.trim();
+
+					// If td contains span or select, extract proper value
+					const span = td.querySelector('span');
+					const select = td.querySelector('select');
+					if(span) text = span.textContent.trim();
+					if(select) text = select.value.trim();
+
+					// Escape double quotes
+					return `"${text.replace(/"/g, '""')}"`;
+				});
+				csvContent += cols.join(',') + '\n';
+			});
+
+			// Download file
+			const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+			const link = document.createElement('a');
+			link.href = URL.createObjectURL(blob);
+			link.setAttribute('download', 'transactions.csv');
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+		});
+	}
+
+	// Show/Hide filter popup
+	const openPaymentFilter = () => {
+		paymentFilterModal.style.display = 'flex';
+		document.body.style.overflow = 'hidden';
+	};
+	const closePaymentFilter = () => {
+		paymentFilterModal.style.display = 'none';
+		document.body.style.overflow = '';
+	};
+
+	filterBtn?.addEventListener('click', openPaymentFilter);
+
+	// Close X button
+	document.querySelector(".payment-close-x")?.addEventListener("click", closePaymentFilter);
+
+	// Close when clicking outside modal-content
+	window.addEventListener("click", (e) => {
+		if (e.target === paymentFilterModal) closePaymentFilter();
+	});
+
+	// Apply filter
+	const applyFilter = () => {
+		const selected = [...checkboxes].filter(cb => cb.checked).map(cb => cb.value.toLowerCase());
+
+		tbody.querySelectorAll('tr').forEach(row => {
+			const paymentCell = row.querySelector('td:last-child span');
+			if (!paymentCell) return;
+
+			const pm = paymentCell.textContent.trim().toLowerCase();
+			row.style.display = (selected.length === 0 || selected.includes(pm)) ? '' : 'none';
+		});
+
+		// Save selection to localStorage so filter persists
+		localStorage.setItem('paymentFilter', JSON.stringify(selected));
+		closePaymentFilter();
+	};
+
+	applyPaymentFilter?.addEventListener('click', applyFilter);
+
+	// Clear filter
+	clearPaymentFilter?.addEventListener('click', () => {
+		checkboxes.forEach(cb => cb.checked = false);
+		tbody.querySelectorAll('tr').forEach(row => row.style.display = '');
+		localStorage.removeItem('paymentFilter');
+		closePaymentFilter();
+	});
+
+	// Restore filter on page load WITHOUT opening the popup
+	const savedFilter = JSON.parse(localStorage.getItem('paymentFilter') || '[]');
+	if (savedFilter.length) {
+		checkboxes.forEach(cb => {
+			cb.checked = savedFilter.includes(cb.value.toLowerCase());
+		});
+		// Apply the filter to the rows
+		tbody.querySelectorAll('tr').forEach(row => {
+			const paymentCell = row.querySelector('td:last-child span');
+			if (!paymentCell) return;
+			const pm = paymentCell.textContent.trim().toLowerCase();
+			row.style.display = savedFilter.includes(pm) ? '' : 'none';
+		});
+	}
+
+	// To record modal
 	function openModal(){ if(modal){ modal.style.display = 'flex'; document.body.style.overflow = 'hidden'; if(modalError){ modalError.style.display='none'; modalError.textContent=''; } } }
 	function closeModal(){ if(modal){ modal.style.display = 'none'; document.body.style.overflow = ''; if(form){ form.reset(); } if(modalError){ modalError.style.display='none'; modalError.textContent=''; } } }
 
@@ -60,13 +172,13 @@ document.addEventListener('DOMContentLoaded', function () {
 					};
 
 					tr.innerHTML = `
-						<td style="padding:12px 8px; font-weight:600;">${escapeHtml(displayTxn)}</td>
-						<td style="padding:12px 8px;">${escapeHtml(dt)}</td>
-						<td style="padding:12px 8px;">${escapeHtml(product)}</td>
-						<td style="padding:12px 8px;">₱${escapeHtml(price)}</td>
-						<td style="padding:12px 8px;">${escapeHtml(qty)} Packets</td>
-						<td style="padding:12px 8px;">${escapeHtml(customer)}</td>
-						<td style="padding:12px 8px;">${createPaymentSelect(payment)}</td>
+						<td>${escapeHtml(displayTxn)}</td>
+						<td>${escapeHtml(dt)}</td>
+						<td>${escapeHtml(product)}</td>
+						<td>₱${escapeHtml(price)}</td>
+						<td>${escapeHtml(qty)} Packets</td>
+						<td>${escapeHtml(customer)}</td>
+						<td>${createPaymentSelect(payment)}</td>
 					`;
 					if (tbody && tbody.firstChild) tbody.insertBefore(tr, tbody.firstChild);
 					else if (tbody) tbody.appendChild(tr);

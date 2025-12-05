@@ -280,11 +280,6 @@ class ReportsView {
             </div>
         </div>
 
-        
-        
-
-
-
         <script>
             window.reportsChartData = <?= json_encode($this->list['chart'] ?? [
                 "labels" => ["Sep","Oct","Nov","Dec","Jan","Feb","Mar"],
@@ -398,10 +393,7 @@ class ReportsView {
 
         </script>
 
-
-
-
-
+        <link rel="stylesheet" href="./public/src/css/reports.css">
 <?php
     }
 }

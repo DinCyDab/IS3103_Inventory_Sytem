@@ -145,6 +145,21 @@ main{
     fill: #bbb;
 }
 
+/* Download Button css */
+.download-btn{
+    background: #f7f7fb;
+    color: #666;
+    border: 1px solid #e0e1ed;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.download-btn:hover{
+    background: #e9ecef;
+}
+
 /* Table Navigation */
 .table-nav{
     display: flex;
