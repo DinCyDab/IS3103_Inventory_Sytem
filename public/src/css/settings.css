@@ -1,22 +1,27 @@
 :root {
-    --bg: #f2f3f7;
-    --white: #ffffff;
+    --bg: #f2f3f7; /* Light background */
+    --text-color: #2c2c2c; /* Dark text for light mode */
+    --white: #ffffff; /* White card/form background in light mode */
     --accent: #6a00ff;
     --muted: #6b6b6b;
+    --input-border: #e6e6ee;
 }
 
 body {
     background: var(--bg);
-    transition: background .25s ease;
+    color: var(--text-color); /* Set default (light mode) text color */
+    transition: background .25s ease, color .25s ease;
 }
 
 body.dark {
-    --bg: #0f1724;
-    --white: #0b1220;
+    --bg: #0f1724; /* Dark background */
+    --text-color: #d7e6f5; /* Light text for dark mode */
+    --white: #0b1220; /* Darker card/form background in dark mode */
     --accent: #8b5cf6;
     --muted: #9aa4b2;
+    --input-border: #3e4a60; /* Lighter border for contrast */
     background: #061322;
-    color: #d7e6f5;
+    color: var(--text-color); /* Apply light text color for dark mode */
 }
 
 .layout {
@@ -76,14 +81,20 @@ body.dark {
 }
 
 .settings-form {
-    background: var(--white);
+    background: var(--white); /* Uses the theme-specific background */
     margin-top: 22px;
     padding: 26px;
     border-radius: 12px;
     display: flex;
     flex-direction: column;
     gap: 22px;
-    box-shadow: 0 6px 20px rgba(11, 12, 16, 0.04);
+    /* Use dynamic shadow for better theme integration */
+    box-shadow: 0 6px 20px rgba(11, 12, 16, 0.04); 
+}
+
+/* Dark mode specific shadow */
+body.dark .settings-form {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2); 
 }
 
 .field-row {
@@ -98,26 +109,36 @@ body.dark {
     gap: 8px;
 }
 
+/* --- FIX FOR INPUTS IN LIGHT MODE --- */
 .field input {
     padding: 12px;
-    border: 1px solid #e6e6ee;
+    /* Use dynamic border color */
+    border: 1px solid var(--input-border); 
     border-radius: 8px;
     background: transparent;
+    /* FIX: Set input text color to inherit from body for light/dark mode */
+    color: var(--text-color); 
 }
 
 .input-icon {
     display: flex;
     align-items: center;
-    border: 1px solid #e6e6ee;
+    /* Use dynamic border color */
+    border: 1px solid var(--input-border); 
     border-radius: 8px;
     padding-left: 10px;
+    background: transparent;
 }
 
 .input-icon input {
     border: none;
     flex: 1;
     padding: 10px;
+    /* FIX: Set input text color to inherit from body for light/dark mode */
+    color: var(--text-color); 
 }
+/* --- END INPUT FIX --- */
+
 
 .manage {
     font-size: 13px;
@@ -198,8 +219,6 @@ input:checked + .slider:before {
 
 /* Modal */
 
-/* Modal */
-
 .account-modal{
     display: flex;
     position: fixed;
@@ -214,7 +233,8 @@ input:checked + .slider:before {
 }
 
 .modal-content{
-    background: #fff;
+    /* Use white variable for modal background */
+    background: var(--white); 
     padding: 24px 26px;
     border-radius: 9px;
     box-shadow: 0 4px 32px rgba(44,44,84, 0.12);
@@ -228,8 +248,9 @@ input:checked + .slider:before {
 }
 
 .modal-title{
+    /* Use text-color variable for modal title */
+    color: var(--text-color); 
     font-size: 1.1rem;
-    color: #2c2c2c;
     font-weight: 500;
     margin-bottom: 22px;
     text-align: left;
