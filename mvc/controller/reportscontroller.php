@@ -13,14 +13,14 @@ class ReportsController {
     public function index() {
 
         // fetch actual data from model
-        $overview     = $this->model->getOverviewStats();
-        $categories   = $this->model->getBestSellingCategories();
-        $products     = $this->model->getBestSellingProducts();
+        $overview = $this->model->getOverviewStats();
+        $categories = $this->model->getBestSellingCategories();
+        $products = $this->model->getBestSellingProducts();
 
         // FIXED: Load Sales Report using correct SQL
-        $sales = $this->model->loadSalesReport();
+        $salesReportProducts = $this->model->getSalesReportProducts();
 
-        $chart        = $this->model->getProfitRevenueChart();
+        $chart = $this->model->getProfitRevenueChart();
 
         // If chart is empty 
         if (empty($chart)) {
@@ -36,7 +36,7 @@ class ReportsController {
             "overview"      => $overview,
             "categories"    => $categories,
             "products"      => $products,
-            "salesReport"   => $sales,
+            "salesReportList"   => $salesReportProducts,
             "chart"         => $chart,
         ];
 

@@ -164,4 +164,21 @@ class ReportsModel {
             return $this->conn->read($sql, [$keyword, $keyword, $keyword]);
         }
 
+
+        // Fetch the products from inventory page
+        public function getTopSellingProducts($limit = 5){
+            $sql = "
+                SELECT
+                    p.productName AS product_name,
+                    p.productID,
+                    p.category AS category_name,
+                    CONCAT(p.quantity, ' ', p.unit) AS remaining_qty,
+                    SUM(s.quantity * s.price) AS turnover,
+                    SUM(s.quantity) AS increase
+                FROM 
+            ";
+
+            return $this->conn->read($sql);
+        }
+
 }

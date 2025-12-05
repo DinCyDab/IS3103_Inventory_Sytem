@@ -1,9 +1,3 @@
-<<<<<<< Updated upstream
-<?php 
-    class ReportsView{
-        public function render(){
-            echo "Reports View";
-=======
 <?php
 
 class ReportsView {
@@ -29,7 +23,6 @@ class ReportsView {
                     $this->overviewStats[$i]['value'] = $value;
                 }
             }
->>>>>>> Stashed changes
         }
 
         $this->list = $data;
@@ -185,7 +178,7 @@ class ReportsView {
         <div class="bestseller-product-container">
 
             <div class="bestseller-product-header">
-                <h3>List of sales report</h3>
+                <h3>Best selling product</h3>
                 <a href="#" class="see-all">See All</a>
             </div>
 
@@ -203,22 +196,17 @@ class ReportsView {
                 <div class="product-divider"></div>
 
                 <?php
-                $bestProducts = $this->list['products'] ?? [
-                    ["product" => "Tomato", "id" => "0", "category" => "Groceries", "qty" => "0", "turnover" => "₱0", "increase" => "0%"],
-                    ["product" => "Onion", "id" => "0", "category" => "Groceries", "qty" => "0", "turnover" => "₱0", "increase" => "0%"],
-                    ["product" => "Maggi", "id" => "0", "category" => "Groceries", "qty" => "0", "turnover" => "₱0", "increase" => "0%"],
-                    ["product" => "Surf Excel", "id" => "0", "category" => "Groceries", "qty" => "0", "turnover" => "₱0", "increase" => "0%"],
-                ];
+                $bestProducts = $this->list['salesReportList'] ?? [];
 
                 foreach ($bestProducts as $i => $row):
                 ?>
 
                 <div class="product-row">
-                    <div class="product-col"><?= $row["product"] ?></div>
-                    <div class="product-col"><?= $row["id"] ?></div>
-                    <div class="product-col"><?= $row["category"] ?></div>
-                    <div class="product-col"><?= $row["qty"] ?></div>
-                    <div class="product-col"><?= $row["turnover"] ?></div>
+                    <div class="product-col"><?= htmlspecialchars($row["product_name"]) ?></div>
+                    <div class="product-col"><?= htmlspecialchars($row["productID"]) ?></div>
+                    <div class="product-col"><?= htmlspecialchars($row["category"]) ?></div>
+                    <div class="product-col"><?= htmlspecialchars($row["remaining_qty"]) ?></div>
+                    <div class="product-col">₱<?= number_format($row["turnover"], 2) ?></div>
                     <div class="product-col increase"><?= $row["increase"] ?></div>
                 </div>
 
@@ -279,11 +267,11 @@ class ReportsView {
                     <tbody>
                         <?php foreach ($this->list['salesReportList'] as $row): ?>
                             <tr>
-                                <td><?= $row['product_name'] ?></td>
-                                <td><?= $row['product_ID'] ?></td>
-                                <td><?= $row['category_name'] ?></td>
-                                <td><?= $row['remaining_qty'] ?></td>
-                                <td><?= $row['turnover'] ?></td>
+                                <td><?= htmlspecialchars($row['product_name']) ?></td>
+                                <td><?= htmlspecialchars($row['productID']) ?></td>
+                                <td><?= htmlspecialchars($row['category_name']) ?></td>
+                                <td><?= htmlspecialchars($row['remaining_qty']) ?></td>
+                                <td>₱<?= number_format($row['turnover'], 2) ?></td>
                                 <td><?= $row['increase'] ?></td>
                             </tr>
                         <?php endforeach; ?>
