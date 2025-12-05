@@ -83,23 +83,23 @@ class SettingsView {
                     <div class="field-row">
                         <div class="field">
                             <label>Email</label>
-                            <input value="<?php echo $this->user['email']; ?>" readonly>
+                            <input value="<?php echo $this->user['email']; ?>" disabled>
                         </div>
 
                         <div class="field">
                             <label>Role</label>
-                            <input value="<?php echo $this->user['role']; ?>" readonly>
+                            <input value="<?php echo $this->user['role']; ?>" readonly disabled>
                             <!-- <a class="manage" href="#">Manage User Access</a> -->
                         </div>
                     </div>
 
-                    <div class="theme-field">
+                    <!-- <div class="theme-field">
                         <label>Theme</label>
                         <label class="switch">
                             <input type="checkbox" id="themeToggle">
                             <span class="slider"></span>
                         </label>
-                    </div>
+                    </div> -->
 
                     <input type="hidden" name="edit_info">
                     <button class="save">Save Changes</button>
