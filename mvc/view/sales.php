@@ -102,6 +102,7 @@ class SalesView{
 						<div class="form-row" style="grid-column:1 / -1;">
 							<label class="field-label">Payment Method</label>
 							<select name="payment_method" required>
+								<option value="" disabled selected>Select payment method</option>
 								<option value="GCash">GCash</option>
 								<option value="Cash">Cash</option>
 								<option value="Card">Card</option>

@@ -21,6 +21,7 @@
 
     //Add your controller here
     require_once "./mvc/controller/inventorycontroller.php";
+    require_once "./mvc/controller/reportscontroller.php";
 
     // ROUTER
     //$_GET['view'] comes from navigation.php
@@ -83,7 +84,23 @@
                 $controller->search();
                 exit;
         }
-    } else{
+    } 
+    
+    // Handle reports routing
+    elseif($isLoggedIn && $view === 'reports'){
+        $reportsController = new ReportsController();
+
+        // Check if this is a search request
+        if(isset($_GET['action']) && $_GET['action'] === 'search'){
+            $reportsController->search();
+            exit;
+        }
+
+        // Otherwise render the reports page
+        $page = $reportsController->index();
+    }
+    
+    else{
         // Handle other views
         switch($view){
             case "dashboard":

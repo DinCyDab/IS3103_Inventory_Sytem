@@ -3,7 +3,6 @@ require_once __DIR__ . "/../model/reportsmodel.php";
 require_once __DIR__ . "/../view/reports.php";
 
 class ReportsController {
-
     private $model;
 
     public function __construct() {
@@ -11,72 +10,83 @@ class ReportsController {
     }
 
     public function index() {
-
-        // fetch actual data from model
         $overview = $this->model->getOverviewStats();
-        $categories = $this->model->getBestSellingCategories();
-        $products = $this->model->getBestSellingProducts();
+        $categories = $this->model->getBestSellingCategories(3);
+        $products = $this->model->getTopSellingProducts(4);
+        $salesReportList = $this->model->loadSalesReport();
+        
+        // Chart data
+        $monthlyChart = $this->model->getMonthlySalesChart();
+        $weeklyChart  = $this->model->getWeeklySalesChart();
 
-        // FIXED: Load Sales Report using correct SQL
-        $salesReportProducts = $this->model->getSalesReportProducts();
-
-        $chart = $this->model->getProfitRevenueChart();
-
-        // If chart is empty 
-        if (empty($chart)) {
-            $chart = [
-                "labels" => ["Sep","Oct","Nov","Dec","Jan","Feb","Mar"],
-                "revenue" => [0,0,0,0,0,0,0],
-                "profit" => [0,0,0,0,0,0,0]
-            ];
-        }
-
-        // Send to View
         $data = [
-            "overview"      => $overview,
-            "categories"    => $categories,
-            "products"      => $products,
-            "salesReportList"   => $salesReportProducts,
-            "chart"         => $chart,
+            "overview"        => $overview,
+            "categories"      => $categories,
+            "products"        => $products,
+            "chartMonthly"    => $monthlyChart,
+            "chartWeekly"     => $weeklyChart,
+            "salesReportList" => $salesReportList
         ];
 
         return new ReportsView($data);
     }
 
     public function search() {
-
+        // Set headers first
+        header("Content-Type: application/json");
+        
         if (!isset($_GET["q"])) {
             echo json_encode([]);
             return;
         }
 
-        $keyword = $_GET["q"];
-
-        // for the search
-        ini_set('display_errors', 1);
-        ini_set('display_startup_errors', 1);
-        error_reporting(E_ALL);
-
-        // connect to database
-        require_once __DIR__ . "/../model/db_connection.php";
-        $db = new Database();
-        $conn = $db->connect();
-
-        // prevent SQL errors when inventory table doesn't exist
-        $stmt = $conn->prepare("SELECT * FROM inventory WHERE productName LIKE ?");
-        $searchTerm = "%$keyword%";
-        $stmt->bind_param("s", $searchTerm);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        $data = [];
-        while ($row = $result->fetch_assoc()) {
-            $data[] = $row;
+        $keyword = trim($_GET["q"]);
+        
+        if (empty($keyword)) {
+            echo json_encode([]);
+            return;
         }
 
-        // return JSON for AJAX
-        header("Content-Type: application/json");
-        echo json_encode($data);
+        try {
+            // Use the existing Config class connection
+            require_once __DIR__ . "/../api/config.php";
+            $config = new Config();
+            
+            // Search in sales report with product info
+            $sql = "
+                SELECT DISTINCT
+                    s.products AS product_name,
+                    COALESCE(i.productID, 'N/A') AS productID,
+                    COALESCE(i.category, 'Unknown') AS category,
+                    COALESCE(CONCAT(i.quantity, ' ', i.unit), 'N/A') AS remaining_qty,
+                    SUM(CAST(s.order_value AS DECIMAL(10,2))) AS turnover,
+                    SUM(CAST(s.quantity_sold AS UNSIGNED)) AS increase
+                FROM salesreport s
+                LEFT JOIN inventory i ON i.productName = s.products
+                WHERE s.products LIKE ? 
+                   OR i.productID LIKE ? 
+                   OR i.category LIKE ?
+                   OR s.transaction_ID LIKE ?
+                GROUP BY s.products, i.productID, i.category, i.quantity, i.unit
+                LIMIT 10
+            ";
+            
+            $searchTerm = "%$keyword%";
+            $stmt = $config->prepare($sql);
+            $stmt->bind_param("ssss", $searchTerm, $searchTerm, $searchTerm, $searchTerm);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            $data = [];
+            while ($row = $result->fetch_assoc()) {
+                $data[] = $row;
+            }
+            
+            echo json_encode($data);
+            
+        } catch (Exception $e) {
+            error_log("Search error: " . $e->getMessage());
+            echo json_encode(["error" => "Search failed"]);
+        }
     }
-
 }

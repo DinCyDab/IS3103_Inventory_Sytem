@@ -3,11 +3,10 @@
     background: #fff;
     border-radius: 12px;
     box-shadow: 0 2px 22px rgba(120,120,170,0.09);
-    padding: 23px;
     margin-bottom: 10px;
     margin-top: 30px;
-    max-width: 600px;
-    width: 100%; 
+    max-width: 99vw;
+    width: 100%;
 }
 
 /* title */
@@ -15,16 +14,17 @@
     font-size: 1.24rem;
     color: #2c2760;
     font-weight: 550;
-    margin-bottom: 30px;
+    margin: 25px 0 20px 15px;
 }
 
 /* row layout */
 .overview-row {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    gap: 0;
-    margin-bottom: 17px;
+    flex-wrap: wrap;
+    align-items: baseline;
+    margin: 25px 0 20px 17px;
+    gap: 20px;
 }
 
 /* each item */
@@ -38,19 +38,23 @@
 
 /* main value (₱0) */
 .overview-value {
-    color: #44475c;
-    font-size: 1.19rem;
-    font-weight: 600;
-    margin-bottom: 8px;
+    color: #6b7280;
+    font-size: clamp(1rem, 1.2vw, 1.5rem);
+    margin-bottom: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    cursor: pointer;
 }
 
 /* label */
 .overview-label {
     color: #8e93a3;
-    font-size: .95rem;
+    font-size: .68rem;
     font-weight: 400;
     letter-spacing: 0.01em;
-    margin-top: 0px;
+    max-width: 100%;
 }
 
 /* divider */
@@ -83,25 +87,14 @@
     margin-bottom: 20px;
 }
 
-
-
-
-
-
-
-
-
-
-
-
 /* reports best selling category box */
 .bestseller-container {
     background: #fff;
     border-radius: 12px;
     box-shadow: 0 2px 22px rgba(120,120,170,0.09);
-    padding: 24px;
+    margin-bottom: 10px;
     margin-top: 30px;
-    max-width: 600px;
+    max-width: 99vw;
     width: 100%;
 }
 
@@ -110,13 +103,13 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 22px;
 }
 
 .bestseller-header h3 {
-    font-size: 1.18rem;
+    font-size: 1.24rem;
     color: #2c2760;
     font-weight: 550;
+    margin: 25px 0 20px 15px;
 }
 
 .see-all {
@@ -124,6 +117,7 @@
     color: #6c5cef;
     font-weight: 500;
     text-decoration: none;
+    margin-right: 15px;
 }
 
 .see-all:hover {
@@ -139,12 +133,12 @@
     display: flex;
     justify-content: space-between;
     padding-bottom: 10px;
+    text-align: center;
 }
 
 .bestseller-labels .bestseller-col {
     flex: 1;
     font-size: .95rem;
-    font-weight: 600;
     color: #6b7280;
 }
 
@@ -153,13 +147,20 @@
     display: flex;
     justify-content: space-between;
     padding: 15px 0;
+    text-align: center;
+}
+
+.bestseller-col:first-child,
+.bestseller-row:first-child{
+    text-align: left;
+    margin-left: 20px;
 }
 
 /* each column */
 .bestseller-col {
     flex: 1;
     font-size: .95rem;
-    color: #44475c;
+    color: #6b7280;
 }
 
 /* green percentage text */
@@ -174,17 +175,6 @@
     height: 1px;
     background: #e5e7eb;
 }
-
-
-
-
-
-
-
-
-
-
-
 
 /* profit and revenue box */
 .profit-container {
@@ -304,24 +294,13 @@
     background: #f5f5f5;
 }
 
-
-
-
-
-
-
-
-
-
 /* best selling product container */
 .bestseller-product-container {
     background: #fff;
     border-radius: 12px;
-    box-shadow: 0 2px 22px rgba(120,120,170,0.09);
-    padding: 24px;
-    margin-top: 26px;
-    margin-bottom: 40px;
-    width: 100%;
+    margin-top: 35px;
+    margin-bottom: 35px;
+    box-shadow: 0 4px 24px rgba(120,120,170,0.07);
 }
 
 /* header */
@@ -329,7 +308,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 22px;
+    padding: 16px;
+    margin-bottom: 10px;
 }
 
 .bestseller-product-header h3 {
@@ -353,7 +333,6 @@
 .product-labels .product-col {
     flex: 1;
     font-size: .95rem;
-    font-weight: 600;
     color: #6b7280;
 }
 
@@ -368,6 +347,13 @@
     flex: 1;
     font-size: .95rem;
     color: #44475c;
+    text-align: center;
+}
+
+.product-col:first-child,
+.product-col:first-child{
+    text-align: left;
+    margin-left: 20px;
 }
 
 /* green percentage text */
@@ -382,16 +368,6 @@
     height: 1px;
     background: #e5e7eb;
 }
-
-
-
-
-
-
-
-
-
-
 
 /* pop out box */
 .modal-overlay {
@@ -439,11 +415,6 @@
 .modal-row.header {
     font-weight: bold;
 }
-
-
-
-
-
 
 .modal-overlay {
     display: none;
