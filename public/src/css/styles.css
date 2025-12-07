@@ -61,6 +61,10 @@ a{
     letter-spacing: 0.01em;
 }
 
+.sidebar a:last-child{
+    color: red;
+}
+
 .sidebar a:hover, .sidebar a.active{
     background: #eeeafd;
     color: #6c5ce7;
@@ -212,6 +216,14 @@ main{
     gap: 4px;
 }
 
+
+
+
+
+
+
+
+
 /* FIX ASAP */
 /* For responsiveness of the whole page */
 @media(min-width: 1200px){
@@ -338,5 +350,111 @@ main{
     .product-img-box {
         width: 100%;
         height: auto;
+    }
+}
+
+
+
+
+
+
+/* Dashboard Responsiveness */
+@media (max-width: 1280px) {
+    .dashboard-grid-2 {
+        grid-template-columns: 1fr;
+    }
+    
+    .span-2 {
+        grid-column: span 1;
+    }
+}
+
+@media (max-width: 1024px) {
+    .dashboard-container {
+        margin-left: 0;
+        padding: 1.5rem;
+    }
+
+    .inventory-summary-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 1rem;
+    }
+
+    .dashboard-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .card-header h2 {
+        font-size: 1.125rem;
+    }
+
+    .dashboard-table th,
+    .dashboard-table td {
+        padding: 0.625rem 0.5rem;
+        font-size: 0.8125rem;
+    }
+
+    .low-stock-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-container {
+        height: 220px;
+    }
+
+    .summary-value {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-container {
+        padding: 0.75rem;
+    }
+
+    .dashboard-card {
+        padding: 1rem;
+    }
+
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .dashboard-table {
+        font-size: 0.75rem;
+    }
+
+    .inventory-summary-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .summary-card {
+        padding: 1rem;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .dashboard-container {
+        margin-left: 0;
+        padding: 1rem;
+    }
+
+    .see-all-link {
+        display: none;
+    }
+
+    .dashboard-card {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #e5e7eb;
     }
 }

@@ -22,9 +22,7 @@
     //Add your controller here
     require_once "./mvc/controller/inventorycontroller.php";
     require_once "./mvc/controller/reportscontroller.php";
-
-    // ROUTER
-    //$_GET['view'] comes from navigation.php
+    require_once "./mvc/controller/dashboardcontroller.php";
 
     // Check login status
     if(isset($_SESSION["account"])){
@@ -36,13 +34,25 @@
         $view = "login";
     }
 
-    // if(isset($_GET["view"])){
-    //     $view = $_GET["view"];
-    // }
+    // Handle dashboard routing
+    if($isLoggedIn && $view === 'dashboard'){
+        $dashboardController = new DashboardController();
+        $dashboardData = $dashboardController->index();
+
+        $page = new DashboardView();
+        $page->setDashboardData($dashboardData);
+    }
+
+    // Handle dashboard stats API endpoint
+    elseif($isLoggedIn && $view === 'dashboardStats'){
+        $dashboardController = new DashboardController();
+        $dashboardController->fetchStats();
+        exit;
+    }
 
 
     // Handle inventory routing only if logged in
-    if($isLoggedIn && in_array($view, ['inventory', 'createProduct', 'updateProduct', 'deleteProduct', 'fetchStats', 'paginated', 'allProducts', 'searchProducts'])){
+    elseif($isLoggedIn && in_array($view, ['inventory', 'createProduct', 'updateProduct', 'deleteProduct', 'fetchStats', 'paginated', 'allProducts', 'searchProducts'])){
 
         $controller = new ProductController();
 
