@@ -70,6 +70,20 @@ a{
     color: #6c5ce7;
 }
 
+.nav-logo{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: -50px;
+    margin-bottom: -30px;
+}
+
+.nav-logo img{
+    width: 240px;
+    height: auto;
+}
+
 /* Main Content */
 main{
     margin-left: 240px;

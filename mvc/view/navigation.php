@@ -13,7 +13,14 @@
         public function render(){
             // detect active view
             $active = $_GET["view"] ?? "dashboard";
+            ?>
 
+            <!-- Navigation Logo -->
+            <div class="nav-logo">
+                <img src="./public/images/navigation/KASAMA.png" alt="Kasama Logo">
+            </div>
+
+            <?php
             foreach($this->nav_items as $item){
                 $view = $item['label'];
                 $icon = $item['icon'];
