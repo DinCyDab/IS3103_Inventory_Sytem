@@ -21,6 +21,7 @@
                         <img src="./public/images/login/login-image.png">
                     </div>
                     <div class="login-form-holder">
+                        <img src="./public/images/login/login-image2.png">
                         <h2>Log in to your account</h2>
                         <p>Welcome back! Please enter your details</p>
                         <?php 

@@ -30,6 +30,11 @@ main{
     margin-bottom: 8px;
 }
 
+.login-form-holder img{
+    width: 100px;
+    height: auto;
+}
+
 .login-form-holder p{
     font-size: 14px;
     color: #8e93a3;
@@ -70,7 +75,6 @@ main{
 }
 
 .login-form input{
-    height: 30px;
     border-radius: 3px;
     border: 1px solid rgba(0, 0, 0, .1);
     padding: 10px;
