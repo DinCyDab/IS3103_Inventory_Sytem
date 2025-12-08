@@ -22,7 +22,7 @@ class Navigation{
         $permissions = [
             'super_admin' => ['dashboard', 'accounts', 'inventory', 'sales', 'reports', 'settings'],
             'admin' => ['dashboard', 'accounts', 'inventory', 'sales', 'reports', 'settings'],
-            'staff' => ['sales', 'reports', 'settings']
+            'staff' => ['inventory', 'sales', 'reports', 'settings']
         ];
         
         $this->allowedPages = $permissions[$this->userRole] ?? [];

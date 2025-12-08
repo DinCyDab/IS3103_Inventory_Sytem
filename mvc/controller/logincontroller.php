@@ -41,7 +41,7 @@
                 case 'admin':
                     return 'dashboard';
                 case 'staff':
-                    return 'sales';
+                    return 'inventory';
             }
         }
     }

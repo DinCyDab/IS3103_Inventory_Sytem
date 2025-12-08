@@ -356,6 +356,7 @@
                                 <select id="edit_role" name="role" required="">
                                     <option value="staff">Staff</option>
                                     <option value="admin">Admin</option>
+                                    <option value="super_admin">Super Admin</option>
                                 </select>
                             </div>
                             <div class="form-row">
@@ -398,6 +399,11 @@
                                 </label>
 
                                 <hr>
+
+                                <label>
+                                    <input type="checkbox" name="role[]" value="super_admin" class="role-checkbox">
+                                    Super Admin
+                                </label>
 
                                 <label>
                                     <input type="checkbox" name="role[]" value="admin" class="role-checkbox">

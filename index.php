@@ -36,7 +36,7 @@
                             'createProduct', 'updateProduct', 'deleteProduct', 'fetchStats', 'paginated', 'allProducts', 'searchProducts'],
             'admin' => ['dashboard', 'accounts', 'inventory', 'sales', 'reports', 'settings', 'logout',
                        'createProduct', 'updateProduct', 'deleteProduct', 'fetchStats', 'paginated', 'allProducts', 'searchProducts'],
-            'staff' => ['sales', 'reports', 'settings', 'logout']
+            'staff' => ['inventory', 'paginated', 'allProducts', 'searchProducts', 'fetchStats', 'sales', 'reports', 'settings', 'logout']
         ];
         
         $allowedViews = $permissions[$userRole] ?? ['sales', 'reports', 'settings', 'logout'];
