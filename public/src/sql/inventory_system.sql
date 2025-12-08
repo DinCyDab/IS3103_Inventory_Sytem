@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Dec 07, 2025 at 11:12 AM
+-- Generation Time: Dec 08, 2025 at 10:17 AM
 -- Server version: 10.4.21-MariaDB
 -- PHP Version: 7.4.29
 
@@ -34,7 +34,7 @@ CREATE TABLE `account` (
   `password` varchar(255) NOT NULL,
   `email` varchar(150) NOT NULL,
   `contact_number` varchar(50) DEFAULT NULL,
-  `role` enum('staff','admin','super admin') NOT NULL DEFAULT 'staff',
+  `role` enum('staff','admin','super_admin') NOT NULL,
   `status` enum('active','inactive') DEFAULT 'active'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -44,7 +44,11 @@ CREATE TABLE `account` (
 
 INSERT INTO `account` (`account_ID`, `first_name`, `last_name`, `password`, `email`, `contact_number`, `role`, `status`) VALUES
 (1, 'Juan', 'Dela Cruz', '$2y$10$B6DbJWTioOvMKLz/SaxFKutc4E844LP7VL1MQCOFBvrShwlN3/Czy', '1234@gmail.com', '', 'admin', 'active'),
-(2, 'James', 'Galon', '$2y$10$QXNaKJyJqUz76ZIPuK.k2OpgxQfZrLT63fnkbloXC8wRUg/omKcTi', '24100467@usc.edu.php', '0921 443 9215', 'admin', 'active');
+(2, 'James', 'Galon', '$2y$10$QXNaKJyJqUz76ZIPuK.k2OpgxQfZrLT63fnkbloXC8wRUg/omKcTi', '24100467@usc.edu.php', '0921 443 9215', 'admin', 'active'),
+(3, 'Dino', 'Dabon', '$2y$10$Sovvezgs/KnYpbsBDAhBr.UuKOiA8BOnkkWhHhbZ5bojNMK..GDQy', '12345@gmail.com', '0921 443 9215', 'super_admin', 'active'),
+(4, 'Miguel', 'Andaya', '$2y$10$JEH3gDnEZXcr.GhvUmQl/.r.xGPdAThpraelZ3jzzKx2dlsRQnTPm', '123@gmail.com', '0921 443 9215', 'staff', 'active'),
+(5, 'Remegio', 'Magallanes', '$2y$10$YdJZJwZtY.iMnfZOkr1AzugaJSixMjnEaWzAmteuQdrvcvR.9vrZG', '12@gmail.com', '0921 443 9215', 'staff', 'active'),
+(6, 'Kris', 'Mesola', '$2y$10$2QuNnCVoHCO82RrJwPZCBuV/UkVB2yr.JzGEtc9JD1/TarHPQNRo2', '1@gmail.com', '0921 443 9215', 'staff', 'active');
 
 -- --------------------------------------------------------
 
@@ -137,7 +141,7 @@ ALTER TABLE `salesreport`
 -- AUTO_INCREMENT for table `account`
 --
 ALTER TABLE `account`
-  MODIFY `account_ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `account_ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `inventory`

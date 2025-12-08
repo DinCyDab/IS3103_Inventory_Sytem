@@ -1,6 +1,6 @@
 <?php 
-
     // require_once __DIR__ . "/../controller/accountcontroller.php";
+    
     class NotFound{
         public function render(){
             ?>

@@ -51,7 +51,7 @@ class Navigation{
             if(!$isLogout && !$this->isAllowed($page)){
                 // Show disabled menu item
                 ?>
-                <span class="nav-disabled" style="opacity: 0.5; cursor: not-allowed; display: flex; align-items: center; padding: 12px 20px; color: #999;">
+                <span class="nav-disabled">
                     <i class="<?php echo $icon; ?>"></i>
                     <span><?php echo $view; ?></span>
                 </span>

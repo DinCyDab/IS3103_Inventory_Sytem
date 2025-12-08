@@ -430,7 +430,7 @@
                                 </label>
 
                                 <button type="submit">Apply Filter</button>
-                                <button type="submit">Clear Filter</button>
+                                <button type="submit" style="background: orange;">Clear Filter</button>
                             </form>
                             <!-- <a href="index.php?view=accounts&role=admin">
                                 <div id="categoryOptions" style="display: flex; flex-wrap: wrap; gap:10px; margin: 15px 0;"><button type="button" class="category-option">Admin</button></div>

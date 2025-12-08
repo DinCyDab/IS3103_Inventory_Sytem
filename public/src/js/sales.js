@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', function () {
 					// create payment select to match table UI
 					const createPaymentSelect = (selected) => {
 						const options = ['GCash','Cash','Card'];
-						let html = '<select style="padding:6px 8px; border-radius:8px; border:1px solid #e6e9ef;">';
+						let html = '<select>';
 						options.forEach(opt => {
 							html += `<option value="${escapeHtml(opt)}"${opt===selected ? ' selected' : ''}>${escapeHtml(opt)}</option>`;
 						});

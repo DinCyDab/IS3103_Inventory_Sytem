@@ -38,7 +38,7 @@ class ReportsModel {
             SELECT  
                 SUM(CAST(order_value AS DECIMAL(10,2))) AS revenue,
                 SUM(CAST(order_value AS DECIMAL(10,2)) * 0.30) AS profit,
-                COUNT(transaction_ID) AS total_sales
+                SUM(CAST(order_value AS DECIMAL(10,2))) AS total_sales
             FROM salesreport
         ";
         $row = $this->conn->readOne($sql);
@@ -47,18 +47,20 @@ class ReportsModel {
         $totalSales = intval($row['total_sales'] ?? 0);
 
         // Net purchase value
-        // No purchase_price in inventory implemented -- initialized to 0
         $sqlPurchase = "
-            SELECT 
-                SUM(
-                    CAST(COALESCE(i.purchase_price,0) AS DECIMAL(10,2)) *
-                    CAST(COALESCE(s.quantity_sold,0) AS UNSIGNED)
-                ) AS net_purchase
-            FROM salesreport s
-            LEFT JOIN inventory i ON TRIM(LOWER(i.productName)) = TRIM(LOWER(s.products))
-        ";
+                SELECT 
+                    SUM(
+                        CAST(COALESCE(i.purchase_price,0) AS DECIMAL(10,2)) *
+                        CAST(COALESCE(s.quantity_sold,0) AS UNSIGNED)
+                    ) AS net_purchase
+                FROM salesreport s
+                LEFT JOIN inventory i 
+                    ON TRIM(LOWER(i.productName)) = TRIM(LOWER(s.products))
+            ";
         $purchaseRow = $this->conn->readOne($sqlPurchase);
         $netPurchase = floatval($purchaseRow['net_purchase'] ?? 0);
+
+        $grossProfit = $revenue - $netPurchase;
 
         // MoM profit in peso
         $sqlMoM = "
@@ -102,7 +104,7 @@ class ReportsModel {
             'total_profit' => $profit,
             'revenue' => $revenue,
             'sales' => $totalSales,
-            'net_purchase_value' => $netPurchase,
+            'net_purchase_value' => $grossProfit,
             'net_sales_value' => $revenue,
             'mom_profit' => $momProfit, // in peso
             'yoy_profit' => $yoyProfit  // in peso

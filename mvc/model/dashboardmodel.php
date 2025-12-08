@@ -113,38 +113,70 @@ class DashboardModel {
 
     // Get sales summary (monthly data for the last 5 months)
     public function getSalesSummary() {
-        $query = "SELECT 
-                    DATE_FORMAT(date_time, '%Y-%m') as month,
-                    DATE_FORMAT(date_time, '%b') as month_name,
-                    SUM(order_value) as total_sales,
-                    SUM(quantity_sold) as total_quantity,
-                    COUNT(*) as total_transactions
-                  FROM salesreport 
-                  WHERE date_time >= DATE_SUB(CURDATE(), INTERVAL 5 MONTH)
-                  GROUP BY DATE_FORMAT(date_time, '%Y-%m')
-                  ORDER BY month ASC";
+        $query = "
+            SELECT 
+                MONTH(s.date_time) AS month_number,
+                DATE_FORMAT(s.date_time, '%M') AS month_name,
+
+                -- SALES (revenue)
+                SUM(CAST(s.order_value AS DECIMAL(10,2))) AS total_sales,
+
+                -- PURCHASE COST (COGS)
+                SUM(
+                    CAST(COALESCE(i.purchase_price,0) AS DECIMAL(10,2)) *
+                    CAST(COALESCE(s.quantity_sold,0) AS UNSIGNED)
+                ) AS total_purchase_cost
+
+            FROM salesreport s
+            LEFT JOIN inventory i 
+                ON TRIM(LOWER(i.productName)) = TRIM(LOWER(s.products))
+
+            WHERE YEAR(s.date_time) = YEAR(CURDATE())
+
+            GROUP BY month_number, month_name
+            ORDER BY month_number
+        ";
+
+        $rows = $this->db->read($query);
         
-        return $this->db->read($query);
+        // Build chart data
+        $labels = [];
+        $sales = [];
+        $purchase_cost = [];
+
+        if($rows && is_array($rows)){
+            foreach($rows as $row){
+                $labels[] = $row['month_name'];
+                $sales[] = floatval($row['total_sales']);
+                $purchase_cost[] = floatval($row['total_purchase_cost']);
+            }
+        }
+
+        return [
+            "labels" => $labels,
+            "sales" => $sales,
+            "purchase_cost" => $purchase_cost
+        ];
     }
 
-    // Get purchase summary for comparison (if you have a purchases table)
-    public function getPurchaseSummary() {
-        // This is a placeholder - adjust based on your purchases/stock-in table
-        // For now, returning empty array since you might not have a purchases table yet
-        $query = "SELECT 
-                    DATE_FORMAT(created_at, '%Y-%m') as month,
-                    DATE_FORMAT(created_at, '%b') as month_name,
-                    COUNT(*) as total_purchases,
-                    SUM(quantity * price) as total_value
-                  FROM inventory 
-                  WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 5 MONTH)
-                  GROUP BY DATE_FORMAT(created_at, '%Y-%m')
-                  ORDER BY month ASC";
+    // // Get purchase summary for comparison (if you have a purchases table)
+    // public function getPurchaseSummary() {
+    //     // This is a placeholder - adjust based on your purchases/stock-in table
+    //     // For now, returning empty array since you might not have a purchases table yet
+    //     $query = "SELECT 
+    //                 DATE_FORMAT(created_at, '%Y-%m') as month,
+    //                 DATE_FORMAT(created_at, '%b') as month_name,
+    //                 COUNT(*) as total_purchases,
+    //                 SUM(quantity * price) as total_value
+    //               FROM inventory 
+    //               WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 5 MONTH)
+    //               GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+    //               ORDER BY month ASC";
         
-        // Check if created_at column exists, if not return empty array
-        $result = $this->db->read($query);
-        return $result ? $result : [];
-    }
+    //     // Check if created_at column exists, if not return empty array
+    //     $result = $this->db->read($query);
+    //     return $result ? $result : [];
+    // }
 
     // Get low stock items (limit to 4 for display)
     public function getLowStockItems($threshold = 20, $limit = 4) {

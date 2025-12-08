@@ -1,10 +1,11 @@
 Unknown column 'i.purchase_price' in 'field list'
 SQL: 
-            SELECT 
-                SUM(
-                    CAST(COALESCE(i.purchase_price,0) AS DECIMAL(10,2)) *
-                    CAST(COALESCE(s.quantity_sold,0) AS UNSIGNED)
-                ) AS net_purchase
-            FROM salesreport s
-            LEFT JOIN inventory i ON TRIM(LOWER(i.productName)) = TRIM(LOWER(s.products))
-        
+                SELECT 
+                    SUM(
+                        CAST(COALESCE(i.purchase_price,0) AS DECIMAL(10,2)) *
+                        CAST(COALESCE(s.quantity_sold,0) AS UNSIGNED)
+                    ) AS net_purchase
+                FROM salesreport s
+                LEFT JOIN inventory i 
+                    ON TRIM(LOWER(i.productName)) = TRIM(LOWER(s.products))
+            

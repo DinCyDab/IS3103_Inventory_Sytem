@@ -84,6 +84,22 @@ a{
     height: auto;
 }
 
+.nav-disabled{
+    opacity: 0.5; 
+    cursor: not-allowed; 
+    display: flex; 
+    align-items: center; 
+    padding: 12px 38px 12px 38px;
+    font-size: 1.1em;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    color: #999;
+}
+
+.nav-disabled i{
+    margin-right: 15px;
+}
+
 /* Main Content */
 main{
     margin-left: 240px;
