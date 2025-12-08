@@ -200,12 +200,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-
-
-
-
-
-
     // SEARCH
     const searchInput = document.getElementById("reportsSearch");
     const searchList = document.getElementById("reportsSearchList");

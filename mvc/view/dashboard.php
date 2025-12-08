@@ -14,7 +14,7 @@ class DashboardView {
         $lowStockItems = $this->dashboardData['lowStockItems'] ?? [];
         
         // Get user's first name for welcome message
-        $userName = $_SESSION['account']['firstName'] ?? 'User';
+        $userName = $_SESSION['account']['first_name'] ?? 'User';
         ?>
         
         <!-- Welcome Header -->
@@ -130,7 +130,12 @@ class DashboardView {
                             <h2>Sales Summary</h2>
                         </div>
                         <div class="chart-container">
-                            <canvas id="salesChart"></canvas>
+
+                            <canvas id="salesChart1" width="400" height="200"></canvas>
+                        </div>
+                         <div class="chart-container">
+
+                            <canvas id="salesChart" width="400" height="200"></canvas>
                         </div>
                         <div class="chart-legend">
                             <div class="legend-item">
@@ -201,115 +206,265 @@ class DashboardView {
                 const variation = 0.7 + (Math.sin(index) * 0.15);
                 return val * variation;
             });
+
+            // async function getData() {
+            // const url = "index.php?view=allProducts";
+            // try {
+            //     const response = await fetch(url);
+            //     if (!response.ok) {
+            //     throw new Error(`Response status: ${response.status}`);
+            //     }
+
+            //     const result = await response.json();
+            //     console.log(result);
+            // } catch (error) {
+            //     console.error(error.message);
+            // }
+            // }
             
             // Create the chart when DOM is loaded
             document.addEventListener('DOMContentLoaded', function() {
-                const ctx = document.getElementById('salesChart');
-                if (ctx && typeof Chart !== 'undefined') {
-                    new Chart(ctx.getContext('2d'), {
-                        type: 'line',
-                        data: {
-                            labels: labels,
-                            datasets: [
-                                {
-                                    label: 'Sales',
-                                    data: salesValues,
-                                    borderColor: 'rgb(59, 130, 246)',
-                                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                                    tension: 0.4,
-                                    fill: true,
-                                    borderWidth: 2,
-                                    pointRadius: 4,
-                                    pointBackgroundColor: 'rgb(59, 130, 246)',
-                                    pointBorderColor: '#fff',
-                                    pointBorderWidth: 2,
-                                    pointHoverRadius: 6
-                                },
-                                {
-                                    label: 'Purchase',
-                                    data: purchaseValues,
-                                    borderColor: 'rgb(249, 115, 22)',
-                                    backgroundColor: 'rgba(249, 115, 22, 0.1)',
-                                    tension: 0.4,
-                                    fill: true,
-                                    borderWidth: 2,
-                                    pointRadius: 4,
-                                    pointBackgroundColor: 'rgb(249, 115, 22)',
-                                    pointBorderColor: '#fff',
-                                    pointBorderWidth: 2,
-                                    pointHoverRadius: 6
-                                }
-                            ]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            interaction: {
-                                mode: 'index',
-                                intersect: false
-                            },
-                            plugins: {
-                                legend: {
-                                    display: false
-                                },
-                                tooltip: {
-                                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                                    padding: 12,
-                                    titleColor: '#fff',
-                                    bodyColor: '#fff',
-                                    borderColor: 'rgba(255, 255, 255, 0.1)',
-                                    borderWidth: 1,
-                                    displayColors: true,
-                                    callbacks: {
-                                        label: function(context) {
-                                            let label = context.dataset.label || '';
-                                            if (label) {
-                                                label += ': ';
-                                            }
-                                            label += '₱' + context.parsed.y.toLocaleString('en-PH', {
-                                                minimumFractionDigits: 2,
-                                                maximumFractionDigits: 2
-                                            });
-                                            return label;
-                                        }
-                                    }
-                                }
-                            },
-                            scales: {
-                                x: {
-                                    grid: {
-                                        display: false
-                                    },
-                                    ticks: {
-                                        color: '#6b7280',
-                                        font: {
-                                            size: 12
-                                        }
-                                    }
-                                },
-                                y: {
-                                    beginAtZero: true,
-                                    grid: {
-                                        color: 'rgba(0, 0, 0, 0.05)',
-                                        drawBorder: false
-                                    },
-                                    ticks: {
-                                        color: '#6b7280',
-                                        font: {
-                                            size: 12
-                                        },
-                                        callback: function(value) {
-                                            if (value >= 1000) {
-                                                return '₱' + (value / 1000) + 'k';
-                                            }
-                                            return '₱' + value;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
-                }
+
+//getData();
+
+                const canvas = document.getElementById('salesChart');
+                const ctx = canvas.getContext('2d');
+
+                  
+
+        const data = [
+            { label: 'Jan', value: 50 },
+            { label: 'Feb', value: 75 },
+            { label: 'Mar', value: 60 },
+            { label: 'Apr', value: 90 },
+            { label: 'May', value: 45 },
+            { label: 'Jun', value: 45 },
+            { label: 'Jul', value: 45 },
+            { label: 'Aug', value: 45 },
+            { label: 'Sep', value: 45 },
+            { label: 'Oct', value: 45 },
+            { label: 'Nov', value: 45 },
+            { label: 'Dec', value: 45 }
+        ];
+
+        const chartWidth = canvas.width;
+        const chartHeight = canvas.height;
+        const padding = 50;
+        const barWidth = 10;
+        const barSpacing = 10;
+
+        // Calculate maximum value for scaling
+        const maxValue = Math.max(...data.map(item => item.value));
+        const scale = (chartHeight - 2 * padding) / maxValue;
+
+        // Draw X and Y axis
+        ctx.strokeStyle = '#961717ff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(padding, padding);
+        ctx.lineTo(padding, chartHeight - padding); // Y-axis
+        ctx.lineTo(chartWidth - padding, chartHeight - padding); // X-axis
+        ctx.stroke();
+
+        // Draw bars
+        let currentX = padding + barSpacing;
+        for (let i = 0; i < data.length; i++) {
+            const barHeight = data[i].value * scale;
+
+            ctx.fillStyle = 'orange';
+            ctx.fillRect(currentX, chartHeight - padding - barHeight, barWidth, barHeight);
+
+            // Draw labels
+            ctx.fillStyle = '#c51c1cff';
+            ctx.textAlign = 'center';
+            ctx.fillText(data[i].label, currentX + barWidth / 2, chartHeight - padding + 20);
+            ctx.fillText(data[i].value, currentX + barWidth / 2, chartHeight - padding - barHeight - 10);
+
+            currentX += barWidth + barSpacing;
+        }
+
+        // Draw axis labels
+        ctx.textAlign = 'center';
+        ctx.fillText('Months', chartWidth / 2, chartHeight - 10);
+        ctx.save();
+        ctx.translate(20, chartHeight / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText('Purchase', 0, 0);
+        ctx.restore();
+             
+
+        /////SALES////
+             const canvas1 = document.getElementById('salesChart1');
+                const ctx1 = canvas1.getContext('2d');
+
+                  
+
+        const data1 = [
+            { label: 'Jan', value: 50 },
+            { label: 'Feb', value: 75 },
+            { label: 'Mar', value: 60 },
+            { label: 'Apr', value: 90 },
+            { label: 'May', value: 45 },
+            { label: 'Jun', value: 45 },
+            { label: 'Jul', value: 45 },
+            { label: 'Aug', value: 45 },
+            { label: 'Sep', value: 45 },
+            { label: 'Oct', value: 45 },
+            { label: 'Nov', value: 45 },
+            { label: 'Dec', value: 45 }
+        ];
+
+        const chartWidth1 = canvas1.width;
+        const chartHeight1 = canvas1.height;
+        const padding1 = 50;
+        const barWidth1 = 10;
+        const barSpacing1 = 10;
+
+        // Calculate maximum value for scaling
+        const maxValue1 = Math.max(...data1.map(item => item.value));
+        const scale1 = (chartHeight1 - 2 * padding1) / maxValue1;
+
+        // Draw X and Y axis
+        ctx1.strokeStyle = '#333';
+        ctx1.lineWidth = 2;
+        ctx1.beginPath();
+        ctx1.moveTo(padding1, padding1);
+        ctx1.lineTo(padding1, chartHeight1 - padding1); // Y-axis
+        ctx1.lineTo(chartWidth1 - padding1, chartHeight1 - padding1); // X-axis
+        ctx1.stroke();
+
+        // Draw bars
+        let currentX1 = padding1 + barSpacing1;
+        for (let i = 0; i < data1.length; i++) {
+            const barHeight1 = data1[i].value * scale1;
+
+            ctx1.fillStyle = 'steelblue';
+            ctx1.fillRect(currentX1, chartHeight - padding1 - barHeight1, barWidth1, barHeight1);
+
+            // Draw labels
+            ctx1.fillStyle = '#000';
+            ctx1.textAlign = 'center';
+            ctx1.fillText(data1[i].label, currentX1 + barWidth1 / 2, chartHeight - padding1 + 20);
+            ctx1.fillText(data1[i].value, currentX1 + barWidth1 / 2, chartHeight - padding1 - barHeight1 - 10);
+
+            currentX1 += barWidth1 + barSpacing1;
+        }
+
+        // Draw axis labels
+        ctx1.textAlign = 'center';
+        ctx1.fillText('Months', chartWidth1 / 2, chartHeight1 - 10);
+        ctx1.save();
+        ctx1.translate(20, chartHeight1 / 2);
+        ctx1.rotate(-Math.PI / 2);
+        ctx1.fillText('Sales', 0, 0);
+        ctx1.restore();
+             
+
+                // if (canvas && typeof Chart !== 'undefined') {
+                //     new Chart(canvas.getContext('2d'), {
+                //         type: 'line',
+                //         data: {
+                //             labels: labels,
+                //             datasets: [
+                //                 {
+                //                     label: 'Sales',
+                //                     data: salesValues,
+                //                     borderColor: 'rgb(59, 130, 246)',
+                //                     backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                //                     tension: 0.4,
+                //                     fill: true,
+                //                     borderWidth: 2,
+                //                     pointRadius: 4,
+                //                     pointBackgroundColor: 'rgb(59, 130, 246)',
+                //                     pointBorderColor: '#fff',
+                //                     pointBorderWidth: 2,
+                //                     pointHoverRadius: 6
+                //                 },
+                //                 {
+                //                     label: 'Purchase',
+                //                     data: purchaseValues,
+                //                     borderColor: 'rgb(249, 115, 22)',
+                //                     backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                //                     tension: 0.4,
+                //                     fill: true,
+                //                     borderWidth: 2,
+                //                     pointRadius: 4,
+                //                     pointBackgroundColor: 'rgb(249, 115, 22)',
+                //                     pointBorderColor: '#fff',
+                //                     pointBorderWidth: 2,
+                //                     pointHoverRadius: 6
+                //                 }
+                //             ]
+                //         },
+                //         options: {
+                //             responsive: true,
+                //             maintainAspectRatio: false,
+                //             interaction: {
+                //                 mode: 'index',
+                //                 intersect: false
+                //             },
+                //             plugins: {
+                //                 legend: {
+                //                     display: false
+                //                 },
+                //                 tooltip: {
+                //                     backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                //                     padding: 12,
+                //                     titleColor: '#fff',
+                //                     bodyColor: '#fff',
+                //                     borderColor: 'rgba(255, 255, 255, 0.1)',
+                //                     borderWidth: 1,
+                //                     displayColors: true,
+                //                     callbacks: {
+                //                         label: function(context) {
+                //                             let label = context.dataset.label || '';
+                //                             if (label) {
+                //                                 label += ': ';
+                //                             }
+                //                             label += '₱' + context.parsed.y.toLocaleString('en-PH', {
+                //                                 minimumFractionDigits: 2,
+                //                                 maximumFractionDigits: 2
+                //                             });
+                //                             return label;
+                //                         }
+                //                     }
+                //                 }
+                //             },
+                //             scales: {
+                //                 x: {
+                //                     grid: {
+                //                         display: false
+                //                     },
+                //                     ticks: {
+                //                         color: '#6b7280',
+                //                         font: {
+                //                             size: 12
+                //                         }
+                //                     }
+                //                 },
+                //                 y: {
+                //                     beginAtZero: true,
+                //                     grid: {
+                //                         color: 'rgba(0, 0, 0, 0.05)',
+                //                         drawBorder: false
+                //                     },
+                //                     ticks: {
+                //                         color: '#6b7280',
+                //                         font: {
+                //                             size: 12
+                //                         },
+                //                         callback: function(value) {
+                //                             if (value >= 1000) {
+                //                                 return '₱' + (value / 1000) + 'k';
+                //                             }
+                //                             return '₱' + value;
+                //                         }
+                //                     }
+                //                 }
+                //             }
+                //         }
+                //     });
+                // }
             });
         </script>
         

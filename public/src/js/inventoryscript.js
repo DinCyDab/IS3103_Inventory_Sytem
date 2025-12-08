@@ -601,7 +601,7 @@ document.addEventListener('DOMContentLoaded', function() {
   async function updateOverallStats(){
     try{
         const res = await fetch('index.php?view=fetchStats', {
-            headers: { 'X-Requested_With': 'XMLHttpRequest' }
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
         });
         const stats = await res.json();
         if(!Array.isArray(stats)) return;

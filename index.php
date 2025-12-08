@@ -18,6 +18,7 @@
     require_once __DIR__ . "/mvc/view/sales.php";
     require_once __DIR__ . "/mvc/view/reports.php";
     require_once __DIR__ . "/mvc/view/settings.php";
+    require_once __DIR__ . "/mvc/view/notfound.php";
 
     //Add your controller here
     require_once "./mvc/controller/inventorycontroller.php";
@@ -27,11 +28,79 @@
     // Check login status
     if(isset($_SESSION["account"])){
         $isLoggedIn = true;
-        $view =  $_GET['view'] ?? "dashboard";
-    } else{
-        // $view = $_GET["view"] ?? "login";
+        $userRole = $_SESSION["account"]["role"] ?? 'staff';
+        
+        // Define permissions
+        $permissions = [
+            'super_admin' => ['dashboard', 'accounts', 'inventory', 'sales', 'reports', 'settings', 'logout', 
+                            'createProduct', 'updateProduct', 'deleteProduct', 'fetchStats', 'paginated', 'allProducts', 'searchProducts'],
+            'admin' => ['dashboard', 'accounts', 'inventory', 'sales', 'reports', 'settings', 'logout',
+                       'createProduct', 'updateProduct', 'deleteProduct', 'fetchStats', 'paginated', 'allProducts', 'searchProducts'],
+            'staff' => ['sales', 'reports', 'settings', 'logout']
+        ];
+        
+        $allowedViews = $permissions[$userRole] ?? ['sales', 'reports', 'settings', 'logout'];
+        
+        // Get requested view
+        $requestedView = $_GET['view'] ?? null;
+        
+        // If no view requested, redirect to default based on role
+        if(!$requestedView){
+            if($userRole === 'staff'){
+                header("Location: index.php?view=sales");
+                exit();
+            } else {
+                header("Location: index.php?view=dashboard");
+                exit();
+            }
+        }
+        
+        // Check if user has permission to access requested view
+        if(!in_array($requestedView, $allowedViews)){
+            // For AJAX requests, return JSON error instead of redirect
+            if(!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'){
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'permission_denied',
+                    'message' => 'You do not have permission to access this resource'
+                ]);
+                exit();
+            }
+            
+            // For regular requests, redirect to their default page
+            if($userRole === 'staff'){
+                header("Location: index.php?view=sales");
+            } else {
+                header("Location: index.php?view=dashboard");
+            }
+            exit();
+        }
+        
+        $view = $requestedView;
+    } else {
         $isLoggedIn = false;
         $view = "login";
+        $userRole = null;
+        
+        // If not logged in and trying to access protected resources
+        $requestedView = $_GET['view'] ?? null;
+        if($requestedView && $requestedView !== 'login'){
+            // For AJAX requests, return JSON error
+            if(!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'){
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'not_authenticated',
+                    'message' => 'Please login to access this resource'
+                ]);
+                exit();
+            }
+            
+            // For regular requests, redirect to login
+            header("Location: index.php?view=login");
+            exit();
+        }
     }
 
     // Handle dashboard routing
@@ -50,18 +119,36 @@
         exit;
     }
 
-
-    // Handle inventory routing only if logged in
+    // Handle inventory routing - check permissions first
     elseif($isLoggedIn && in_array($view, ['inventory', 'createProduct', 'updateProduct', 'deleteProduct', 'fetchStats', 'paginated', 'allProducts', 'searchProducts'])){
+        
+        // Double-check permission (already checked above, but extra safety)
+        if(!in_array($view, $allowedViews)){
+            if(!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'){
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'permission_denied',
+                    'message' => 'You do not have permission to access inventory'
+                ]);
+                exit();
+            }
+            
+            if($userRole === 'staff'){
+                header("Location: index.php?view=sales");
+            } else {
+                header("Location: index.php?view=dashboard");
+            }
+            exit();
+        }
 
         $controller = new ProductController();
 
         switch($view){
             case "inventory":
-                $inventoryData = $controller->index(); // Get Data
-                // $stats = $controller->getOverviewStats(); 
+                $inventoryData = $controller->index();
 
-                $page = new InventoryView(); // Load View
+                $page = new InventoryView();
                 $page->setProducts($inventoryData["products"]);
                 $page->setOverviewStats($inventoryData["overviewStats"]);
                 break;
@@ -100,13 +187,11 @@
     elseif($isLoggedIn && $view === 'reports'){
         $reportsController = new ReportsController();
 
-        // Check if this is a search request
         if(isset($_GET['action']) && $_GET['action'] === 'search'){
             $reportsController->search();
             exit;
         }
 
-        // Otherwise render the reports page
         $page = $reportsController->index();
     }
     
@@ -135,7 +220,7 @@
                 $page = new SettingsView();
                 break;
             default:
-                $page = new LoginView();
+                $page = new NotFound();
         }
     }
 
@@ -153,7 +238,6 @@
     </head>
     <body>
         <header>
-            <!-- Add your view as a list in class Navigation inside navigation.php -->
             <?php if($isLoggedIn && $navigation instanceof Navigation): ?>
                 <div class="sidebar">
                     <?php $navigation->render(); ?>

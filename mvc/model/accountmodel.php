@@ -32,15 +32,21 @@
             return $this->config->read($sql);
         }
 
+        public function getAccountById($account_ID){
+            $sql = "SELECT * FROM Account WHERE account_ID = $account_ID";
+            $result = $this->config->read($sql);
+            return !empty($result) ? $result[0] : null;
+        }
+
         public function updateAccount($account_ID, $first_name, $last_name, $hashed_password, $email, $contact_number, $role, $status){
             $sql = "UPDATE Account
                     SET first_name = '$first_name',
-                    last_name = '$last_name',
-                    password = '$hashed_password',
-                    email = '$email',
-                    contact_number = '$contact_number',
-                    role = '$role',
-                    status = '$status'
+                        last_name = '$last_name',
+                        password = '$hashed_password',
+                        email = '$email',
+                        contact_number = '$contact_number',
+                        role = '$role',
+                        status = '$status'
                     WHERE account_ID = $account_ID";
             
             return $this->config->query($sql);

@@ -157,6 +157,7 @@ class SalesView{
 		<script src="./public/src/js/sales.js"></script>
  
  		<link href="./public/src/css/sales.css" rel="stylesheet">
+
  		<?php
 	}
 

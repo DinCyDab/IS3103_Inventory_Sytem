@@ -118,8 +118,17 @@ document.addEventListener('DOMContentLoaded', function () {
 	}
 
 	// To record modal
-	function openModal(){ if(modal){ modal.style.display = 'flex'; document.body.style.overflow = 'hidden'; if(modalError){ modalError.style.display='none'; modalError.textContent=''; } } }
-	function closeModal(){ if(modal){ modal.style.display = 'none'; document.body.style.overflow = ''; if(form){ form.reset(); } if(modalError){ modalError.style.display='none'; modalError.textContent=''; } } }
+	function openModal(){ 
+		if(modal){ 
+			modal.style.display = 'flex'; 
+			document.body.style.overflow = 'hidden'; 
+			if(modalError){ modalError.style.display='none'; 
+				modalError.textContent=''; 
+			} 
+		} 
+	}
+	function closeModal(){ 
+		if(modal){ modal.style.display = 'none'; document.body.style.overflow = ''; if(form){ form.reset(); } if(modalError){ modalError.style.display='none'; modalError.textContent=''; } } }
 
 	if (addBtn) addBtn.addEventListener('click', openModal);
 	if (discardBtn) discardBtn.addEventListener('click', closeModal);

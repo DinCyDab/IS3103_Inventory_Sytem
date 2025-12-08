@@ -1,13 +1,17 @@
 <?php 
     require_once __DIR__ . "/../controller/accountcontroller.php";
+    
     class AccountsView{
         private $account_controller;
         private $accounts = [];
         private $upper_limit;
         private $lower_limit;
         private $next_disabled;
+        private $current_user_role;
+
         public function __construct(){
             $this->account_controller = new AccountController();
+            $this->current_user_role = $_SESSION["account"]["role"] ?? 'staff';
 
             $this->handleAccountCreation();
             $this->handleDeleteAccount();
@@ -59,6 +63,20 @@
 
             $this->account_controller->closeConnection();
         }
+
+        // Check if current user can modify target account
+        private function canModify($target_role){
+            if($this->current_user_role === 'super_admin'){
+                return $target_role !== 'super_admin';
+            }
+
+            if($this->current_user_role === 'admin'){
+                return $target_role === 'staff';
+            }
+
+            return false;
+        }
+
         public function render(){
             ?>
                 <div class="header"></div>
@@ -78,6 +96,10 @@
 
                 <link href="./public/src/css/account.css" rel="stylesheet">
                 <script src="./public/src/js/accounts.js"></script>
+                <script>
+                    // Pass current user role to Javascript
+                    const currentUserRole = '<?php echo $this->current_user_role; ?>';
+                </script>
             <?php
         }
 
@@ -166,15 +188,26 @@
                                                 <td><?php echo $contact_number?></td>
                                                 <td><?php echo $role?></td>
                                                 <td><?php echo $status?></td>
-                                                <td>
-                                                    <button class="action-btn edit" title="Edit" onclick="editAccount(<?php printf('\'%s\', \'%s\', \'%s\', \'%s\', \'%s\', \'%s\'', $account_ID, $first_name, $last_name, $email, $contact_number, $role, $status) ?>)">
-                                                        <i class="bx bxs-edit"></i>
-                                                    </button>
-                                                    <button class="action-btn delete" title="Delete" 
-                                                        onclick="deleteAccount(<?php echo $account['account_ID'] . ', \'' . $role . '\''; ?>)">
-                                                        <i class="bx bx-trash-alt"></i>
-                                                    </button>
-                                                </td>
+                                                
+                                                    <td>
+                                                        <?php if ($this->canModify($role)) : ?>
+                                                            <!-- EDIT BUTTON -->
+                                                            <button class="action-btn edit" title="Edit"
+                                                                onclick="editAccount(<?php printf('\'%s\', \'%s\', \'%s\', \'%s\', \'%s\', \'%s\'', 
+                                                                    $account_ID, $first_name, $last_name, $email, $contact_number, $role, $status) ?>)">
+                                                                <i class="bx bxs-edit"></i>
+                                                            </button>
+
+                                                            <!-- DELETE BUTTON -->
+                                                            <button class="action-btn delete" title="Delete"
+                                                                onclick="deleteAccount(<?php echo $account_ID . ', \'' . $role . '\''; ?>)">
+                                                                <i class="bx bx-trash-alt"></i>
+                                                            </button>
+                                                        <?php else: ?>
+                                                            <span style="color:#888; font-size:12px;">No Access</span>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                
                                             </tr>
                                         <?php
                                     }
@@ -273,6 +306,7 @@
                                     <option value="" disabled="" selected="">Select role</option>
                                     <option value="staff">Staff</option>
                                     <option value="admin">Admin</option>
+                                    <option value="super_admin">Super Admin</option>
                                 </select>
                             </div>
                             <small style="color: red; font-size: 10px;">Note: The default password is the user’s email address.</small>
@@ -396,6 +430,7 @@
                                 </label>
 
                                 <button type="submit">Apply Filter</button>
+                                <button type="submit">Clear Filter</button>
                             </form>
                             <!-- <a href="index.php?view=accounts&role=admin">
                                 <div id="categoryOptions" style="display: flex; flex-wrap: wrap; gap:10px; margin: 15px 0;"><button type="button" class="category-option">Admin</button></div>

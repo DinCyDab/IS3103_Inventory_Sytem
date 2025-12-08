@@ -9,27 +9,44 @@ function showAccountModal(){
     add_account_modal.style.display = "flex";
 }
 
-//Delete Logic
+// Helper function to check if current user can modify target role
+function canModifyRole(targetRole){
+    // currentUserRole is defined in the PHP view
+    if(currentUserRole === 'super_admin'){
+        return targetRole !== 'super_admin';
+    }
 
+    if(currentUserRole === 'admin'){
+        return targetRole === 'staff';
+    }
+
+    return false;
+}
+
+//Delete Logic
 var delete_selected_ID = document.getElementById("selected_ID");
 
 function deleteAccount(account_ID, account_role){
-    if(account_role == 'admin'){
+    // Check permissions
+    if(!canModifyRole(account_role)){
+        alert('You do not have permission to delete this account.');
         return;
     }
 
-    delete_selected_ID.value = account_ID;
-
-    var delete_form = document.getElementById("delete_form");
-
-    delete_form.submit();
+    if(confirm('Are you sure you want to delete this account?')){
+        delete_selected_ID = account_ID;
+        var delete_form = document.getElementById("delete_form");
+        delete_form.submit();
+    }
 }
 
 var edit_account_modal = document.getElementById("editAccountModal");
 
 //Edit Account Logic
 function editAccount(account_ID, first_name, last_name, email, contact_number, role, status){
-    if(role == 'admin'){
+    // check permissions
+    if(!canModifyRole(role)){
+        alert('You do not have permission to edit this account.');
         return;
     }
     
@@ -48,8 +65,8 @@ function editAccount(account_ID, first_name, last_name, email, contact_number, r
     email_holder.value = email;
     contact_number_holder.value = contact_number;
     account_ID_holder.value = account_ID;
-    edit_status.value = status.toLowerCase();
-    edit_role.value = role.toLowerCase();
+    edit_status.value = status;
+    edit_role.value = role;
 }
 
 function closeEditModal(){
@@ -57,7 +74,6 @@ function closeEditModal(){
 }
 
 // Filter modal
-
 var filterModal = document.getElementById("filterModal");
 
 function closeFilterModal(){
@@ -69,7 +85,6 @@ function openFilterModal(){
 }
 
 //Check All Filter
-
 const checkAllRole = document.getElementById('checkAllRole');
 const roleCheckboxes = document.querySelectorAll('.role-checkbox');
 
@@ -83,4 +98,17 @@ const statusCheckboxes = document.querySelectorAll('.status-checkbox');
 
 checkAllStatus.addEventListener('change', function() {
     statusCheckboxes.forEach(cb => cb.checked = checkAllStatus.checked);
+});
+
+// Update checkAll state based on individual checkboxes
+roleCheckboxes.forEach(cb => {
+    cb.addEventListener('change', function() {
+        checkAllRole.checked = Array.from(roleCheckboxes).every(checkbox => checkbox.checked);
+    });
+});
+
+statusCheckboxes.forEach(cb => {
+    cb.addEventListener('change', function() {
+        checkAllStatus.checked = Array.from(statusCheckboxes).every(checkbox => checkbox.checked);
+    });
 });

@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.1.3
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Sep 11, 2025 at 05:26 PM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- Host: localhost
+-- Generation Time: Dec 07, 2025 at 11:12 AM
+-- Server version: 10.4.21-MariaDB
+-- PHP Version: 7.4.29
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -34,21 +34,17 @@ CREATE TABLE `account` (
   `password` varchar(255) NOT NULL,
   `email` varchar(150) NOT NULL,
   `contact_number` varchar(50) DEFAULT NULL,
-  `role` enum('admin','staff') DEFAULT 'staff',
+  `role` enum('staff','admin','super admin') NOT NULL DEFAULT 'staff',
   `status` enum('active','inactive') DEFAULT 'active'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Table structure for table `category`
+-- Dumping data for table `account`
 --
 
-CREATE TABLE `category` (
-  `category_ID` int(11) NOT NULL,
-  `category_name` varchar(100) NOT NULL,
-  `status` enum('active','inactive') DEFAULT 'active'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+INSERT INTO `account` (`account_ID`, `first_name`, `last_name`, `password`, `email`, `contact_number`, `role`, `status`) VALUES
+(1, 'Juan', 'Dela Cruz', '$2y$10$B6DbJWTioOvMKLz/SaxFKutc4E844LP7VL1MQCOFBvrShwlN3/Czy', '1234@gmail.com', '', 'admin', 'active'),
+(2, 'James', 'Galon', '$2y$10$QXNaKJyJqUz76ZIPuK.k2OpgxQfZrLT63fnkbloXC8wRUg/omKcTi', '24100467@usc.edu.php', '0921 443 9215', 'admin', 'active');
 
 -- --------------------------------------------------------
 
@@ -57,24 +53,28 @@ CREATE TABLE `category` (
 --
 
 CREATE TABLE `inventory` (
-  `inventory_ID` int(11) NOT NULL,
-  `product_ID` int(11) NOT NULL,
-  `quantity` int(11) DEFAULT 0,
-  `last_update` date DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
+  `id` int(11) NOT NULL,
+  `productID` varchar(50) NOT NULL,
+  `productName` varchar(255) NOT NULL,
+  `quantity` int(11) NOT NULL DEFAULT 0,
+  `unit` varchar(50) NOT NULL,
+  `price` decimal(10,2) NOT NULL,
+  `expiryDate` date DEFAULT NULL,
+  `category` varchar(100) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `image` longtext DEFAULT NULL,
+  `status` varchar(20) NOT NULL DEFAULT 'active'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Table structure for table `products`
+-- Dumping data for table `inventory`
 --
 
-CREATE TABLE `products` (
-  `product_ID` int(11) NOT NULL,
-  `category_ID` int(11) NOT NULL,
-  `product_name` varchar(150) NOT NULL,
-  `status` enum('active','inactive') DEFAULT 'active'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+INSERT INTO `inventory` (`id`, `productID`, `productName`, `quantity`, `unit`, `price`, `expiryDate`, `category`, `created_at`, `image`, `status`) VALUES
+(43, '1', 'Red Bull', 2, 'packets', '6767.00', '2025-12-25', 'Beverage', '2025-12-02 10:25:01', '69302c01806d8_360_F_431621440_FFG7fwFMxdVlADPCaOPKOkD94nQkL1nQ.jpg', 'active'),
+(44, '2', 'Maggi', 3, 'packets', '1245.00', '2028-09-12', 'Spices', '2025-12-03 15:18:26', '693054c2e1e2b_692a6c5d158c9_6926f0fd63b9d_692446b956eb3_MAGGIMAGICSARAP55G_grande.jpg', 'active'),
+(45, '3', 'Oreo', 3, 'packets', '6032.00', '2025-09-12', 'Snacks', '2025-12-06 06:39:20', '6933cf9870e80_692a6c25cdf1d_6926efab58f1f_69244da329381_100000093360-Oreo-Original-Sandwich-Cookies-Trial-Pack-6x27.6g-230907_dd55cbd0-ac97-4796-bd06-370be62d9a01.jpg', 'active'),
+(46, '4', 'Ariel', 1, 'packets', '4095.00', '2028-09-12', 'Cleaning Supplies', '2025-12-06 06:40:37', '6933cfe54d5db_692c626e89b72_6927b73d1aad7_692456da98c47_105034909_1024x.png', 'active');
 
 -- --------------------------------------------------------
 
@@ -83,27 +83,27 @@ CREATE TABLE `products` (
 --
 
 CREATE TABLE `salesreport` (
-  `report_ID` int(11) NOT NULL,
-  `account_ID` int(11) NOT NULL,
-  `report_date` date NOT NULL,
-  `report_time` time NOT NULL,
-  `total_price` decimal(10,2) NOT NULL,
-  `status` enum('pending','paid','cancelled') DEFAULT 'pending'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
+  `transaction_ID` varchar(20) NOT NULL,
+  `date_time` datetime NOT NULL,
+  `products` varchar(255) NOT NULL,
+  `order_value` decimal(10,2) NOT NULL,
+  `quantity_sold` varchar(50) NOT NULL,
+  `customer_name` varchar(100) NOT NULL,
+  `payment_method` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Table structure for table `salesreportitem`
+-- Dumping data for table `salesreport`
 --
 
-CREATE TABLE `salesreportitem` (
-  `item_ID` int(11) NOT NULL,
-  `report_ID` int(11) NOT NULL,
-  `product_ID` int(11) NOT NULL,
-  `quantity` int(11) NOT NULL,
-  `price` decimal(10,2) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+INSERT INTO `salesreport` (`transaction_ID`, `date_time`, `products`, `order_value`, `quantity_sold`, `customer_name`, `payment_method`) VALUES
+('TXN-00001', '2025-12-05 07:58:18', 'Maggi', '6767.00', '12', 'James', 'GCash'),
+('TXN-00002', '2025-12-05 10:00:23', 'Red Bull', '9999.00', '5', 'Dino', 'Cash'),
+('TXN-00003', '2025-12-05 10:05:40', 'Red Bull', '1200.00', '3', 'Kris', 'GCash'),
+('TXN-00004', '2025-12-05 10:20:46', 'Maggi', '867.00', '12', 'Migs', 'Card'),
+('TXN-00005', '2025-12-05 10:22:37', 'Maggi', '1023.00', '14', 'Remegio', 'GCash'),
+('TXN-00006', '2025-12-06 06:41:20', 'Ariel', '4000.00', '40', 'James', 'Cash'),
+('TXN-00007', '2025-12-06 06:42:40', 'Oreo', '6000.00', '40', 'James', 'Card');
 
 --
 -- Indexes for dumped tables
@@ -117,39 +117,17 @@ ALTER TABLE `account`
   ADD UNIQUE KEY `email` (`email`);
 
 --
--- Indexes for table `category`
---
-ALTER TABLE `category`
-  ADD PRIMARY KEY (`category_ID`);
-
---
 -- Indexes for table `inventory`
 --
 ALTER TABLE `inventory`
-  ADD PRIMARY KEY (`inventory_ID`),
-  ADD KEY `FK_Inventory_Product` (`product_ID`);
-
---
--- Indexes for table `products`
---
-ALTER TABLE `products`
-  ADD PRIMARY KEY (`product_ID`),
-  ADD KEY `FK_Products_Category` (`category_ID`);
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `productID` (`productID`);
 
 --
 -- Indexes for table `salesreport`
 --
 ALTER TABLE `salesreport`
-  ADD PRIMARY KEY (`report_ID`),
-  ADD KEY `FK_SalesReport_Account` (`account_ID`);
-
---
--- Indexes for table `salesreportitem`
---
-ALTER TABLE `salesreportitem`
-  ADD PRIMARY KEY (`item_ID`),
-  ADD KEY `FK_SalesReportItem_Report` (`report_ID`),
-  ADD KEY `FK_SalesReportItem_Product` (`product_ID`);
+  ADD PRIMARY KEY (`transaction_ID`);
 
 --
 -- AUTO_INCREMENT for dumped tables
@@ -159,66 +137,13 @@ ALTER TABLE `salesreportitem`
 -- AUTO_INCREMENT for table `account`
 --
 ALTER TABLE `account`
-  MODIFY `account_ID` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `category`
---
-ALTER TABLE `category`
-  MODIFY `category_ID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `account_ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `inventory`
 --
 ALTER TABLE `inventory`
-  MODIFY `inventory_ID` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `products`
---
-ALTER TABLE `products`
-  MODIFY `product_ID` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `salesreport`
---
-ALTER TABLE `salesreport`
-  MODIFY `report_ID` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `salesreportitem`
---
-ALTER TABLE `salesreportitem`
-  MODIFY `item_ID` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- Constraints for dumped tables
---
-
---
--- Constraints for table `inventory`
---
-ALTER TABLE `inventory`
-  ADD CONSTRAINT `FK_Inventory_Product` FOREIGN KEY (`product_ID`) REFERENCES `products` (`product_ID`);
-
---
--- Constraints for table `products`
---
-ALTER TABLE `products`
-  ADD CONSTRAINT `FK_Products_Category` FOREIGN KEY (`category_ID`) REFERENCES `category` (`category_ID`);
-
---
--- Constraints for table `salesreport`
---
-ALTER TABLE `salesreport`
-  ADD CONSTRAINT `FK_SalesReport_Account` FOREIGN KEY (`account_ID`) REFERENCES `account` (`account_ID`);
-
---
--- Constraints for table `salesreportitem`
---
-ALTER TABLE `salesreportitem`
-  ADD CONSTRAINT `FK_SalesReportItem_Product` FOREIGN KEY (`product_ID`) REFERENCES `products` (`product_ID`),
-  ADD CONSTRAINT `FK_SalesReportItem_Report` FOREIGN KEY (`report_ID`) REFERENCES `salesreport` (`report_ID`);
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
