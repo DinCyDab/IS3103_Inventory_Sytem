@@ -8,13 +8,24 @@
             [ "label" => "Reports", "icon" => "bx bx-line-chart", "view" => "reports" ],
             [ "label" => "Settings", "icon" => "bx bx-cog", "view" => "settings" ],
             [ "label" => "Logout", "icon" => "bx bx-log-out", "view" => "logout" ],
-
         ];
+
+        private $staff_nav_items = [
+            [ "label" => "Reports", "icon" => "bx bx-line-chart", "view" => "staffreport" ],
+            [ "label" => "Settings", "icon" => "bx bx-cog", "view" => "settings" ],
+            [ "label" => "Logout", "icon" => "bx bx-log-out", "view" => "logout" ],
+        ];
+
         public function render(){
             // detect active view
             $active = $_GET["view"] ?? "dashboard";
 
-            foreach($this->nav_items as $item){
+            $nav_items = $this->nav_items;
+            if($_SESSION["account"]["role"] == 'staff'){
+                $nav_items = $this->staff_nav_items;
+            }
+
+            foreach($nav_items as $item){
                 $view = $item['label'];
                 $icon = $item['icon'];
                 $isLogout = isset($item["logout"]) && $item["logout"] === true;

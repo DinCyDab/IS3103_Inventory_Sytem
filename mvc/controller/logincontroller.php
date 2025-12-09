@@ -17,8 +17,15 @@
 
             if(password_verify($password, $user["password"])){
                 $_SESSION["account"] = $user;
-                header("Location: index.php?view=dashboard");
-                exit();
+                
+                if($user['role'] == 'staff'){
+                    header("Location: index.php?view=staffreport");
+                    exit();
+                }
+                else{
+                    header("Location: index.php?view=dashboard");
+                    exit();
+                }
             }
 
             echo "Invalid Password";

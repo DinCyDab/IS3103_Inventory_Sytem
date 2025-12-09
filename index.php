@@ -18,6 +18,7 @@
     require_once __DIR__ . "/mvc/view/sales.php";
     require_once __DIR__ . "/mvc/view/reports.php";
     require_once __DIR__ . "/mvc/view/settings.php";
+    require_once __DIR__ . "/mvc/view/staffreport.php";
 
     //Add your controller here
     require_once "./mvc/controller/inventorycontroller.php";
@@ -106,6 +107,9 @@
                 break;
             case "settings":
                 $page = new SettingsView();
+                break;
+            case "staffreport":
+                $page = new StaffReport();
                 break;
             default:
                 $page = new LoginView();
