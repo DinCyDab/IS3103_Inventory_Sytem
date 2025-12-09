@@ -174,22 +174,6 @@
     background: #6c5ce7;
 }
 
-.filter-btn,
-.download-btn{
-    background: #f7f7fb;
-    color: #666;
-    border: 1px solid #e0e1ed;
-    padding: 8px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-
-.filter-btn:hover,
-.download-btn:hover{
-    background: #e9ecef;
-}
-
 /* Table */
 .products-table{
     width: 100%;

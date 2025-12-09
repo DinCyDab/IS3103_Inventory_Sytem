@@ -91,11 +91,16 @@
         }
 
         public function readOne($sql) {
-             $result = $this->conn->query($sql);
+            $result = $this->conn->query($sql);
+
+            if (!$result) {
+                file_put_contents("sql_error.txt", $this->conn->error . "\nSQL: " . $sql);
+            }
+
             if ($result && $result->num_rows > 0) {
                 return $result->fetch_assoc();  // return single row
             }
-            return null;
+            return [];
         }
 
         //Don't forget to close the connection

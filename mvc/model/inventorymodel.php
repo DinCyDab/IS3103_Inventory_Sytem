@@ -68,7 +68,7 @@ class ProductModel{
         return (int)$result['total'];
     }
 
-        // Get Overall Inventory
+    // Get Overall Inventory
     public function getOverviewStats(){
         $stats = [];
 
@@ -98,20 +98,18 @@ class ProductModel{
         $lowStocks = $row['lowStocks'] ?? 0;
 
         // Top Selling (If their is a sold column)
-        // If not, then 0
-        if($this->columnExists("inventory", "sold")){
             $row = $conn->query("
-                SELECT IFNULL(SUM(sold), 0) AS totalSold,
-                    IFNULL(SUM(sold * price), 0) AS totalCost
-                FROM inventory
-                WHERE (status IS NULL OR TRIM(LOWER(status)) != 'deleted')
+                SELECT 
+                    IFNULL(SUM(s.quantity_sold), 0) AS totalSold,
+                    IFNULL(SUM(s.quantity_sold * i.price), 0) AS totalRevenue
+                FROM salesreport s
+                LEFT JOIN inventory i 
+                    ON TRIM(LOWER(i.productName)) = TRIM(LOWER(s.products))
+                WHERE " . $this->activeCondition() . "
             ")->fetch_assoc();
+
             $totalSellingQty = $row['totalSold'] ?? 0;
-            $totalSellingValue = $row['totalCost'] ?? 0;
-        } else{
-            $totalSellingQty = 0;
-            $totalSellingValue = 0;
-        }
+            $totalSellingValue = $row['totalRevenue'] ?? 0;
 
         // Building overviewStats array
         $overviewStats = [
@@ -131,7 +129,7 @@ class ProductModel{
             [
                 "label" => "Top Selling", 
                 "value" => $totalSellingQty,  
-                "footer" => "Top Selling Products", 
+                "footer" => "Products Sold", 
                 "extra" => "₱" . number_format($totalSellingValue, 2), 
                 "highlight" => "purple"
             ],

@@ -21,8 +21,9 @@
                         <img src="./public/images/login/login-image.png">
                     </div>
                     <div class="login-form-holder">
+                        <img src="./public/images/login/login-image2.png">
                         <h2>Log in to your account</h2>
-                        <p>Welcome back! Please enter your account details</p>
+                        <p>Welcome back! Please enter your details</p>
                         <?php 
                             $this->loginForm();
                         ?>
@@ -36,11 +37,11 @@
             ?>
                 <form method="POST" class="login-form">
                     <div>
-                        <p>Email</p>
+                        <label>Email</label>
                         <input type="text" name="account_ID" placeholder="Enter your email" required>
                     </div>
                     <div>
-                        <p>Password</p>
+                        <label>Password</label>
                         <input type="password" name="password" placeholder="*******" required>
                     </div>
                     <div>

@@ -2,15 +2,29 @@
     require_once __DIR__ . "/../model/dashboardmodel.php";
     class DashboardController{
         private $model;
+
         public function __construct(){
             $this->model = new DashboardModel();
         }
 
-        public function loadReports(){
-            $result = $this->model->loadData();
-            $this->model->close();
+        public function index(){
+            // Fetch all dashboard data
+            $data = [
+                'stockSummary' => $this->model->getStockSummary(),
+                'inventorySummary' => $this->model->getInventorySummary(),
+                'recentTransactions' => $this->model->getRecentTransactions(),
+                'salesSumary' => $this->model->getSalesSummary(),
+                'lowStockItems' => $this->model->getLowStockItems()
+            ];
 
-            return $result;
+            return $data;
+        }
+
+        // API endpoint for fetching dashboard stats
+        public function fetchStats(){
+            header('Content-Type: application/json');
+            echo json_encode($this->index());
+            exit;
         }
     }
 ?>
