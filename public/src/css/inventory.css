@@ -9,7 +9,6 @@
     max-width: 99vw;
     width: 100%;
 }
-
 .inventory-title h3{
     font-size: 1.24rem;
     color: #2c2760;
@@ -175,6 +174,7 @@
     background: #6c5ce7;
 }
 
+.filter-btn,
 .download-btn{
     background: #f7f7fb;
     color: #666;
@@ -185,6 +185,7 @@
     transition: background 0.3s;
 }
 
+.filter-btn:hover,
 .download-btn:hover{
     background: #e9ecef;
 }
@@ -723,6 +724,34 @@
     bottom: 30px;
     right: 30px;
     padding: 15px;
+}
+/* Icons CSS */
+.filter-btn svg{
+    vertical-align: middle;
+    margin-right: 4px;
+    width: 20px;
+    height: 20px;
+    fill: #6c5ce7;
+    transition: fill 0.2s;
+}
+
+.filter-btn:hover svg{
+    fill: #5941c6;
+}
+
+.filter-btn:disabled svg{
+    fill: #bbb;
+}
+
+/* See all Back To Top Button */
+.bTopButton{
+    /* display: none; */
+    position: fixed;
+    border-radius: 50%;
+    background: #656488;
+    bottom: 30px;
+    right: 30px;
+    padding: 10px 15px;
     font-size: 20px;
     cursor: pointer;
     z-index: 1000;
