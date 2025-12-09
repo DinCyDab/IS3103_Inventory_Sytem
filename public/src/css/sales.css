@@ -1,0 +1,225 @@
+/* --- Header / layout helpers --- */
+.header{
+    width: 100%;
+    height: 85px;
+    background-color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    position: fixed;
+    top: 0;
+    left: 243px;
+    z-index: 1000;
+}
+/* search wrapper in header */
+
+/* Top Bar */
+.topbar{
+    position: fixed;
+    top: 33px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-bottom: 50px;
+    background: white;
+    z-index: 9998;
+}
+
+.search-wrapper {
+    display: flex;
+    align-items: center;
+    margin-top: -10px;
+    z-index: 9999;
+}
+
+.search-wrapper i {
+    position: absolute;
+    left: 12px;
+    font-size: 18px;
+    color: #888;
+}
+
+.searchbar {
+    background: #f7f7fb;
+    padding-left: 40px;
+    height: 38px;
+    width: 400px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    outline: none;
+    color: black;
+}
+
+
+/* Ensure page content is pushed below header */
+.sales-page-wrapper{
+	margin-top: 110px; /* header height (88) + spacing; adjust if needed */
+	padding-left: 24px;
+	padding-right: 24px;
+	padding-bottom: 48px;
+	background: #f9fafb;
+	min-height: calc(100vh - 110px);
+	font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+/* --- Modal & Form styles --- */
+.modal-overlay{
+	position: fixed;
+	inset: 0;
+	background: rgba(0,0,0,0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1200;
+	backdrop-filter: blur(4px);
+}
+.modal-card{
+	background: #fff;
+	border-radius: 12px;
+	width: 580px;
+	max-width: 92%;
+	padding: 28px;
+	box-shadow: 0 20px 25px -5px rgba(0,0,0,0.08), 0 10px 10px -5px rgba(0,0,0,0.04);
+}
+.modal-card h2 { color: #000; }
+/* Make all form text black */
+.form-row label { color: #000 !important; }
+.form-row input,
+.form-row select,
+.form-row textarea {
+    color: #000 !important;
+}
+
+/* Ensure select dropdown options are black */
+.form-row select option {
+    color: #000;
+}
+
+/* Keep placeholders slightly muted but darker than before (optional) */
+.form-row input::placeholder,
+.form-row textarea::placeholder {
+    color: #9aa0a6;
+}
+
+.form-grid{
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 16px;
+}
+.form-row{ display:flex; flex-direction:column; gap:8px; }
+.form-row label{ font-size:14px; font-weight:500; color:#374151; }
+.form-row input, .form-row select{
+	padding: 10px 14px;
+	border: 1px solid #e5e7eb;
+	border-radius: 8px;
+	font-size: 14px;
+	outline: none;
+	background: #fff;
+	transition: border 0.15s, box-shadow 0.15s;
+}
+.form-row input:focus, .form-row select:focus{
+	border-color:#6366f1;
+	box-shadow: 0 0 0 6px rgba(99,102,241,0.06);
+}
+.modal-actions{ display:flex; justify-content:flex-end; gap:12px; margin-top:24px; }
+.btn-primary{ background:#6366f1; color:#fff; border:none; padding:10px 20px; border-radius:8px; font-weight:600; cursor:pointer; }
+.btn-primary:hover{ background:#4f46e5; }
+.btn-secondary{
+	background:#fff;
+	border:1px solid #e5e7eb;
+	padding:10px 16px;
+	border-radius:8px;
+	cursor:pointer;
+	color: #111827; /* make button text dark/black */
+}
+
+/* --- Transactions / Sales log styles --- */
+.transactions-card{
+	background:#fff;
+	border-radius:12px;
+	box-shadow:0 4px 24px rgba(16,24,40,0.04);
+	overflow:hidden;
+	margin-bottom: 24px;
+}
+.transactions-header{
+	display:flex;
+	justify-content:space-between;
+	align-items:center;
+	padding:18px 24px;
+	border-bottom:1px solid #f3f4f6;
+}
+.transactions-header h2{
+	margin:0;
+	font-size:20px;
+	font-weight:700;
+	color:#111827;
+}
+.transactions-actions{ display:flex; gap:10px; align-items:center; }
+
+/* Buttons specific for transactions (reuse .btn-primary/.btn-secondary if desired) */
+.btn-primary-alt{ background:#7e6ceb; color:#fff; border:none; padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; }
+.btn-secondary-alt{
+	background:#fff;
+	color:#111827; /* make button text dark/black */
+	border:1px solid #e5e7eb;
+	padding:8px 12px;
+	border-radius:8px;
+	cursor:pointer;
+}
+
+/* Table layout (adjusted for better contrast) */
+.transactions-table{ width:100%; border-collapse:collapse; }
+.transactions-table thead tr{ background:#fbfbfe; }
+.transactions-table thead th{
+	padding:12px 20px;
+	font-size:12px;
+	color:#4b5563; /* darker header color for readability */
+	text-align:left;
+	font-weight:700;
+	text-transform:uppercase;
+	letter-spacing:0.04em;
+	white-space: nowrap;
+}
+.transactions-table tbody td{
+	padding:14px 20px;
+	vertical-align:middle;
+	font-size:14px;
+	color:#0f172a; /* darker body text for accessibility */
+	border-bottom:1px solid #eef2f7; /* lighter divider */
+}
+
+/* emphasized columns */
+.transactions-table tbody td.txn{ font-weight:700; color:#0b1220; }
+.order-value{ font-weight:700; color:#0b1220; }
+ qty-text{ color:#374151; }
+
+/* payment badge (more contrast) */
+.payment-badge{
+	display:inline-block;
+	padding:6px 10px;
+	border-radius:999px;
+	background:#e9f2ff; /* slightly lighter */
+	color:#08306b; /* darker blue for contrast */
+	font-weight:700;
+	font-size:13px;
+}
+
+/* footer / pagination (ensure visibility) */
+.transactions-footer{
+	display:flex;
+	justify-content:space-between;
+	align-items:center;
+	padding:14px 24px;
+	background:#ffffff;
+	border-top:1px solid #eef2f7;
+}
+.pagination-center{ text-align:center; color:#475569; }
+.pagination-center a{ color:#5b46e6; text-decoration:none; font-weight:700; display:block; margin-top:6px; }
+
+/* small-screen responsive */
+@media (max-width:900px){
+	.transactions-header{ padding:12px; }
+	.transactions-table thead th, .transactions-table tbody td{ padding:10px; }
+	.form-grid{ grid-template-columns: 1fr; }
+}
