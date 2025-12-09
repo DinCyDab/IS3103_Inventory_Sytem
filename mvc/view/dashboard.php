@@ -185,75 +185,124 @@ class DashboardView {
 
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
-            // paased from PHP to JS
-            const salesSummary = <?php echo json_encode($salesSummary ?? []); ?>;
-
-            // extract labels and data
-            const labels = salesSummary.map(item => item.month);
-            const salesData = salesSummary.map(item => parseFloat(item.sales));
-            const purchaseData = salesSummary.map(item => parseFloat(item.purchase));
-
-            // Gat canvas element
-            const ctx = document.getElementById('salesChart').getContext('2d');
-
-            // Set canvas size
-            ctx.canvas.width = 400;
-            ctx.canvas.height = 270;
-
-            let data = <?php echo json_encode($salesSummary); ?>;
-
-            // Create Chart.js chart
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.labels,
-                    datasets: [
-                        {
-                            label: "",
-                            data: data.purchase_cost,
-                            borderColor: "#f7db93",
-                            backgroundColor: "rgba(251,191,36,0.15)",
-                            borderWidth: 3,
-                            pointRadius: 3,
-                            pointBackgroundColor: "#3b82f6",
-                            tension: 0.4,
-                            fill: true
-                        },
-                        {
-                            label: "",
-                            data: data.sales,
-                            borderColor: "#3b82f6",
-                            backgroundColor: "rgba(59,130,246,0.15)",
-                            borderWidth: 3,
-                            pointRadius: 3,
-                            pointBackgroundColor: "#f7db93",
-                            tension: 0.4,
-                            fill: true
-                        }
-                    ]
-                },
-                options: {
-                    responsive: false,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: value => '₱' + value.toLocaleString()
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend : {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
+            // Pass PHP data to JavaScript
+            window.dashboardSalesSummary = <?php echo json_encode($salesSummary); ?>;
         </script>
         
-        <script src="./public/src/js/dashboardscript.js"></script>
+        <script>
+        const data = window.dashboardSalesSummary || {
+            labels: [],
+            sales: [],
+            purchase_cost: []
+        };
+
+        const ctx = document.getElementById('salesChart').getContext('2d');
+
+        // Ensure canvas uses exact size
+        ctx.canvas.width = 400;
+        ctx.canvas.height = 270;
+
+        // Calculate dynamic max value for Y-axis
+        function calculateMaxValue(arr1, arr2){
+            const all = [...arr1, ...arr2];
+            if(all.length === 0) return 100000;
+            const max = Math.max(...all);
+            const magnitude = Math.pow(10, Math.floor(Math.log10(max)));
+            return Math.ceil(max / magnitude) * magnitude * 1.2;
+        }
+
+        const maxY = calculateMaxValue(data.sales, data.purchase_cost);
+
+        // Custom tooltip
+        function customTooltip(context){
+            let el = document.getElementById("sales-tip");
+            if(!el){
+                el = document.createElement("div");
+                el.id = "sales-tip";
+                el.style.position = "absolute";
+                el.style.background = "#fff";
+                el.style.padding = "10px 15px";
+                el.style.borderRadius = "12px";
+                el.style.boxShadow = "0 4px 15px rgba(0,0,0,0.15)";
+                el.style.pointerEvents = "none";
+                el.style.opacity = 0;
+                el.style.transition = ".15s";
+                document.body.appendChild(el);
+            }
+
+            const tooltip = context.tooltip;
+            if(tooltip.opacity === 0){ el.style.opacity = 0; return; }
+
+            if(tooltip.dataPoints){
+                let html = `<div style="font-size:12px;color:#9ca3af;margin-bottom:5px;">${tooltip.dataPoints[0].label}</div>`;
+                tooltip.dataPoints.forEach(p => {
+                    html += `<div style="font-size:14px;font-weight:700;margin-bottom:3px;color:${p.dataset.borderColor};">
+                                ${p.dataset.label}: ₱${p.raw.toLocaleString()}
+                            </div>`;
+                });
+                el.innerHTML = html;
+            }
+
+            const rect = context.chart.canvas.getBoundingClientRect();
+            el.style.opacity = 1;
+            el.style.left = rect.left + window.scrollX + tooltip.caretX - 60 + "px";
+            el.style.top = rect.top + window.scrollY + tooltip.caretY - 70 + "px";
+        }
+
+        // Chart.js
+        new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: data.labels.length > 0 ? data.labels : ['No Data'],
+                datasets: [
+                    {
+                        label: "Purchase Cost",
+                        data: data.purchase_cost.length > 0 ? data.purchase_cost : [0],
+                        borderColor: "#f7db93",
+                        backgroundColor: "rgba(251,191,36,0.15)",
+                        borderWidth: 3,
+                        pointRadius: 3,
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: "Sales",
+                        data: data.sales.length > 0 ? data.sales : [0],
+                        borderColor: "#3b82f6",
+                        backgroundColor: "rgba(59,130,246,0.15)",
+                        borderWidth: 3,
+                        pointRadius: 3,
+                        tension: 0.4,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: false, // disable automatic resizing
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: { enabled: false, external: customTooltip }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        min: 0,
+                        max: maxY,
+                        ticks: { 
+                            stepSize: Math.ceil(maxY/5),
+                            callback: v => '₱' + v.toLocaleString() 
+                        },
+                        grid: { color: "rgba(0,0,0,0.08)" }
+                    },
+                    x: { grid: { display: false } }
+                },
+                interaction: { mode: "index", intersect: false }
+            }
+        });
+        </script>
         <link rel="stylesheet" href="./public/src/css/dashboard.css">
+        
         <?php
     }
 }

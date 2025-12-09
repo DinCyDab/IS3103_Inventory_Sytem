@@ -13,7 +13,7 @@
                 'stockSummary' => $this->model->getStockSummary(),
                 'inventorySummary' => $this->model->getInventorySummary(),
                 'recentTransactions' => $this->model->getRecentTransactions(),
-                'salesSumary' => $this->model->getSalesSummary(),
+                'salesSummary' => $this->model->getSalesSummary(),
                 'lowStockItems' => $this->model->getLowStockItems()
             ];
 
