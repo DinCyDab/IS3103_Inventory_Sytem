@@ -11,7 +11,8 @@
         ];
 
         private $staff_nav_items = [
-            [ "label" => "Reports", "icon" => "bx bx-line-chart", "view" => "staffreport" ],
+            [ "label" => "Record Transaction", "icon" => "bx bx-line-chart", "view" => "staffreport" ],
+            [ "label" => "Inventory", "icon" => "bx bx-package", "view" => "inventory" ],
             [ "label" => "Settings", "icon" => "bx bx-cog", "view" => "settings" ],
             [ "label" => "Logout", "icon" => "bx bx-log-out", "view" => "logout" ],
         ];
