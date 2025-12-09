@@ -167,77 +167,40 @@ document.addEventListener("DOMContentLoaded", function () {
     const modeBtn = document.getElementById("reportModeBtn");
     const modeList = document.getElementById("reportModeList");
 
-    // open/close
-    modeBtn.addEventListener("click", () => modeList.classList.toggle("show"));
-    document.addEventListener("click", e => {
-        if (!modeBtn.contains(e.target) && !modeList.contains(e.target)) {
-            modeList.classList.remove("show");
-        }
-    });
-
-    // switching weekly or sa monthly
-    document.querySelectorAll("#reportModeList li").forEach(item => {
-        item.addEventListener("click", () => {
-
-            const mode = item.getAttribute("data-mode");
-
-            // update button text
-            modeBtn.innerHTML = item.innerText + ' <i class="bx bx-chevron-down"></i>';
-
-            // close dropdown
-            modeList.classList.remove("show");
-
-            const newData = mode === "weekly" ? weeklyData : monthlyData;
-
-            chart.data.labels = newData.labels;
-            chart.data.datasets[0].data = newData.revenue.map(Number);
-            chart.data.datasets[1].data = newData.profit.map(Number);
-
-            // Recalculate Y-axis max
-            chart.options.scales.y.max = calculateMaxValue(newData.revenue, newData.profit);
-
-            chart.update();
+    if (modeBtn && modeList) {
+        // open/close
+        modeBtn.addEventListener("click", () => modeList.classList.toggle("show"));
+        document.addEventListener("click", e => {
+            if (!modeBtn.contains(e.target) && !modeList.contains(e.target)) {
+                modeList.classList.remove("show");
+            }
         });
-    });
 
-    // SEARCH
-    const searchInput = document.getElementById("reportsSearch");
-    const searchList = document.getElementById("reportsSearchList");
+        // switching weekly or monthly
+        document.querySelectorAll("#reportModeList li").forEach(item => {
+            item.addEventListener("click", () => {
 
-    searchInput.addEventListener("keypress", e => {
-        if (e.key !== "Enter") return;
-        const query = searchInput.value.trim();
-        if (!query) return;
+                const mode = item.getAttribute("data-mode");
 
-        searchList.innerHTML = '<li style="padding:10px;text-align:center;">Searching…</li>';
-        searchList.style.display = "block";
+                // update button text
+                modeBtn.innerHTML = item.innerText + ' <i class="bx bx-chevron-down"></i>';
 
-        fetch(`?view=reports&action=search&q=${encodeURIComponent(query)}`, { headers:{'Accept':'application/json'} })
-            .then(r => r.json())
-            .then(data => {
-                searchList.innerHTML = '';
-                if (!data.length) {
-                    const li = document.createElement('li');
-                    li.textContent = 'No results.'; li.style.padding = '8px 14px';
-                    searchList.appendChild(li);
-                    return;
-                }
-                data.forEach(item => {
-                    const li = document.createElement('li');
-                    li.style.padding = '8px 14px'; li.style.cursor = 'pointer'; li.style.borderBottom = '1px solid #f2f2f2';
-                    const name = item.product_name || item.productName || item.name || 'Unnamed';
-                    li.innerHTML = `<div style="font-weight:600;">${name}</div><div style="font-size:12px;color:#6b7280;">ID: ${item.productID || item.id || ''}</div>`;
-                    li.addEventListener('click', () => { searchInput.value = name; searchList.style.display = 'none'; });
-                    searchList.appendChild(li);
-                });
-            })
-            .catch(() => { searchList.innerHTML = '<li style="padding:10px;text-align:center;">Error fetching results</li>'; });
-    });
+                // close dropdown
+                modeList.classList.remove("show");
 
-    document.addEventListener('click', e => {
-        const wrapper = document.querySelector('.search-wrapper');
-        if (!wrapper.contains(e.target)) searchList.style.display = 'none';
-    });
+                const newData = mode === "weekly" ? weeklyData : monthlyData;
+
+                chart.data.labels = newData.labels;
+                chart.data.datasets[0].data = newData.revenue.map(Number);
+                chart.data.datasets[1].data = newData.profit.map(Number);
+
+                // Recalculate Y-axis max
+                chart.options.scales.y.max = calculateMaxValue(newData.revenue, newData.profit);
+
+                chart.update();
+            });
+        });
+    }
 
     // MODALS
     document.querySelectorAll('.bestseller-container .see-all').forEach(btn => {
@@ -278,4 +241,139 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // SEARCH
+    const searchInput = document.getElementById('reportsSearch');
+    const searchResultsDiv = document.getElementById('reportsProductOverview');
+    
+    // Check if both elements exist AND we're actually on reports page
+    const isReportsPage = searchInput && searchResultsDiv && document.querySelector('.reports-row');
+    
+    if (isReportsPage) {
+        let searchTimeout;
+
+        searchInput.addEventListener('input', function(e) {
+            // Stop propagation to prevent script.js from interfering
+            e.stopPropagation();
+            
+            const query = this.value.trim();
+            
+            // Clear previous timeout
+            clearTimeout(searchTimeout);
+            
+            // Hide results if query is empty
+            if (query.length === 0) {
+                searchResultsDiv.style.display = 'none';
+                searchResultsDiv.innerHTML = '';
+                return;
+            }
+            
+            // Debounce search - wait 300ms after user stops typing
+            searchTimeout = setTimeout(() => {
+                performSearch(query);
+            }, 300);
+        });
+
+        // Close search results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !searchResultsDiv.contains(e.target)) {
+                searchResultsDiv.style.display = 'none';
+            }
+        });
+
+        async function performSearch(query) {
+            try {
+                const response = await fetch(`index.php?view=reports&action=search&query=${encodeURIComponent(query)}`, {
+                    headers: { "X-Requested-With": "XMLHttpRequest" }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    showSearchError(data.message || 'Search failed. Please try again.');
+                    return;
+                }
+
+                displaySearchResults(data.results);
+
+            } catch (error) {
+                console.error('Search error:', error);
+                showSearchError('Network error. Please try again.');
+            }
+        }
+
+        function displaySearchResults(results) {
+            if (!searchResultsDiv) return;
+
+            if (results.length === 0) {
+                searchResultsDiv.innerHTML = `
+                    <div style="padding: 20px; text-align: center; color: #6b7280;">
+                        No products found
+                    </div>
+                `;
+                searchResultsDiv.style.display = 'block';
+                return;
+            }
+
+            let html = '<div style="max-height: 400px; overflow-y: auto;">';
+            html += '<table style="width: 100%; border-collapse: collapse;">';
+            html += `
+                <thead>
+                    <tr style="background: #f3f4f6; text-align: left;">
+                        <th style="padding: 12px; font-size: 13px; color: #6b7280;">Product</th>
+                        <th style="padding: 12px; font-size: 13px; color: #6b7280;">Product ID</th>
+                        <th style="padding: 12px; font-size: 13px; color: #6b7280;">Category</th>
+                        <th style="padding: 12px; font-size: 13px; color: #6b7280;">Remaining</th>
+                        <th style="padding: 12px; font-size: 13px; color: #6b7280;">Turnover</th>
+                        <th style="padding: 12px; font-size: 13px; color: #6b7280;">Sold</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+
+            results.forEach((item, index) => {
+                const bgColor = index % 2 === 0 ? '#ffffff' : '#f9fafb';
+                html += `
+                    <tr style="background: ${bgColor}; border-bottom: 1px solid #e5e7eb;">
+                        <td style="padding: 12px; font-size: 14px; color: #111827;">${escapeHtml(item.product_name || 'N/A')}</td>
+                        <td style="padding: 12px; font-size: 14px; color: #6b7280;">${escapeHtml(item.productID || 'N/A')}</td>
+                        <td style="padding: 12px; font-size: 14px; color: #6b7280;">${escapeHtml(item.category || 'Unknown')}</td>
+                        <td style="padding: 12px; font-size: 14px; color: #6b7280;">${escapeHtml(item.remaining_qty || 'N/A')}</td>
+                        <td style="padding: 12px; font-size: 14px; color: #059669; font-weight: 600;">₱${formatNumber(item.turnover || 0)}</td>
+                        <td style="padding: 12px; font-size: 14px; color: #6b7280;">${escapeHtml(item.increase || 0)}</td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table></div>';
+
+            searchResultsDiv.innerHTML = html;
+            searchResultsDiv.style.display = 'block';
+        }
+
+        function showSearchError(message) {
+            if (!searchResultsDiv) return;
+            
+            searchResultsDiv.innerHTML = `
+                <div style="padding: 20px; text-align: center; color: #ef4444;">
+                    ${escapeHtml(message)}
+                </div>
+            `;
+            searchResultsDiv.style.display = 'block';
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function formatNumber(num) {
+            return parseFloat(num || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+    }
 });

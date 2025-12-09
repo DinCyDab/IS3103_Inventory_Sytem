@@ -239,4 +239,30 @@ class ReportsModel {
             'profit' => $profit
         ];
     }
+
+    // Search products for AJAX search bar
+    public function searchProducts($query){
+        $query = $this->conn->conn->real_escape_string(trim($query));
+
+        $sql = "
+            SELECT
+                s.products AS product_name,
+                COALESCE(i.productID, 'N/A') AS productID,
+                COALESCE(i.category, 'Unknown') AS category,
+                COALESCE(CONCAT(i.quantity, ' ', i.unit), 'N/A') AS remaining_qty,
+                CAST(s.order_value AS DECIMAL(10,2)) AS turnover,
+                CAST(s.quantity_sold AS UNSIGNED) AS increase
+            FROM salesreport s
+            LEFT JOIN inventory i ON i.productName = s.products
+            WHERE s.products LIKE '%$query%'
+            OR i.productID LIKE '%$query%'
+            OR i.category LIKE '%$query%'
+            ORDER BY s.date_time DESC
+            LIMIT 20
+        ";
+
+        $result = $this->conn->read($sql);
+
+        return $result ?: [];
+    }
 }

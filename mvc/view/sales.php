@@ -5,7 +5,9 @@ class SalesView{
 	public function render(){
 		// Load sales data from database
 		$sales_model = new SalesModel();
-		$sales_records = $sales_model->getAllSalesReports();
+		$sales_records = $sales_model->getSalesReportsPaginated(1, 8);
+		$total = $sales_model->getTotalSalesCount();
+		$totalPages = max(1, ceil($total / 8));
 		?>
 		<!-- Add fixed header that uses inventory.css .header/.search-wrapper/.searchbar -->
 		<div class="header"></div>
@@ -66,16 +68,16 @@ class SalesView{
 							?>
 						</tbody>
 					</table>
+				 <div class="table-nav">
+					<button class="prev-btn" id="prevBtn" <?php echo $totalPages <= 1 ? 'disabled' : ''; ?>>Previous</button>
 
-				        <div class="table-nav">
-							<button class="prev-btn">Previous</button>
+					<div class="pages">
+						<span class="page-indicator" id="pageIndicator">Page 1 of <?php echo $totalPages; ?></span>
+					</div>
 
-							<div class="pages">
-								<span class="page-indicator">Page 1</span>
-							</div>
-
-							<button class="next-btn">Next</button>
-						</div>
+					<button class="next-btn" id="nextBtn" <?php echo $totalPages <= 1 ? 'disabled' : ''; ?>>Next</button>
+				</div>
+			</div>
 		</div>
 
 		<!-- Modal HTML -->
@@ -99,7 +101,7 @@ class SalesView{
 							<label class="field-label">Total Price</label>
 							<input type="number" name="total_price" placeholder="Enter total price" min="0" step="0.01" required>
 						</div>
-						<div class="form-row" style="grid-column:1 / -1;">
+						<div class="form-row">
 							<label class="field-label">Payment Method</label>
 							<select name="payment_method" required>
 								<option value="" disabled selected>Select payment method</option>
@@ -154,8 +156,12 @@ class SalesView{
 		</div>
 
 		<!-- external JS -->
+		 <!-- <link rel="stylesheet" href="https://cdn.datatables.net/2.3.5/css/dataTables.dataTables.css" />
+  
+<script src="https://cdn.datatables.net/2.3.5/js/dataTables.js"></script> -->
+
 		<script src="./public/src/js/sales.js"></script>
- 
+
  		<link href="./public/src/css/sales.css" rel="stylesheet">
 
  		<?php

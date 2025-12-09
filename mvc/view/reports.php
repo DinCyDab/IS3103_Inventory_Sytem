@@ -41,10 +41,7 @@ class ReportsView {
                 <input type="search" class="searchbar" id="reportsSearch" placeholder="Search product or order">
             </div>
 
-            <div id="reportsSearchResults" style="position:relative;">
-                <ul id="reportsSearchList" style="display:none; position:absolute; right:0; top:44px; background:#fff; border:1px solid #ddd; border-radius:6px; width:320px; max-height:300px; overflow:auto; padding:6px 0; z-index:9999; list-style:none; margin:0;">
-                </ul>
-            </div>
+            <div id="reportsProductOverview" style="display:none;"></div>
         </div>
 
         <!-- both boxes side by side -->

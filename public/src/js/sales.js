@@ -15,12 +15,112 @@ document.addEventListener('DOMContentLoaded', function () {
 	const downloadBtn = document.querySelector('.download-btn');
 	const table = document.getElementById('transactionsTable');
 
+	// PAGINATION FIX: Use consistent variable names
+	let currentPage = parseInt(localStorage.getItem('salesCurrentPage')) || 1;
+	const salesPerPage = 8; // Match your limit from PHP
+
+	const prevBtn = document.getElementById('prevBtn'); // Use correct IDs from your HTML
+	const nextBtn = document.getElementById('nextBtn');
+	const pageIndicator = document.getElementById('pageIndicator');
+
+	function updatePaginationButtons(totalPages) {
+		if (prevBtn) prevBtn.disabled = currentPage <= 1;
+		if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+
+		if (pageIndicator) {
+			pageIndicator.textContent = `Page ${currentPage} of ${totalPages}`;
+		}
+	}
+
+	async function renderSales(page = 1) {
+		try {
+			const url = `index.php?view=sales&action=getPaginatedSales&page=${page}&limit=${salesPerPage}`;
+
+			const res = await fetch(url, {
+				headers: { "X-Requested-With": "XMLHttpRequest" }
+			});
+
+			const data = await res.json();
+
+			if (!tbody) return;
+
+			tbody.innerHTML = "";
+
+			if (!data.success || data.data.length === 0) {
+				tbody.innerHTML = `
+					<tr><td colspan="7" style="padding:40px; text-align:center; color:#9ca3af; font-size:14px;">
+						No transactions yet
+					</td></tr>`;
+				updatePaginationButtons(1);
+				return;
+			}
+
+			// Render rows
+			tbody.innerHTML = data.data.map(row => {
+				const txnId = escapeHtml(row.transaction_ID || 'N/A');
+				const dateTime = escapeHtml(row.date_time || '');
+				const products = escapeHtml(row.products || '-');
+				const orderValue = parseFloat(row.order_value || 0).toFixed(2);
+				const qtySold = parseInt(row.quantity_sold || 0);
+				const customerName = escapeHtml(row.customer_name || 'Guest');
+				const paymentMethod = escapeHtml(row.payment_method || 'Cash');
+
+				return `
+					<tr>
+						<td class='txn'>${txnId}</td>
+						<td>${dateTime}</td>
+						<td>${products}</td>
+						<td class='order-value'>₱${orderValue}</td>
+						<td class='qty-text'>${qtySold} Packets</td>
+						<td>${customerName}</td>
+						<td><span class='payment-badge'>${paymentMethod} <svg class='down-arrow' width='14' height='14' viewBox='0 0 24 24'><path d='M7 10l5 5 5-5z' fill='#180d42ff'/></svg></span></td>
+					</tr>
+				`;
+			}).join('');
+
+			// Apply saved payment filter if any
+			applySavedFilter();
+
+			updatePaginationButtons(data.pagination.total_pages);
+
+		} catch (err) {
+			console.error("Error loading sales:", err);
+			if (tbody) {
+				tbody.innerHTML = `
+					<tr><td colspan="7" style="padding:40px; text-align:center; color:#ef4444; font-size:14px;">
+						Error loading transactions. Please refresh the page.
+					</td></tr>`;
+			}
+		}
+	}
+
+	// Pagination button handlers
+	if (prevBtn) {
+		prevBtn.addEventListener('click', () => {
+			if (currentPage > 1) {
+				currentPage--;
+				localStorage.setItem('salesCurrentPage', currentPage);
+				renderSales(currentPage);
+			}
+		});
+	}
+
+	if (nextBtn) {
+		nextBtn.addEventListener('click', () => {
+			currentPage++;
+			localStorage.setItem('salesCurrentPage', currentPage);
+			renderSales(currentPage);
+		});
+	}
+
+	// Initial load
+	renderSales(currentPage);
+
 	// Download All
 	if(downloadBtn) {
 		downloadBtn.addEventListener('click', () => {
 			if(!table) return;
 
-			// Prepare CSV content
 			let csvContent = '';
 			const headers = Array.from(table.querySelectorAll('thead th'))
 				.map(th => `"${th.textContent.trim()}"`)
@@ -31,20 +131,13 @@ document.addEventListener('DOMContentLoaded', function () {
 			rows.forEach(row => {
 				const cols = Array.from(row.querySelectorAll('td')).map(td => {
 					let text = td.textContent.trim();
-
-					// If td contains span or select, extract proper value
 					const span = td.querySelector('span');
-					const select = td.querySelector('select');
 					if(span) text = span.textContent.trim();
-					if(select) text = select.value.trim();
-
-					// Escape double quotes
 					return `"${text.replace(/"/g, '""')}"`;
 				});
 				csvContent += cols.join(',') + '\n';
 			});
 
-			// Download file
 			const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
 			const link = document.createElement('a');
 			link.href = URL.createObjectURL(blob);
@@ -55,7 +148,7 @@ document.addEventListener('DOMContentLoaded', function () {
 		});
 	}
 
-	// Show/Hide filter popup
+	// Payment filter modal
 	const openPaymentFilter = () => {
 		paymentFilterModal.style.display = 'flex';
 		document.body.style.overflow = 'hidden';
@@ -66,16 +159,13 @@ document.addEventListener('DOMContentLoaded', function () {
 	};
 
 	filterBtn?.addEventListener('click', openPaymentFilter);
-
-	// Close X button
 	document.querySelector(".payment-close-x")?.addEventListener("click", closePaymentFilter);
 
-	// Close when clicking outside modal-content
 	window.addEventListener("click", (e) => {
 		if (e.target === paymentFilterModal) closePaymentFilter();
 	});
 
-	// Apply filter
+	// Apply filter function
 	const applyFilter = () => {
 		const selected = [...checkboxes].filter(cb => cb.checked).map(cb => cb.value.toLowerCase());
 
@@ -87,14 +177,25 @@ document.addEventListener('DOMContentLoaded', function () {
 			row.style.display = (selected.length === 0 || selected.includes(pm)) ? '' : 'none';
 		});
 
-		// Save selection to localStorage so filter persists
 		localStorage.setItem('paymentFilter', JSON.stringify(selected));
 		closePaymentFilter();
 	};
 
+	// Function to apply saved filter
+	const applySavedFilter = () => {
+		const savedFilter = JSON.parse(localStorage.getItem('paymentFilter') || '[]');
+		if (savedFilter.length) {
+			tbody.querySelectorAll('tr').forEach(row => {
+				const paymentCell = row.querySelector('td:last-child span');
+				if (!paymentCell) return;
+				const pm = paymentCell.textContent.trim().toLowerCase();
+				row.style.display = savedFilter.includes(pm) ? '' : 'none';
+			});
+		}
+	};
+
 	applyPaymentFilter?.addEventListener('click', applyFilter);
 
-	// Clear filter
 	clearPaymentFilter?.addEventListener('click', () => {
 		checkboxes.forEach(cb => cb.checked = false);
 		tbody.querySelectorAll('tr').forEach(row => row.style.display = '');
@@ -102,33 +203,37 @@ document.addEventListener('DOMContentLoaded', function () {
 		closePaymentFilter();
 	});
 
-	// Restore filter on page load WITHOUT opening the popup
+	// Restore filter checkboxes on load
 	const savedFilter = JSON.parse(localStorage.getItem('paymentFilter') || '[]');
 	if (savedFilter.length) {
 		checkboxes.forEach(cb => {
 			cb.checked = savedFilter.includes(cb.value.toLowerCase());
 		});
-		// Apply the filter to the rows
-		tbody.querySelectorAll('tr').forEach(row => {
-			const paymentCell = row.querySelector('td:last-child span');
-			if (!paymentCell) return;
-			const pm = paymentCell.textContent.trim().toLowerCase();
-			row.style.display = savedFilter.includes(pm) ? '' : 'none';
-		});
 	}
 
-	// To record modal
+	// Add Record Modal
 	function openModal(){ 
 		if(modal){ 
 			modal.style.display = 'flex'; 
 			document.body.style.overflow = 'hidden'; 
-			if(modalError){ modalError.style.display='none'; 
+			if(modalError){ 
+				modalError.style.display='none'; 
 				modalError.textContent=''; 
 			} 
 		} 
 	}
+
 	function closeModal(){ 
-		if(modal){ modal.style.display = 'none'; document.body.style.overflow = ''; if(form){ form.reset(); } if(modalError){ modalError.style.display='none'; modalError.textContent=''; } } }
+		if(modal){ 
+			modal.style.display = 'none'; 
+			document.body.style.overflow = ''; 
+			if(form){ form.reset(); } 
+			if(modalError){ 
+				modalError.style.display='none'; 
+				modalError.textContent=''; 
+			} 
+		} 
+	}
 
 	if (addBtn) addBtn.addEventListener('click', openModal);
 	if (discardBtn) discardBtn.addEventListener('click', closeModal);
@@ -136,16 +241,16 @@ document.addEventListener('DOMContentLoaded', function () {
 		if(e.target === modal) closeModal();
 	});
 
+	// Form submission
 	if (form) {
 		form.addEventListener('submit', function(e){
 			e.preventDefault();
-			if(modalError){ modalError.style.display='none'; modalError.textContent=''; }
+			if(modalError){ 
+				modalError.style.display='none'; 
+				modalError.textContent=''; 
+			}
+
 			const formData = new FormData(form);
-			const customer = formData.get('customer_name');
-			const product = formData.get('product');
-			const qty = formData.get('quantity');
-			const price = parseFloat(formData.get('total_price')||0).toFixed(2);
-			const payment = formData.get('payment_method');
 
 			fetch('./mvc/controller/salescontroller.php', {
 				method: 'POST',
@@ -153,59 +258,51 @@ document.addEventListener('DOMContentLoaded', function () {
 			})
 			.then(async response => {
 				let data;
-				try { data = await response.json(); } catch(err){ data = {}; }
+				try { 
+					data = await response.json(); 
+				} catch(err){ 
+					data = {}; 
+				}
+
 				if (!response.ok) {
 					const msg = data.error || 'Failed to record sale';
-					if(modalError){ modalError.textContent = msg; modalError.style.display = 'block'; }
+					if(modalError){ 
+						modalError.textContent = msg; 
+						modalError.style.display = 'block'; 
+					}
 					return;
 				}
+
 				if (data.success) {
-					// controller returns report_id (transaction id or numeric id)
-					const txnId = (data.report_id || '').toString();
-					const displayTxn = txnId.startsWith('TXN-') ? txnId : ('TXN-' + txnId);
-					const dt = new Date().toISOString().replace('T',' ').slice(0,16);
-
-					const tr = document.createElement('tr');
-					tr.style.borderTop = '1px solid #f3f4f6';
-					tr.style.color = '#374151';
-
-					// create payment select to match table UI
-					const createPaymentSelect = (selected) => {
-						const options = ['GCash','Cash','Card'];
-						let html = '<select>';
-						options.forEach(opt => {
-							html += `<option value="${escapeHtml(opt)}"${opt===selected ? ' selected' : ''}>${escapeHtml(opt)}</option>`;
-						});
-						html += '</select>';
-						return html;
-					};
-
-					tr.innerHTML = `
-						<td>${escapeHtml(displayTxn)}</td>
-						<td>${escapeHtml(dt)}</td>
-						<td>${escapeHtml(product)}</td>
-						<td>₱${escapeHtml(price)}</td>
-						<td>${escapeHtml(qty)} Packets</td>
-						<td>${escapeHtml(customer)}</td>
-						<td>${createPaymentSelect(payment)}</td>
-					`;
-					if (tbody && tbody.firstChild) tbody.insertBefore(tr, tbody.firstChild);
-					else if (tbody) tbody.appendChild(tr);
+					// Refresh the current page to show new record
+					renderSales(currentPage);
 					closeModal();
 				} else {
-					if(modalError){ modalError.textContent = data.error || 'Failed to record sale'; modalError.style.display = 'block'; }
+					if(modalError){ 
+						modalError.textContent = data.error || 'Failed to record sale'; 
+						modalError.style.display = 'block'; 
+					}
 				}
 			})
 			.catch(err => {
 				console.error('Error:', err);
-				if(modalError){ modalError.textContent = 'Network or server error'; modalError.style.display = 'block'; }
+				if(modalError){ 
+					modalError.textContent = 'Network or server error'; 
+					modalError.style.display = 'block'; 
+				}
 			});
 		});
 	}
 
-	// helper
+	// Helper function
 	function escapeHtml(s){
 		if(!s) return '';
-		return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+		return String(s).replace(/[&<>"']/g, m => ({
+			'&':'&amp;',
+			'<':'&lt;',
+			'>':'&gt;',
+			'"':'&quot;',
+			"'":'&#39;'
+		}[m]));
 	}
 });

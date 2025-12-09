@@ -11,7 +11,6 @@ class SalesModel {
 	}
 
 	private function columnExists($table, $column) {
-		// Use direct query (prepared SHOW COLUMNS caused issues)
 		$res = $this->db->query("SHOW COLUMNS FROM `{$table}` LIKE '{$column}'");
 		return $res && $res->num_rows > 0;
 	}
@@ -25,7 +24,6 @@ class SalesModel {
 		// Resolve product name from inventory (productID -> productName)
 		$productName = $this->getProductNameById($product_id);
 		if (!$productName) {
-			// Fallback: use "Product #ID" if name not found
 			$productName = "Product #" . $product_id;
 		}
 
@@ -41,40 +39,68 @@ class SalesModel {
 			"INSERT INTO salesreport (transaction_ID, date_time, products, order_value, quantity_sold, customer_name, payment_method)
 			 VALUES (?, ?, ?, ?, ?, ?, ?)"
 		);
-		// Correct bind_param: 7 values, types: s s s d i s s
 		$stmt->bind_param("sssdiss", $transactionId, $dateTime, $productName, $orderValue, $qtySold, $custName, $payMethod);
 
 		$ok = $stmt->execute();
-		$error = $stmt->error; // Capture any SQL error
+		$error = $stmt->error;
 		$stmt->close();
 
 		if ($ok) {
 			$this->decrementInventory($product_id, $quantity);
-			return $transactionId; // Return transaction_ID instead of true
+			return $transactionId;
 		}
-		// Log error for debugging
 		error_log("Insert failed: " . $error);
 		return false;
 	}
 
-	// Helper: generate unique transaction ID
 	private function generateTxnId() {
-		// Get last transaction ID from database
 		$result = $this->db->query("SELECT transaction_ID FROM salesreport ORDER BY transaction_ID DESC LIMIT 1");
 		if ($result && $row = $result->fetch_assoc()) {
-			// Extract number from TXN-XXX format
 			$lastId = $row['transaction_ID'];
 			if (preg_match('/TXN-(\d+)/', $lastId, $matches)) {
 				$nextNum = intval($matches[1]) + 1;
 				return 'TXN-' . str_pad($nextNum, 5, '0', STR_PAD_LEFT);
 			}
 		}
-		// Default if table is empty
 		return 'TXN-00001';
 	}
 
+	// Get paginated sales reports
+	public function getSalesReportsPaginated($page = 1, $limit = 8) {
+		$page = max(1, (int)$page);
+		$limit = max(1, (int)$limit);
+		$offset = ($page - 1) * $limit;
+
+		$query = "SELECT transaction_ID, date_time, products, order_value, quantity_sold, customer_name, payment_method
+				  FROM salesreport
+				  ORDER BY date_time DESC
+				  LIMIT ? OFFSET ?";
+		
+		$stmt = $this->db->prepare($query);
+		$stmt->bind_param("ii", $limit, $offset);
+		$stmt->execute();
+		$result = $stmt->get_result();
+
+		$sales_data = [];
+		if ($result && $result->num_rows > 0) {
+			while ($row = $result->fetch_assoc()) {
+				$sales_data[] = $row;
+			}
+		}
+		$stmt->close();
+		return $sales_data;
+	}
+
+	// Get total count of sales reports
+	public function getTotalSalesCount() {
+		$result = $this->db->query("SELECT COUNT(*) as total FROM salesreport");
+		if ($result && $row = $result->fetch_assoc()) {
+			return (int)$row['total'];
+		}
+		return 0;
+	}
+
 	public function getAllSalesReports() {
-		// Read back using actual columns present
 		$query = "SELECT transaction_ID, date_time, products, order_value, quantity_sold, customer_name, payment_method
 				  FROM salesreport
 				  ORDER BY date_time DESC";
@@ -90,7 +116,6 @@ class SalesModel {
 		return $sales_data;
 	}
 
-	// Helper: resolve inventory.productName by productID
 	private function getProductNameById($product_id) {
 		$stmt = $this->db->prepare("SELECT productName FROM inventory WHERE productID = ? LIMIT 1");
 		$stmt->bind_param("i", $product_id);
@@ -103,14 +128,11 @@ class SalesModel {
 	}
 
 	public function getProductIdByName($product_name) {
-		// Check if input is numeric (product ID)
 		if (is_numeric($product_name)) {
 			$product_id = (int)$product_name;
-			// Use productID from your inventory table
 			$stmt = $this->db->prepare("SELECT productID FROM inventory WHERE productID = ? LIMIT 1");
 			$stmt->bind_param("i", $product_id);
 		} else {
-			// Search by product name (case-insensitive) - use productName column
 			$stmt = $this->db->prepare("SELECT productID FROM inventory WHERE LOWER(productName) = LOWER(?) LIMIT 1");
 			$stmt->bind_param("s", $product_name);
 		}
@@ -126,7 +148,6 @@ class SalesModel {
 	}
 
 	public function getAllProducts() {
-		// Query your actual inventory table structure
 		$query = "SELECT productID as product_ID, productName as product_name, quantity
 				  FROM inventory
 				  WHERE quantity > 0
@@ -144,7 +165,6 @@ class SalesModel {
 	}
 
 	public function getInventoryByProduct($product_id) {
-		// Use productID column from your inventory table
 		$stmt = $this->db->prepare("SELECT quantity FROM inventory WHERE productID = ? LIMIT 1");
 		$stmt->bind_param("i", $product_id);
 		$stmt->execute();
@@ -158,7 +178,6 @@ class SalesModel {
 	}
 
 	public function decrementInventory($product_id, $quantity) {
-		// Use productID column
 		$stmt = $this->db->prepare("UPDATE inventory SET quantity = quantity - ? WHERE productID = ?");
 		$stmt->bind_param("ii", $quantity, $product_id);
 		$ok = $stmt->execute();
@@ -167,9 +186,7 @@ class SalesModel {
 	}
 
 	public function deleteAllSales() {
-		// Only delete from salesreport
 		$this->db->query("DELETE FROM salesreport");
-		// Reset auto increment
 		$this->db->query("ALTER TABLE salesreport AUTO_INCREMENT = 1");
 		return true;
 	}

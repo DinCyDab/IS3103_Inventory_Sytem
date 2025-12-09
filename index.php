@@ -24,6 +24,7 @@
     require_once "./mvc/controller/inventorycontroller.php";
     require_once "./mvc/controller/reportscontroller.php";
     require_once "./mvc/controller/dashboardcontroller.php";
+    require_once "./mvc/controller/salescontroller.php";
 
     // Check login status
     if(isset($_SESSION["account"])){
@@ -33,10 +34,10 @@
         // Define permissions
         $permissions = [
             'super_admin' => ['dashboard', 'accounts', 'inventory', 'sales', 'reports', 'settings', 'logout', 
-                            'createProduct', 'updateProduct', 'deleteProduct', 'fetchStats', 'paginated', 'allProducts', 'searchProducts'],
+                            'createProduct', 'updateProduct', 'deleteProduct', 'fetchStats', 'paginated', 'allProducts', 'searchProducts', 'getPaginatedSales'],
             'admin' => ['dashboard', 'accounts', 'inventory', 'sales', 'reports', 'settings', 'logout',
-                       'createProduct', 'updateProduct', 'deleteProduct', 'fetchStats', 'paginated', 'allProducts', 'searchProducts'],
-            'staff' => ['inventory', 'paginated', 'allProducts', 'searchProducts', 'fetchStats', 'sales', 'reports', 'settings', 'logout']
+                       'createProduct', 'updateProduct', 'deleteProduct', 'fetchStats', 'paginated', 'allProducts', 'searchProducts', 'getPaginatedSales'],
+            'staff' => ['inventory', 'paginated', 'allProducts', 'searchProducts', 'fetchStats', 'sales', 'reports', 'settings', 'logout', 'getPaginatedSales']
         ];
         
         $allowedViews = $permissions[$userRole] ?? ['sales', 'reports', 'settings', 'logout'];
@@ -119,6 +120,22 @@
         exit;
     }
 
+    /////////// SALES
+    elseif ($isLoggedIn && $view === 'sales') {
+        $salesController = new SalesController();
+
+        // Check if this is an AJAX request for paginated data
+        if (isset($_GET['action']) && $_GET['action'] === 'getPaginatedSales') {
+            $salesController->getPaginatedSales();
+            exit;
+        }
+
+        // Otherwise render the sales page normally
+        $page = new SalesView();
+    }
+
+/////////////////////////////
+
     // Handle inventory routing - check permissions first
     elseif($isLoggedIn && in_array($view, ['inventory', 'createProduct', 'updateProduct', 'deleteProduct', 'fetchStats', 'paginated', 'allProducts', 'searchProducts'])){
         
@@ -187,11 +204,13 @@
     elseif($isLoggedIn && $view === 'reports'){
         $reportsController = new ReportsController();
 
+        // Check if this is a search AJAX request
         if(isset($_GET['action']) && $_GET['action'] === 'search'){
             $reportsController->search();
             exit;
         }
 
+        // Otherwise render the reports page normally
         $page = $reportsController->index();
     }
     

@@ -30,4 +30,39 @@ class ReportsController {
 
         return new ReportsView($data);
     }
+
+    // AJAX search endpoint
+    public function search() {
+        header('Content-Type: application/json');
+
+        // Example: fetch from DB
+        try {
+            $query = $_GET['query'] ?? '';
+
+            if(empty($query)){
+                echo json_encode([
+                    'success' => true,
+                    'results' => []
+                ]);
+                exit;
+            }
+
+            // Search products using the model
+            $results = $this->model->searchProducts($query);
+
+            echo json_encode([
+                'success' => true,
+                'results' => $results
+            ]);
+
+        } catch(Exception $e){
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'error' => 'server_error',
+                'message' => $e->getMessage()
+            ]);
+        }
+        exit;
+    }
 }

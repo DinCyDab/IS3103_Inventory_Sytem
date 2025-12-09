@@ -1,11 +1,51 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Search Bar
-  // Storage Helpers
+  // --- Helpers ---
   function getStoredProducts() {
-      return JSON.parse(localStorage.getItem('products') || '[]');
+    return JSON.parse(localStorage.getItem('products') || '[]');
   }
 
-  // Safe Selectors
+  function formatProductId(id){
+    if(!id) return 'PRD-0000';
+    let numericPart = id.toString().replace(/^PRD-/, '').replace(/\D/g, '');
+    return `PRD-${numericPart.padStart(4, '0')}`;
+  }
+
+  function renderProductOverview(productsList, container){
+    if(!container) return;
+    container.innerHTML = '';
+
+    if(productsList.length === 0){
+      container.innerHTML = '<p style="color:#888;">No products found.</p>';
+      return;
+    }
+
+    productsList.forEach(prod => {
+      const card = document.createElement('div');
+      card.className = 'product-card';
+
+      card.innerHTML = `
+        <div class="overview-header">
+          <h3>${prod.productName}</h3>
+        </div>
+        <div class="overview-tabs"><span>Overview</span></div>
+        <div class="overview-content">
+          <div class="product-info">
+            <h4>Product Details</h4>
+            <div class="details-row"><label>Product Name</label><span>${prod.productName}</span></div>
+            <div class="details-row"><label>Product ID</label><span>${formatProductId(prod.productID)}</span></div>
+            <div class="details-row"><label>Category</label><span>${prod.category}</span></div>
+            <div class="details-row"><label>Expiry Date</label><span>${prod.expiryDate || 'N/A'}</span></div>
+          </div>
+          <div class="product-img-box">
+            <img src="public/images/uploads/${prod.image || 'default.png'}" alt="${prod.productName}" class="product-img"/>
+          </div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  // --- INVENTORY PAGE SEARCH ---
   const searchbar = document.querySelector('.searchbar');
   const productContainer = document.getElementById('productOverview'); 
   const lastSearch = localStorage.getItem('lastSearch') || '';
@@ -13,159 +53,67 @@ document.addEventListener("DOMContentLoaded", () => {
   const inventorySection = document.querySelector('.overall-inventory-container');
   const productsSection = document.querySelector('.products');
   const products = getStoredProducts();
-  
 
-  // Immediately set ProductID, Quantity as Packets, and Price as Peso
-  function formatProductId(id){
-    if(!id) return 'PRD-0000'; // Fallback for empty/undefined
+  if(searchbar && productContainer){
+    // Restore previous search
+    if(lastSearch){
+      searchbar.value = lastSearch;
+      inventorySection.style.display = 'none';
+      productsSection.style.display = 'none';
+      productContainer.style.display = 'flex';
+      if(backBtn) backBtn.style.display = 'inline-block';
 
-    // Remove any existing 'PRD-' prefix
-    let numericPart = id.toString().replace(/^PRD-/, '');
-
-    // Keep only digits
-    numericPart = numericPart.replace(/\D/g, '');
-
-    // Pad to 4 digits
-    numericPart = numericPart.padStart(4, '0');
-
-    return `PRD-${numericPart}`;
-  }
-
-  // Render function for overview cards
-  function renderProductOverview(productsList){
-    if(!productContainer) return;
-    productContainer.innerHTML = ''; // Clear existing content
-
-    if(productsList.length === 0){
-      productContainer.innerHTML = '<p style="color:#888;">No products found.</p>';
-      return;
+      const filtered = products.filter(p =>
+        (p.productName && p.productName.toLowerCase().includes(lastSearch)) ||
+        (p.productID && p.productID.toLowerCase().includes(lastSearch)) ||
+        (p.category && p.category.toLowerCase().includes(lastSearch))
+      );
+      renderProductOverview(filtered, productContainer);
     }
 
-    productsList.forEach((prod, idx) => {
-      const card = document.createElement('div');
-      card.className = 'product-card';
+    // Enter search
+    searchbar.addEventListener('keydown', async (e) => {
+      if(e.key !== 'Enter') return;
 
-      card.innerHTML = `
-        <div class="product-card">
-          <div class="overview-header">
-            <h3>${prod.productName}</h3>
-          </div>
-          <div class="overview-tabs">
-            <span>Overview</span>
-          </div>
-          <div class="overview-content">
-            <div class="product-info">
-              <h4>Product Details</h4>
-              <div class="details-row">
-                <label>Product Name</label> 
-                <span>${prod.productName}</span>
-              </div>
-              <div class="details-row">
-                <label>Product ID</label> 
-                <span>${formatProductId(prod.productID)}</span>
-              </div>
-              <div class="details-row">
-                <label>Product category</label> 
-                <span>${prod.category}</span>
-              </div>
-              <div class="details-row">
-                <label>Expiry Date</label> 
-                <span>${prod.expiryDate}</span>
-              </div>
-            </div>
-            <div class="product-img-box">
-              <img src="public/images/uploads/${prod.image}" alt="${prod.productName}" class="product-img"/>
-            </div>
-          </div>
-        </div>
-      `;
-      productContainer.appendChild(card);
-    });
-  }
+      const query = searchbar.value.trim().toLowerCase();
+      localStorage.setItem('lastSearch', query);
 
-  // Back Button
-  if(backBtn){
-    backBtn.addEventListener('click', function(){
-
-      // Clear see all
-      localStorage.removeItem('seeAll');
-      // Clear search storage
-      localStorage.removeItem('lastSearch');
-      if(searchbar) searchbar.value = '';
-
-      // Show default inventory view
-      if(inventorySection) inventorySection.style.display = '';
-      if(productsSection) productsSection.style.display = '';
-
-      // Hide product overview
-      productContainer.style.display = 'none';
-
-      // Hide back button in default inventory view
-      backBtn.style.display = 'none';
-    });
-  }
-
-  // Restore search on page load
-  if(lastSearch){
-    searchbar.value = lastSearch;
-
-    const inventorySection = document.querySelector('.overall-inventory-container');
-    const productsSection = document.querySelector('.products');
-
-    // Hide default inventory view
-    if(inventorySection) inventorySection.style.display = 'none';
-    if(productsSection) productsSection.style.display = 'none';
-
-    // Show product overview
-    productContainer.style.display = 'flex';
-    if(backBtn) backBtn.style.display = 'inline-block';
-
-    // Filter products
-    const filteredProducts = products.filter(prod =>
-      (prod.productName && prod.productName.toLowerCase().includes(lastSearch)) ||
-      (prod.productID && prod.productID.toLowerCase().includes(lastSearch)) ||
-      (prod.category && prod.category.toLowerCase().includes(lastSearch))
-    );
-    renderProductOverview(filteredProducts);
-  }
-
-  // Search Products
-  if (searchbar) {
-    searchbar.addEventListener('keydown', async function(e) {
-      if (e.key !== 'Enter') return;
-
-      const query = this.value.toLowerCase().trim();
-      localStorage.setItem('lastSearch', query); // Store last search
-
-      // Show back button and hide default inventory
-      if(backBtn) backBtn.style.display = 'inline-block';
-      if(inventorySection) inventorySection.style.display = 'none';
-      if(productsSection) productsSection.style.display = 'none';
+      inventorySection.style.display = 'none';
+      productsSection.style.display = 'none';
       productContainer.style.display = 'flex';
+      if(backBtn) backBtn.style.display = 'inline-block';
 
       try {
-        // Fetch fresh products from backend
-        const res = await fetch('index.php?view=allProducts', {
-          headers: { 'X-Requested-With':'XMLHttpRequest' }
-        });
+        const res = await fetch('index.php?view=allProducts', { headers: {'X-Requested-With':'XMLHttpRequest'} });
         const data = await res.json();
         const allProducts = data.products || [];
 
-        // Filter on the frontend if query exists
-        const filteredProducts = query
-          ? allProducts.filter(prod =>
-              (prod.productName && prod.productName.toLowerCase().includes(query)) ||
-              (prod.productID && prod.productID.toLowerCase().includes(query)) ||
-              (prod.category && prod.category.toLowerCase().includes(query))
+        const filtered = query
+          ? allProducts.filter(p =>
+              (p.productName && p.productName.toLowerCase().includes(query)) ||
+              (p.productID && p.productID.toLowerCase().includes(query)) ||
+              (p.category && p.category.toLowerCase().includes(query))
             )
           : allProducts;
 
-        renderProductOverview(filteredProducts);
-
-      } catch(err) {
-        console.error("Search error:", err);
+        renderProductOverview(filtered, productContainer);
+      } catch(err){
+        console.error("Inventory search error:", err);
         productContainer.innerHTML = '<p style="color:#888;">Failed to fetch products.</p>';
       }
     });
+
+    // Back button
+    if(backBtn){
+      backBtn.addEventListener('click', () => {
+        localStorage.removeItem('seeAll');
+        localStorage.removeItem('lastSearch');
+        searchbar.value = '';
+        inventorySection.style.display = '';
+        productsSection.style.display = '';
+        productContainer.style.display = 'none';
+        backBtn.style.display = 'none';
+      });
+    }
   }
 });
