@@ -69,13 +69,7 @@
                 exit();
             }
             
-            // For regular requests, redirect to their default page
-            if($userRole === 'staff'){
-                header("Location: index.php?view=sales");
-            } else {
-                header("Location: index.php?view=dashboard");
-            }
-            exit();
+            $view = "notfound";
         }
         
         $view = $requestedView;
@@ -120,7 +114,7 @@
         exit;
     }
 
-    /////////// SALES
+    // SALES router
     elseif ($isLoggedIn && $view === 'sales') {
         $salesController = new SalesController();
 
@@ -133,8 +127,6 @@
         // Otherwise render the sales page normally
         $page = new SalesView();
     }
-
-/////////////////////////////
 
     // Handle inventory routing - check permissions first
     elseif($isLoggedIn && in_array($view, ['inventory', 'createProduct', 'updateProduct', 'deleteProduct', 'fetchStats', 'paginated', 'allProducts', 'searchProducts'])){
@@ -151,12 +143,7 @@
                 exit();
             }
             
-            if($userRole === 'staff'){
-                header("Location: index.php?view=sales");
-            } else {
-                header("Location: index.php?view=dashboard");
-            }
-            exit();
+            $view = "notfound";
         }
 
         $controller = new ProductController();

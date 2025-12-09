@@ -9,13 +9,13 @@ class SalesView{
 		$total = $sales_model->getTotalSalesCount();
 		$totalPages = max(1, ceil($total / 8));
 		?>
+
 		<!-- Add fixed header that uses inventory.css .header/.search-wrapper/.searchbar -->
 		<div class="header"></div>
 
 		<div class="topbar">
 			<div class="search-wrapper">
-				<i class='bx bx-search' ></i>
-				<input type="search" class="searchbar" placeholder="Search product or order" />
+				<h1>Transactions</h1>
 			</div>
 		</div>
 
@@ -156,47 +156,11 @@ class SalesView{
 		</div>
 
 		<!-- external JS -->
-		 <!-- <link rel="stylesheet" href="https://cdn.datatables.net/2.3.5/css/dataTables.dataTables.css" />
-  
-<script src="https://cdn.datatables.net/2.3.5/js/dataTables.js"></script> -->
-
 		<script src="./public/src/js/sales.js"></script>
 
  		<link href="./public/src/css/sales.css" rel="stylesheet">
 
  		<?php
-	}
-
-	private function renderRows($records){
-		if (empty($records)) {
-			echo "<tr><td colspan='7' style='padding:40px; text-align:center; color:#9ca3af; font-size:14px;'>No transactions yet</td></tr>";
-			return;
-		}
-
-		foreach ($records as $row) {
-			// Use actual salesreport column names
-			$txnId = $row['transaction_ID'] ?? 'N/A';
-			$dateTime = $row['date_time'] ?? '';
-			$products = $row['products'] ?? '-';
-			$orderValue = (float)($row['order_value'] ?? 0);
-			$qtySold = (int)($row['quantity_sold'] ?? 0);
-			$customerName = $row['customer_name'] ?? 'Guest';
-			$paymentMethod = $row['payment_method'] ?? 'Cash';
-			
-			echo "<tr style='border-bottom:1px solid #f3f4f6; transition:background 0.2s;' onmouseover='this.style.background=\"#f9fafb\"' onmouseout='this.style.background=\"#fff\"'>
-					<td style='padding:16px 24px; font-weight:600; color:#111827; font-size:14px;'>" . htmlspecialchars($txnId) . "</td>
-					<td style='padding:16px 24px; color:#6b7280; font-size:14px;'>" . htmlspecialchars($dateTime) . "</td>
-					<td style='padding:16px 24px; color:#374151; font-size:14px;'>" . htmlspecialchars($products) . "</td>
-					<td style='padding:16px 24px; color:#111827; font-size:14px;'>₱" . number_format($orderValue, 2) . "</td>
-					<td style='padding:16px 24px; color:#374151; font-size:14px;'>" . htmlspecialchars($qtySold) . " Packets</td>
-					<td style='padding:16px 24px; color:#374151; font-size:14px;'>" . htmlspecialchars($customerName) . "</td>
-					<td style='padding:16px 24px;'>
-						<span style='display:inline-flex; align-items:center; gap:6px; padding:6px 12px; background:#dbeafe; color:#1e40af; border-radius:6px; font-size:13px;'>
-							" . htmlspecialchars($paymentMethod) . "
-						</span>
-					</td>
-				</tr>";
-		}
 	}
 }
 ?>

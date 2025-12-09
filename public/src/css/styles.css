@@ -134,6 +134,11 @@ main{
     color: #888;
 }
 
+.search-wrapper h1{
+    font-weight: 550;
+    letter-spacing: 2px;
+}
+
 .searchbar,
 .searchbaraccounts,
 .searchbar {

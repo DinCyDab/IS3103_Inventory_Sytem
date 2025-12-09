@@ -36,13 +36,10 @@ class ReportsView {
 
         <!-- search bar -->
         <div class="topbar">
-            <div class="search-wrapper">
-                <i class='bx bx-search search-icon'></i>
-                <input type="search" class="searchbar" id="reportsSearch" placeholder="Search product or order">
-            </div>
-
-            <div id="reportsProductOverview" style="display:none;"></div>
-        </div>
+			<div class="search-wrapper">
+				<h1>Monthly Reports</h1>
+			</div>
+		</div>
 
         <!-- both boxes side by side -->
         <div class="reports-row">

@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
 	const downloadBtn = document.querySelector('.download-btn');
 	const table = document.getElementById('transactionsTable');
 
-	// PAGINATION FIX: Use consistent variable names
+	// Use consistent variable names
 	let currentPage = parseInt(localStorage.getItem('salesCurrentPage')) || 1;
 	const salesPerPage = 8; // Match your limit from PHP
 
@@ -148,23 +148,6 @@ document.addEventListener('DOMContentLoaded', function () {
 		});
 	}
 
-	// Payment filter modal
-	const openPaymentFilter = () => {
-		paymentFilterModal.style.display = 'flex';
-		document.body.style.overflow = 'hidden';
-	};
-	const closePaymentFilter = () => {
-		paymentFilterModal.style.display = 'none';
-		document.body.style.overflow = '';
-	};
-
-	filterBtn?.addEventListener('click', openPaymentFilter);
-	document.querySelector(".payment-close-x")?.addEventListener("click", closePaymentFilter);
-
-	window.addEventListener("click", (e) => {
-		if (e.target === paymentFilterModal) closePaymentFilter();
-	});
-
 	// Apply filter function
 	const applyFilter = () => {
 		const selected = [...checkboxes].filter(cb => cb.checked).map(cb => cb.value.toLowerCase());
@@ -178,7 +161,6 @@ document.addEventListener('DOMContentLoaded', function () {
 		});
 
 		localStorage.setItem('paymentFilter', JSON.stringify(selected));
-		closePaymentFilter();
 	};
 
 	// Function to apply saved filter
@@ -200,7 +182,6 @@ document.addEventListener('DOMContentLoaded', function () {
 		checkboxes.forEach(cb => cb.checked = false);
 		tbody.querySelectorAll('tr').forEach(row => row.style.display = '');
 		localStorage.removeItem('paymentFilter');
-		closePaymentFilter();
 	});
 
 	// Restore filter checkboxes on load

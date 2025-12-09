@@ -198,7 +198,7 @@ class DashboardView {
 
             // Set canvas size
             ctx.canvas.width = 400;
-            ctx.canvas.height = 250;
+            ctx.canvas.height = 270;
 
             let data = <?php echo json_encode($salesSummary); ?>;
 
@@ -209,7 +209,7 @@ class DashboardView {
                     labels: data.labels,
                     datasets: [
                         {
-                            label: "Purchase",
+                            label: "",
                             data: data.purchase_cost,
                             borderColor: "#f7db93",
                             backgroundColor: "rgba(251,191,36,0.15)",
@@ -220,7 +220,7 @@ class DashboardView {
                             fill: true
                         },
                         {
-                            label: "Sales",
+                            label: "",
                             data: data.sales,
                             borderColor: "#3b82f6",
                             backgroundColor: "rgba(59,130,246,0.15)",
