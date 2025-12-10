@@ -305,8 +305,9 @@
                                 <select name="role" required="">
                                     <option value="" disabled="" selected="">Select role</option>
                                     <option value="staff">Staff</option>
+                                    
                                     <?php 
-                                        if($this->current_user['role'] == 'super admin'){
+                                        if($this->current_user_role == 'super_admin'){
                                             ?>
                                                 <option value="admin">Admin</option>
                                             <?php
