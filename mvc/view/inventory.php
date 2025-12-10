@@ -164,7 +164,7 @@
                 </div>
                 <div class="form-row">
                     <label class="field-label">Product ID</label>
-                    <input type="text" id="productID" name="productID" placeholder="Enter product ID" required>
+                    <input type="text" id="productID" name="productID" placeholder="Auto-generated" readonly>
                 </div>
                 <div class="form-row">
                     <label class="field-label">Quantity</label>

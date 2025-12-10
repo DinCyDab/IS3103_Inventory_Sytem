@@ -5,12 +5,33 @@ class ProductModel{
     private $config;
 
     public function __construct(){
-        $this->config = new Config(); // mysqli connection
+        $this->config = new Config();
     }
 
     // Base condition for active products
     private function activeCondition() {
         return "(status IS NULL OR status = '' OR LOWER(TRIM(status)) != 'deleted')";
+    }
+
+    // Generate next Product ID
+    public function generateNextProductId(){
+        $conn = $this->config->getConnection();
+        
+        // Get the last product ID (including deleted ones to avoid ID conflicts)
+        $result = $conn->query("SELECT productID FROM inventory ORDER BY id DESC LIMIT 1");
+        
+        if($result && $row = $result->fetch_assoc()){
+            $lastId = $row['productID'];
+            
+            // Extract numeric part from PRD-XXXX format
+            if(preg_match('/PRD-(\d+)/', $lastId, $matches)){
+                $nextNum = intval($matches[1]) + 1;
+                return 'PRD-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+            }
+        }
+        
+        // Default first ID
+        return 'PRD-0001';
     }
 
     // Get all products
@@ -38,7 +59,7 @@ class ProductModel{
 
         $stmt = $this->config->prepare($sql);
 
-        $types = str_repeat('s', count($categories)) . "ii"; // categories = string, limit & offset = int
+        $types = str_repeat('s', count($categories)) . "ii";
         $stmt->bind_param($types, ...$params);
 
         $stmt->execute();
@@ -97,19 +118,19 @@ class ProductModel{
         ")->fetch_assoc();
         $lowStocks = $row['lowStocks'] ?? 0;
 
-        // Top Selling (If their is a sold column)
-            $row = $conn->query("
-                SELECT 
-                    IFNULL(SUM(s.quantity_sold), 0) AS totalSold,
-                    IFNULL(SUM(s.quantity_sold * i.price), 0) AS totalRevenue
-                FROM salesreport s
-                LEFT JOIN inventory i 
-                    ON TRIM(LOWER(i.productName)) = TRIM(LOWER(s.products))
-                WHERE " . $this->activeCondition() . "
-            ")->fetch_assoc();
+        // Top Selling
+        $row = $conn->query("
+            SELECT 
+                IFNULL(SUM(s.quantity_sold), 0) AS totalSold,
+                IFNULL(SUM(s.quantity_sold * i.price), 0) AS totalRevenue
+            FROM salesreport s
+            LEFT JOIN inventory i 
+                ON TRIM(LOWER(i.productName)) = TRIM(LOWER(s.products))
+            WHERE " . $this->activeCondition() . "
+        ")->fetch_assoc();
 
-            $totalSellingQty = $row['totalSold'] ?? 0;
-            $totalSellingValue = $row['totalRevenue'] ?? 0;
+        $totalSellingQty = $row['totalSold'] ?? 0;
+        $totalSellingValue = $row['totalRevenue'] ?? 0;
 
         // Building overviewStats array
         $overviewStats = [
@@ -146,7 +167,6 @@ class ProductModel{
 
     // Utility -- Check if a column exists in a table
     private function columnExists($table, $column){
-        // Sanitize identifiers to prevent SQL injection
         $table = preg_replace("/[^a-zA-Z0-9_]/", "", $table);
         $column = preg_replace("/[^a-zA-Z0-9_]/", "", $column);
 

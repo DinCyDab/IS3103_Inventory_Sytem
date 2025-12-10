@@ -15,13 +15,82 @@ document.addEventListener('DOMContentLoaded', function () {
 	const downloadBtn = document.querySelector('.download-btn');
 	const table = document.getElementById('transactionsTable');
 
-	// Use consistent variable names
-	let currentPage = parseInt(localStorage.getItem('salesCurrentPage')) || 1;
-	const salesPerPage = 8; // Match your limit from PHP
+	// Product selection elements
+	const productSelect = document.getElementById('productSelect');
+	const quantityInput = document.getElementById('quantityInput');
+	const unitPriceInput = document.getElementById('unitPriceInput');
+	const totalPriceInput = document.getElementById('totalPriceInput');
+	const stockInfo = document.getElementById('stockInfo');
+	const quantityError = document.getElementById('quantityError');
 
-	const prevBtn = document.getElementById('prevBtn'); // Use correct IDs from your HTML
+	let currentPage = parseInt(localStorage.getItem('salesCurrentPage')) || 1;
+	const salesPerPage = 8;
+
+	const prevBtn = document.getElementById('prevBtn');
 	const nextBtn = document.getElementById('nextBtn');
 	const pageIndicator = document.getElementById('pageIndicator');
+
+	// Auto-calculate total price when product or quantity changes
+	if (productSelect) {
+		productSelect.addEventListener('change', function() {
+			const selectedOption = this.options[this.selectedIndex];
+			const price = parseFloat(selectedOption.getAttribute('data-price')) || 0;
+			const stock = parseInt(selectedOption.getAttribute('data-stock')) || 0;
+			
+			// Update unit price
+			if (unitPriceInput) {
+				unitPriceInput.value = price.toFixed(2);
+			}
+			
+			// Show stock info
+			if (stockInfo) {
+				stockInfo.textContent = `Available stock: ${stock} units`;
+				stockInfo.style.display = 'block';
+			}
+			
+			// Reset quantity and hide error
+			if (quantityInput) {
+				quantityInput.value = '';
+				quantityInput.max = stock;
+			}
+			if (quantityError) {
+				quantityError.style.display = 'none';
+			}
+			
+			// Clear total price
+			if (totalPriceInput) {
+				totalPriceInput.value = '';
+			}
+		});
+	}
+
+	if (quantityInput) {
+		quantityInput.addEventListener('input', function() {
+			const quantity = parseInt(this.value) || 0;
+			const unitPrice = parseFloat(unitPriceInput?.value) || 0;
+			const selectedOption = productSelect?.options[productSelect.selectedIndex];
+			const maxStock = parseInt(selectedOption?.getAttribute('data-stock')) || 0;
+			
+			// Validate quantity against stock
+			if (quantity > maxStock) {
+				if (quantityError) {
+					quantityError.textContent = `Only ${maxStock} units available in stock`;
+					quantityError.style.display = 'block';
+				}
+				this.value = maxStock;
+			} else {
+				if (quantityError) {
+					quantityError.style.display = 'none';
+				}
+			}
+			
+			// Calculate total price
+			const total = (parseInt(this.value) || 0) * unitPrice;
+			if (totalPriceInput) {
+				totalPriceInput.value = total.toFixed(2);
+			}
+		});
+	}
 
 	function updatePaginationButtons(totalPages) {
 		if (prevBtn) prevBtn.disabled = currentPage <= 1;
@@ -55,7 +124,6 @@ document.addEventListener('DOMContentLoaded', function () {
 				return;
 			}
 
-			// Render rows
 			tbody.innerHTML = data.data.map(row => {
 				const txnId = escapeHtml(row.transaction_ID || 'N/A');
 				const dateTime = escapeHtml(row.date_time || '');
@@ -78,9 +146,7 @@ document.addEventListener('DOMContentLoaded', function () {
 				`;
 			}).join('');
 
-			// Apply saved payment filter if any
 			applySavedFilter();
-
 			updatePaginationButtons(data.pagination.total_pages);
 
 		} catch (err) {
@@ -94,7 +160,6 @@ document.addEventListener('DOMContentLoaded', function () {
 		}
 	}
 
-	// Pagination button handlers
 	if (prevBtn) {
 		prevBtn.addEventListener('click', () => {
 			if (currentPage > 1) {
@@ -113,10 +178,8 @@ document.addEventListener('DOMContentLoaded', function () {
 		});
 	}
 
-	// Initial load
 	renderSales(currentPage);
 
-	// Download All
 	if(downloadBtn) {
 		downloadBtn.addEventListener('click', () => {
 			if(!table) return;
@@ -148,7 +211,6 @@ document.addEventListener('DOMContentLoaded', function () {
 		});
 	}
 
-	// Apply filter function
 	const applyFilter = () => {
 		const selected = [...checkboxes].filter(cb => cb.checked).map(cb => cb.value.toLowerCase());
 
@@ -163,7 +225,6 @@ document.addEventListener('DOMContentLoaded', function () {
 		localStorage.setItem('paymentFilter', JSON.stringify(selected));
 	};
 
-	// Function to apply saved filter
 	const applySavedFilter = () => {
 		const savedFilter = JSON.parse(localStorage.getItem('paymentFilter') || '[]');
 		if (savedFilter.length) {
@@ -184,7 +245,6 @@ document.addEventListener('DOMContentLoaded', function () {
 		localStorage.removeItem('paymentFilter');
 	});
 
-	// Restore filter checkboxes on load
 	const savedFilter = JSON.parse(localStorage.getItem('paymentFilter') || '[]');
 	if (savedFilter.length) {
 		checkboxes.forEach(cb => {
@@ -192,7 +252,6 @@ document.addEventListener('DOMContentLoaded', function () {
 		});
 	}
 
-	// Add Record Modal
 	function openModal(){ 
 		if(modal){ 
 			modal.style.display = 'flex'; 
@@ -200,7 +259,12 @@ document.addEventListener('DOMContentLoaded', function () {
 			if(modalError){ 
 				modalError.style.display='none'; 
 				modalError.textContent=''; 
-			} 
+			}
+			// Reset form fields
+			if (stockInfo) stockInfo.style.display = 'none';
+			if (quantityError) quantityError.style.display = 'none';
+			if (unitPriceInput) unitPriceInput.value = '';
+			if (totalPriceInput) totalPriceInput.value = '';
 		} 
 	}
 
@@ -212,7 +276,9 @@ document.addEventListener('DOMContentLoaded', function () {
 			if(modalError){ 
 				modalError.style.display='none'; 
 				modalError.textContent=''; 
-			} 
+			}
+			if (stockInfo) stockInfo.style.display = 'none';
+			if (quantityError) quantityError.style.display = 'none';
 		} 
 	}
 
@@ -222,7 +288,6 @@ document.addEventListener('DOMContentLoaded', function () {
 		if(e.target === modal) closeModal();
 	});
 
-	// Form submission
 	if (form) {
 		form.addEventListener('submit', function(e){
 			e.preventDefault();
@@ -255,7 +320,6 @@ document.addEventListener('DOMContentLoaded', function () {
 				}
 
 				if (data.success) {
-					// Refresh the current page to show new record
 					renderSales(currentPage);
 					closeModal();
 				} else {
@@ -275,7 +339,6 @@ document.addEventListener('DOMContentLoaded', function () {
 		});
 	}
 
-	// Helper function
 	function escapeHtml(s){
 		if(!s) return '';
 		return String(s).replace(/[&<>"']/g, m => ({

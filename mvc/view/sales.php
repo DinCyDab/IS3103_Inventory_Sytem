@@ -8,6 +8,9 @@ class SalesView{
 		$sales_records = $sales_model->getSalesReportsPaginated(1, 8);
 		$total = $sales_model->getTotalSalesCount();
 		$totalPages = max(1, ceil($total / 8));
+		
+		// Get available products for dropdown
+		$available_products = $sales_model->getAllProducts();
 		?>
 
 		<!-- Add fixed header that uses inventory.css .header/.search-wrapper/.searchbar -->
@@ -46,7 +49,6 @@ class SalesView{
 						</thead>
 						<tbody id="transactionsTbody">
 							<?php
-							// keep renderRows logic but adjust classes in echo (no view refactor)
 							foreach ($sales_records as $row) {
 								$txnId = htmlspecialchars($row['transaction_ID'] ?? 'N/A');
 								$dateTime = htmlspecialchars($row['date_time'] ?? '');
@@ -85,31 +87,58 @@ class SalesView{
 			<div class="modal-card">
 				<h3 class="modal-title">Add Record</h3>
 				<form id="addRecordForm">
-						<div class="form-row">
-							<label class="field-label">Customer Name</label>
-							<input type="text" name="customer_name" placeholder="Enter customer name" required>
-						</div>
-						<div class="form-row">
-							<label class="field-label">Product Selection</label>
-							<input type="text" name="product" placeholder="Enter product name or ID" required>
-						</div>
-						<div class="form-row">
-							<label class="field-label">Quantity Sold</label>
-							<input type="number" name="quantity" placeholder="Enter quantity sold" min="1" required>
-						</div>
-						<div class="form-row">
-							<label class="field-label">Total Price</label>
-							<input type="number" name="total_price" placeholder="Enter total price" min="0" step="0.01" required>
-						</div>
-						<div class="form-row">
-							<label class="field-label">Payment Method</label>
-							<select name="payment_method" required>
-								<option value="" disabled selected>Select payment method</option>
-								<option value="GCash">GCash</option>
-								<option value="Cash">Cash</option>
-								<option value="Card">Card</option>
-							</select>
-						</div>
+					<div class="form-row">
+						<label class="field-label">Customer Name</label>
+						<input type="text" name="customer_name" placeholder="Enter customer name" required>
+					</div>
+					
+					<div class="form-row">
+						<label class="field-label">Product Selection</label>
+						<select name="product" id="productSelect" required>
+							<option value="" disabled selected>Select a product</option>
+							<?php foreach($available_products as $product): ?>
+								<option 
+									value="<?php echo htmlspecialchars($product['product_ID']); ?>"
+									data-name="<?php echo htmlspecialchars($product['product_name']); ?>"
+									data-price="<?php echo htmlspecialchars($product['price'] ?? 0); ?>"
+									data-stock="<?php echo htmlspecialchars($product['quantity']); ?>">
+									<?php 
+										echo htmlspecialchars($product['product_name']) . 
+										' (ID: ' . $product['product_ID'] . ') - ' .
+										'Stock: ' . $product['quantity'] . 
+										' - ₱' . number_format($product['price'] ?? 0, 2);
+									?>
+								</option>
+							<?php endforeach; ?>
+						</select>
+					</div>
+					<small id="stockInfo" style="color: #6b7280; font-size: 12px; margin-top: 4px; display: none;"></small>
+					
+					<div class="form-row">
+						<label class="field-label">Quantity Sold</label>
+						<input type="number" name="quantity" id="quantityInput" placeholder="Enter quantity sold" min="1" required>
+					</div>
+					<small id="quantityError" style="color: #ef4444; font-size: 12px; margin-top: 4px; display: none;"></small>
+					
+					<div class="form-row">
+						<label class="field-label">Unit Price</label>
+						<input type="number" name="unit_price" id="unitPriceInput" placeholder="Price per unit" min="0" step="0.01" readonly style="background-color: #f3f4f6;">
+					</div>
+					
+					<div class="form-row">
+						<label class="field-label">Total Price</label>
+						<input type="number" name="total_price" id="totalPriceInput" placeholder="Total price" min="0" step="0.01" readonly style="background-color: #f3f4f6;">
+					</div>
+					
+					<div class="form-row">
+						<label class="field-label">Payment Method</label>
+						<select name="payment_method" required>
+							<option value="" disabled selected>Select payment method</option>
+							<option value="GCash">GCash</option>
+							<option value="Cash">Cash</option>
+							<option value="Card">Card</option>
+						</select>
+					</div>
 
 					<div class="modal-actions">
 						<button type="button" id="discardBtn" class="btn-secondary">Discard</button>

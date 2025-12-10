@@ -34,10 +34,10 @@
         // Define permissions
         $permissions = [
             'super_admin' => ['dashboard', 'accounts', 'inventory', 'sales', 'reports', 'settings', 'logout', 
-                            'createProduct', 'updateProduct', 'deleteProduct', 'fetchStats', 'paginated', 'allProducts', 'searchProducts', 'getPaginatedSales'],
+                            'createProduct', 'updateProduct', 'deleteProduct', 'fetchStats', 'paginated', 'allProducts', 'searchProducts', 'getPaginatedSales', 'getNextProductId'],
             'admin' => ['dashboard', 'accounts', 'inventory', 'sales', 'reports', 'settings', 'logout',
-                       'createProduct', 'updateProduct', 'deleteProduct', 'fetchStats', 'paginated', 'allProducts', 'searchProducts', 'getPaginatedSales'],
-            'staff' => ['inventory', 'paginated', 'allProducts', 'searchProducts', 'fetchStats', 'sales', 'reports', 'settings', 'logout', 'getPaginatedSales']
+                       'createProduct', 'updateProduct', 'deleteProduct', 'fetchStats', 'paginated', 'allProducts', 'searchProducts', 'getPaginatedSales', 'getNextProductId'],
+            'staff' => ['inventory', 'paginated', 'allProducts', 'searchProducts', 'fetchStats', 'sales', 'reports', 'settings', 'logout', 'getPaginatedSales', 'getNextProductId']
         ];
         
         $allowedViews = $permissions[$userRole] ?? ['sales', 'reports', 'settings', 'logout'];
@@ -75,11 +75,12 @@
         $view = $requestedView;
     } else {
         $isLoggedIn = false;
-        $view = "login";
         $userRole = null;
         
-        // If not logged in and trying to access protected resources
+        // Get requested view
         $requestedView = $_GET['view'] ?? null;
+        
+        // If not logged in and trying to access protected resources
         if($requestedView && $requestedView !== 'login'){
             // For AJAX requests, return JSON error
             if(!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'){
@@ -93,9 +94,12 @@
             }
             
             // For regular requests, redirect to login
-            header("Location: index.php?view=login");
+            header("Location: index.php");
             exit();
         }
+        
+        // Always show login when not authenticated
+        $view = "login";
     }
 
     // Handle dashboard routing
@@ -129,7 +133,7 @@
     }
 
     // Handle inventory routing - check permissions first
-    elseif($isLoggedIn && in_array($view, ['inventory', 'createProduct', 'updateProduct', 'deleteProduct', 'fetchStats', 'paginated', 'allProducts', 'searchProducts'])){
+    elseif($isLoggedIn && in_array($view, ['inventory', 'createProduct', 'updateProduct', 'deleteProduct', 'fetchStats', 'paginated', 'allProducts', 'searchProducts', 'getNextProductId'])){
         
         // Double-check permission (already checked above, but extra safety)
         if(!in_array($view, $allowedViews)){
@@ -183,6 +187,10 @@
 
             case "searchProducts":
                 $controller->search();
+                exit;
+
+            case "getNextProductId":
+                $controller->getNextProductId();
                 exit;
         }
     } 

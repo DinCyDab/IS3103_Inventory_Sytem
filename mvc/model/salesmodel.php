@@ -147,8 +147,9 @@ class SalesModel {
 		return $id;
 	}
 
+	// Updated to include price
 	public function getAllProducts() {
-		$query = "SELECT productID as product_ID, productName as product_name, quantity
+		$query = "SELECT productID as product_ID, productName as product_name, quantity, price
 				  FROM inventory
 				  WHERE quantity > 0
 				  ORDER BY productName";

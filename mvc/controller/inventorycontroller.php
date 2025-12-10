@@ -11,7 +11,7 @@ class ProductController{
     // Show all products with overview stats
     public function index(){
         $products = $this->inventory_model->getAllProducts();
-        $overviewStats = $this->inventory_model->getOverviewStats(); // fetch totals
+        $overviewStats = $this->inventory_model->getOverviewStats();
 
         return [
             "products" => $products,
@@ -19,23 +19,27 @@ class ProductController{
         ];
     }
 
+    // Get next product ID
+    public function getNextProductId(){
+        header('Content-Type: application/json');
+        $nextId = $this->inventory_model->generateNextProductId();
+        echo json_encode(['success' => true, 'productID' => $nextId]);
+        exit();
+    }
+
     // Pagination Method -- Limit and Offset
     public function paginated(){
         header('Content-Type: application/json');
 
-        // Read ?page= and ?limit= from URL
         $page = max((int)($_GET['page'] ?? 1), 1);
         $limit = max((int)($_GET['limit'] ?? 5), 1);
 
         error_log("PAGINATION DEBUG → Page: $page | Limit: $limit");
-        // Compute offset
         $offset = ($page - 1) * $limit;
 
-        // Category filter
         $categories = json_decode($_GET['categories'] ?? '[]', true);
         if(!is_array($categories)) $categories = [];
 
-        // Fetch data with category filter
         $products = $this->inventory_model->getPaginatedProducts($limit, $offset, $categories);
         $total = $this->inventory_model->getTotalProductsCount($categories);
         $overviewStats = $this->inventory_model->getOverviewStats();
@@ -55,50 +59,51 @@ class ProductController{
 
     // Add a new product
     public function create(){
-        header('Content-Type: application/json'); // Always JSON
+        header('Content-Type: application/json');
         try{
-        // Handle image upload
-        $imagePath = $this->handleImageUpload($_FILES['productImage'] ?? null);
+            $imagePath = $this->handleImageUpload($_FILES['productImage'] ?? null);
+            $expiryDate = $this->normalizeExpiryDate($_POST['expiryDate'] ?? null);
+            $unit = trim($_POST['unit']) ?: 'pcs';
 
-        $expiryDate = $this->normalizeExpiryDate($_POST['expiryDate'] ?? null);
+            // Auto-generate Product ID if not provided or empty
+            $productID = trim($_POST["productID"] ?? '');
+            if(empty($productID)){
+                $productID = $this->inventory_model->generateNextProductId();
+            }
 
-        $unit = trim($_POST['unit']) ?: 'pcs'; // default if empty
+            $data = [
+                "productID" => $productID,
+                "productName" => $_POST["productName"],
+                "quantity" => (int) $_POST["quantity"],
+                "unit" => $unit,
+                "price" => (float) $_POST["price"],
+                "expiryDate" => $expiryDate,
+                "category" => $_POST["category"],
+                "image" => $imagePath
+            ];
 
-        $data = [
-            "productID" => $_POST["productID"],
-            "productName" => $_POST["productName"],
-            "quantity" => (int) $_POST["quantity"],
-            "unit" => $unit,
-            "price" => (float) $_POST["price"],
-            "expiryDate" => $expiryDate,
-            "category" => $_POST["category"],
-            "image" => $imagePath // save path
-        ];
+            $this->inventory_model->addProduct($data);
 
-        $this->inventory_model->addProduct($data);
+            echo json_encode(["success" => true, "message" => "Product added successfully", "productID" => $productID]);
 
-        echo json_encode(["success" => true, "message" => "Product added successfully"]);
-
-    } catch(Exception $e) {
-        echo json_encode(["success" => false, "message" => $e->getMessage()]);
-    }
+        } catch(Exception $e) {
+            echo json_encode(["success" => false, "message" => $e->getMessage()]);
+        }
         exit();
-
     }
 
     // Update an existing product
     public function update(){
         header('Content-Type: application/json');
         try {
-            $imagePath = $_POST['existingImage'] ?? ''; // Existing image path
+            $imagePath = $_POST['existingImage'] ?? '';
 
             if(isset($_FILES['productImage']) && $_FILES['productImage']['error'] === 0){
                 $imagePath = $this->handleImageUpload($_FILES['productImage']);
             }
 
             $expiryDate = $this->normalizeExpiryDate($_POST['expiryDate'] ?? null);
-
-            $unit = trim($_POST['unit']) ?: 'pcs'; // default if empty
+            $unit = trim($_POST['unit']) ?: 'pcs';
 
             $data = [
                 "productID" => $_POST["productID"],
@@ -161,7 +166,6 @@ class ProductController{
     public function allProducts(){
         header('Content-Type: application/json');
         
-        // Fetch all Products
         $products = $this->inventory_model->getAllProducts();
 
         echo json_encode(['products' => $products]);
@@ -189,11 +193,9 @@ class ProductController{
         $expiryDate = trim($expiryDate);
         if(empty($expiryDate)) return null;
 
-        // Append defaults if only year or year-month is given
         if(preg_match('/^\d{4}$/', $expiryDate)) $expiryDate .= '-01-01';
         elseif(preg_match('/^\d{4}-\d{2}$/', $expiryDate)) $expiryDate .= '-01';
 
-        // Validate date
         $d = date_create($expiryDate);
         return $d ? date_format($d, 'Y-m-d') : null;
     }
