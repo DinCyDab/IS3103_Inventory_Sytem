@@ -34,6 +34,25 @@ class ProductModel{
         return 'PRD-0001';
     }
 
+    // Check if Product ID already exists
+    public function productIdExists($productId, $excludeId = null){
+        $conn = $this->config->getConnection();
+        
+        if($excludeId){
+            // When updating, exclude the current product's ID
+            $stmt = $conn->prepare("SELECT COUNT(*) as count FROM inventory WHERE productID = ? AND id != ? AND " . $this->activeCondition());
+            $stmt->bind_param("si", $productId, $excludeId);
+        } else {
+            // When creating new product
+            $stmt = $conn->prepare("SELECT COUNT(*) as count FROM inventory WHERE productID = ? AND " . $this->activeCondition());
+            $stmt->bind_param("s", $productId);
+        }
+        
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
+        return $result['count'] > 0;
+    }
+
     // Get all products
     public function getAllProducts(){
         $stmt = $this->config->prepare("SELECT * FROM inventory WHERE " . $this->activeCondition() . " ORDER BY id DESC");
@@ -187,7 +206,7 @@ class ProductModel{
 
         $sql = "SELECT * FROM inventory 
                 WHERE " . $this->activeCondition() . " 
-                AND (productName LIKE ? OR category LIKE ?)
+                AND (productName LIKE ? OR productID LIKE ? OR category LIKE ?)
                 ORDER BY id DESC";
 
         $stmt = $conn->prepare($sql);
@@ -196,7 +215,7 @@ class ProductModel{
         }
 
         $param = "%" . $q . "%";
-        $stmt->bind_param("ss", $param, $param);
+        $stmt->bind_param("sss", $param, $param, $param);
         $stmt->execute();
 
         $result = $stmt->get_result();

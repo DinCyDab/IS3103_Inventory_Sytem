@@ -164,7 +164,7 @@
                 </div>
                 <div class="form-row">
                     <label class="field-label">Product ID</label>
-                    <input type="text" id="productID" name="productID" placeholder="Auto-generated" readonly>
+                    <input type="text" id="productID" name="productID" placeholder="Scan barcode or enter ID (auto-generated if empty)" maxlength="100">
                 </div>
                 <div class="form-row">
                     <label class="field-label">Quantity</label>

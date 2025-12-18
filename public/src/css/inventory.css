@@ -699,10 +699,6 @@
     stroke: #333;
 } 
 
-#productID{
-    cursor: not-allowed;
-}
-
 /* See all Back To Top Button */
 .bTopButton{
     display: none;

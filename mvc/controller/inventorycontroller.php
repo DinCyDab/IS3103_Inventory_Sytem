@@ -61,15 +61,31 @@ class ProductController{
     public function create(){
         header('Content-Type: application/json');
         try{
+            // Get and sanitize Product ID
+            $productID = trim($_POST["productID"] ?? '');
+            
+            // If empty, auto-generate
+            if(empty($productID)){
+                $productID = $this->inventory_model->generateNextProductId();
+            } else {
+                // Validate the custom Product ID
+                // Remove any potentially dangerous characters but allow alphanumeric, dashes, underscores
+                $productID = preg_replace('/[^a-zA-Z0-9\-_]/', '', $productID);
+                
+                // Check length (max 100 characters)
+                if(strlen($productID) > 100){
+                    throw new Exception("Product ID is too long (max 100 characters)");
+                }
+                
+                // Check if this Product ID already exists
+                if($this->inventory_model->productIdExists($productID)){
+                    throw new Exception("Product ID already exists. Please use a different ID or leave empty for auto-generation.");
+                }
+            }
+
             $imagePath = $this->handleImageUpload($_FILES['productImage'] ?? null);
             $expiryDate = $this->normalizeExpiryDate($_POST['expiryDate'] ?? null);
             $unit = trim($_POST['unit']) ?: 'pcs';
-
-            // Auto-generate Product ID if not provided or empty
-            $productID = trim($_POST["productID"] ?? '');
-            if(empty($productID)){
-                $productID = $this->inventory_model->generateNextProductId();
-            }
 
             $data = [
                 "productID" => $productID,
@@ -105,8 +121,14 @@ class ProductController{
             $expiryDate = $this->normalizeExpiryDate($_POST['expiryDate'] ?? null);
             $unit = trim($_POST['unit']) ?: 'pcs';
 
+            // Validate Product ID (should not be empty on update)
+            $productID = trim($_POST["productID"] ?? '');
+            if(empty($productID)){
+                throw new Exception("Product ID cannot be empty");
+            }
+
             $data = [
-                "productID" => $_POST["productID"],
+                "productID" => $productID,
                 "productName" => $_POST["productName"],
                 "quantity" => (int) $_POST["quantity"],
                 "unit" => $unit,
