@@ -50,7 +50,8 @@ class SalesView{
 						<tbody id="transactionsTbody">
 							<?php
 							foreach ($sales_records as $row) {
-								$txnId = htmlspecialchars($row['transaction_ID'] ?? 'N/A');
+								// Fixed: use transaction_id instead of transaction_ID
+								$txnId = htmlspecialchars($row['transaction_id'] ?? 'N/A');
 								$dateTime = htmlspecialchars($row['date_time'] ?? '');
 								$products = htmlspecialchars($row['products'] ?? '-');
 								$orderValue = number_format((float)($row['order_value'] ?? 0), 2);
@@ -93,9 +94,19 @@ class SalesView{
 					</div>
 					
 					<div class="form-row">
-						<label class="field-label">Product Selection</label>
-						<select name="product" id="productSelect" required>
-							<option value="" disabled selected>Select a product</option>
+						<label class="field-label">Product Search</label>
+						<input 
+							type="text" 
+							id="productSearchInput" 
+							placeholder="Search by ID, name, barcode, serial number..." 
+							autocomplete="off">
+						<div id="productSearchResults" style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-top: none; background: white; position: absolute; z-index: 1000; width: calc(100% - 40px);"></div>
+					</div>
+					
+					<div class="form-row">
+						<label class="field-label">Selected Product</label>
+						<select name="product_id[]" id="productSelect" required>
+							<option value="" disabled selected>Search and select a product above</option>
 							<?php foreach($available_products as $product): ?>
 								<option 
 									value="<?php echo htmlspecialchars($product['product_ID']); ?>"
@@ -116,7 +127,7 @@ class SalesView{
 					
 					<div class="form-row">
 						<label class="field-label">Quantity Sold</label>
-						<input type="number" name="quantity" id="quantityInput" placeholder="Enter quantity sold" min="1" required>
+						<input type="number" name="quantity[]" id="quantityInput" placeholder="Enter quantity sold" min="1" required>
 					</div>
 					<small id="quantityError" style="color: #ef4444; font-size: 12px; margin-top: 4px; display: none;"></small>
 					
@@ -150,12 +161,12 @@ class SalesView{
 		</div>
 
 		<!-- Payment filter modal -->
-		<div id="paymentFilterModal" class="modal">
+		<div id="paymentFilterModal" class="modal" style="display:none;">
 			<div class="modal-content" style="position:relative; width: 380px;">
 				
 				<!-- Close Button -->
 				<button type="button" class="close-modal payment-close-x" aria-label="Close"
-					style="position: absolute; top: 22px; right: 22px; background: none; border: none;">
+					style="position: absolute; top: 22px; right: 22px; background: none; border: none; cursor: pointer;">
 					<svg width="25" height="25" viewBox="0 0 24 24" fill="none">
 						<path d="M18 6L6 18" stroke="#999" stroke-width="2" stroke-linecap="round"/>
 						<path d="M6 6L18 18" stroke="#999" stroke-width="2" stroke-linecap="round"/>

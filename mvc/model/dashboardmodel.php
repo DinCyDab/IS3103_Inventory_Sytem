@@ -11,14 +11,15 @@ class DashboardModel {
     // Get stock summary by category (limit to 4 for display)
     public function getStockSummary() {
         $query = "SELECT 
-                    category,
-                    COUNT(*) as total_products,
-                    SUM(quantity) as remaining_quantity,
-                    SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active_products
-                  FROM inventory 
-                  WHERE status = 'active'
-                  GROUP BY category
-                  ORDER BY category
+                    pc.category_name as category,
+                    COUNT(i.productID) as total_products,
+                    SUM(i.quantity) as remaining_quantity,
+                    COUNT(CASE WHEN (i.status IS NULL OR i.status != 'deleted') THEN 1 END) as active_products
+                  FROM inventory i
+                  LEFT JOIN product_categories pc ON i.category_id = pc.category_id
+                  WHERE (i.status IS NULL OR i.status != 'deleted')
+                  GROUP BY pc.category_name
+                  ORDER BY pc.category_name
                   LIMIT 4";
         
         $results = $this->db->read($query);
@@ -31,7 +32,7 @@ class DashboardModel {
             $percentage = $totalStock > 0 ? round(($row['remaining_quantity'] / $totalStock) * 100, 2) : 0;
 
             $summaryWithSales[] = [
-                'category' => $row['category'],
+                'category' => $row['category'] ?? 'Uncategorized',
                 'sold_quantity' => $soldQty,
                 'remaining_quantity' => $row['remaining_quantity'],
                 'percentage' => $percentage
@@ -41,20 +42,29 @@ class DashboardModel {
         return $summaryWithSales;
     }
 
-    // Get sold quantity by category from sales report (last 30 days)
+    // Get sold quantity by category from sales (last 30 days)
     private function getSoldQuantityByCategory($category) {
-        $category = $this->db->getConnection()->real_escape_string($category);
+        if (empty($category)) {
+            $category = 'Uncategorized';
+        }
         
         $query = "SELECT 
-                    COALESCE(SUM(sr.quantity_sold), 0) as sold_quantity
-                  FROM salesreport sr
-                  INNER JOIN inventory i ON sr.products = i.productName
-                  WHERE i.category = '$category'
-                  AND DATE(sr.date_time) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
+                    COALESCE(SUM(si.quantity_sold), 0) as sold_quantity
+                  FROM sales_items si
+                  JOIN sales_transactions st ON si.transaction_id = st.transaction_id
+                  JOIN inventory i ON si.product_id = i.productID
+                  LEFT JOIN product_categories pc ON i.category_id = pc.category_id
+                  WHERE pc.category_name = ?
+                  AND st.status = 'completed'
+                  AND DATE(st.date_time) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
         
-        $result = $this->db->readOne($query);
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("s", $category);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
         
-        return $result['sold_quantity'] ?? 0;
+        return $row['sold_quantity'] ?? 0;
     }
 
     // Get inventory summary (total quantity in hand and to be received)
@@ -63,7 +73,7 @@ class DashboardModel {
                     SUM(quantity) as quantity_in_hand,
                     COUNT(*) as total_products
                   FROM inventory 
-                  WHERE status = 'active'";
+                  WHERE (status IS NULL OR status != 'deleted')";
         
         $result = $this->db->readOne($query);
 
@@ -86,7 +96,7 @@ class DashboardModel {
                   FROM inventory 
                   WHERE quantity <= 20 
                   AND quantity > 0
-                  AND status = 'active'";
+                  AND (status IS NULL OR status != 'deleted')";
         
         $result = $this->db->readOne($query);
         
@@ -97,40 +107,45 @@ class DashboardModel {
     // Get recent transactions (limit to 7 for display)
     public function getRecentTransactions($limit = 7) {
         $query = "SELECT 
-                    transaction_id,
-                    date_time,
-                    products,
-                    order_value,
-                    quantity_sold,
-                    customer_name,
-                    payment_method
-                  FROM salesreport 
-                  ORDER BY date_time DESC 
-                  LIMIT $limit";
+                    st.transaction_id,
+                    st.date_time,
+                    GROUP_CONCAT(si.product_name SEPARATOR ', ') as products,
+                    st.total_amount as order_value,
+                    SUM(si.quantity_sold) as quantity_sold,
+                    st.customer_name,
+                    st.payment_method
+                  FROM sales_transactions st
+                  JOIN sales_items si ON st.transaction_id = si.transaction_id
+                  WHERE st.status = 'completed'
+                  GROUP BY st.transaction_id
+                  ORDER BY st.date_time DESC 
+                  LIMIT ?";
         
-        return $this->db->read($query);
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("i", $limit);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $transactions = [];
+        while ($row = $result->fetch_assoc()) {
+            $transactions[] = $row;
+        }
+        
+        return $transactions;
     }
 
-    // Get sales summary (monthly data for the last 5 months)
+    // Get sales summary (monthly data for the current year)
     public function getSalesSummary() {
         $query = "
             SELECT 
-                MONTH(s.date_time) AS month_number,
-                DATE_FORMAT(s.date_time, '%M') AS month_name,
-
-                SUM(CAST(s.order_value AS DECIMAL(10,2))) AS total_sales,
-
-                SUM(
-                    CAST(COALESCE(i.price,0) AS DECIMAL(10,2)) *
-                    CAST(COALESCE(NULLIF(s.quantity_sold,''),0) AS UNSIGNED)
-                ) AS total_purchase_cost
-
-            FROM salesreport s
-            LEFT JOIN inventory i 
-                ON TRIM(LOWER(i.productName)) = TRIM(LOWER(s.products))
-
-            WHERE YEAR(s.date_time) = YEAR(CURDATE())
-
+                MONTH(st.date_time) AS month_number,
+                DATE_FORMAT(st.date_time, '%M') AS month_name,
+                SUM(CAST(st.total_amount AS DECIMAL(10,2))) AS total_sales,
+                SUM(CAST(si.unit_price AS DECIMAL(10,2)) * CAST(si.quantity_sold AS UNSIGNED)) AS total_purchase_cost
+            FROM sales_transactions st
+            JOIN sales_items si ON st.transaction_id = si.transaction_id
+            WHERE st.status = 'completed'
+            AND YEAR(st.date_time) = YEAR(CURDATE())
             GROUP BY month_number, month_name
             ORDER BY month_number ASC
         ";
@@ -159,32 +174,48 @@ class DashboardModel {
     // Get low stock items (limit to 4 for display)
     public function getLowStockItems($threshold = 20, $limit = 4) {
         $query = "SELECT 
-                    id,
-                    productName,
-                    quantity,
-                    unit,
-                    category,
-                    price,
-                    image
-                  FROM inventory 
-                  WHERE quantity <= $threshold 
-                  AND status = 'active'
-                  ORDER BY quantity ASC 
-                  LIMIT $limit";
+                    i.id,
+                    i.productID,
+                    i.productName,
+                    i.quantity,
+                    i.unit,
+                    pc.category_name as category,
+                    i.price,
+                    i.image
+                  FROM inventory i
+                  LEFT JOIN product_categories pc ON i.category_id = pc.category_id
+                  WHERE i.quantity <= ? 
+                  AND (i.status IS NULL OR i.status != 'deleted')
+                  ORDER BY i.quantity ASC 
+                  LIMIT ?";
         
-        return $this->db->read($query);
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("ii", $threshold, $limit);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $items = [];
+        while ($row = $result->fetch_assoc()) {
+            $items[] = $row;
+        }
+        
+        return $items;
     }
 
     // Get all low stock items count
     public function getLowStockCount($threshold = 20) {
         $query = "SELECT COUNT(*) as count
                   FROM inventory 
-                  WHERE quantity <= $threshold 
-                  AND status = 'active'";
+                  WHERE quantity <= ? 
+                  AND (status IS NULL OR status != 'deleted')";
         
-        $result = $this->db->readOne($query);
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("i", $threshold);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
         
-        return $result['count'] ?? 0;
+        return $row['count'] ?? 0;
     }
 
     // Close database connection

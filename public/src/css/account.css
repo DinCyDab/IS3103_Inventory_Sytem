@@ -283,7 +283,7 @@
     margin: 10px;
 }
 
-.filter-design form button{
+.filter-design form .applyFilter{
     background: #7e6ceb;
     color: #fff;
     border: none;
@@ -293,6 +293,25 @@
     font-weight: 500;
     transition: background 0.18s;
     font-size: .75rem;
+    box-shadow: 0 1px 2px rgba(108, 92, 231, 0.10);
+}
+
+.filter-design form .clearFilter{
+    border: none;
+    background: none;
+    color: #fff;
+    font-weight: 500;
+    font-size: .75rem;
+}
+
+.filter-design form a{
+    display: flex;
+    justify-content: center;
+    background: #e7893c;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.18s;
     box-shadow: 0 1px 2px rgba(108, 92, 231, 0.10);
 }
 

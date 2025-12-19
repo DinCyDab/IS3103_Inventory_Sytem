@@ -86,6 +86,11 @@
             $results = $this->model->loadAccount($filter);
             return $results;
         }
+
+        // Get total accounts count for pagination
+        public function getTotalAccountsCount($filter = ""){
+            return $this->model->getTotalAccountsCount($filter);
+        }
         
         public function updateAccount($account_ID, $first_name, $last_name, $password, $email, $contact_number, $role, $status){
             if(!$this->canModifyAccount($account_ID)){

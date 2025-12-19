@@ -1,0 +1,596 @@
+/* Tablets and below (< 1024px) */
+@media (max-width: 1024px) {
+    /* Navigation adjustments */
+    .sidebar {
+        width: 200px;
+    }
+    
+    .header,
+    .dashboard-header {
+        left: 200px;
+        width: calc(100% - 200px);
+    }
+    
+    main {
+        margin-left: 200px;
+        padding: 20px;
+    }
+    
+    .searchbar,
+    .searchbaraccounts {
+        width: 300px;
+    }
+}
+
+/* Tablets portrait and below (< 900px) */
+@media (max-width: 900px) {
+    /* Hide sidebar, make it toggleable */
+    .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        z-index: 2000;
+    }
+    
+    .sidebar.active {
+        transform: translateX(0);
+    }
+    
+    /* Full width header */
+    .header,
+    .dashboard-header {
+        left: 0;
+        width: 100%;
+        padding: 0 16px;
+    }
+    
+    /* Full width main content */
+    main {
+        margin-left: 0;
+        padding: 16px;
+    }
+    
+    /* Dashboard grid to single column */
+    .dashboard-main-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        margin-top: 50px;
+    }
+    
+    /* Inventory stats wrap */
+    .inventory-stats-row {
+        gap: 15px;
+    }
+    
+    .inventory-stat-col {
+        flex: 1 1 calc(50% - 15px);
+    }
+    
+    /* Tables become scrollable */
+    .products-table,
+    .accounts-table,
+    .transactions-table,
+    .dashboard-table,
+    .bestseller-product-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+    
+    /* Button groups stack */
+    .button-group,
+    .button-accounts,
+    .transactions-actions {
+        flex-direction: column;
+        width: 100%;
+        gap: 8px;
+    }
+    
+    .add-product,
+    .accounts-btn,
+    .btn-primary {
+        width: 100%;
+    }
+    
+    /* Search bar adjustments */
+    .searchbar,
+    .searchbaraccounts {
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .search-wrapper {
+        width: 100%;
+    }
+    
+    /* Reports layout */
+    .reports-row {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .profit-container,
+    .bestseller-container {
+        width: 100%;
+    }
+    
+    /* Form rows stack */
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+    
+    .field-label {
+        text-align: left;
+    }
+    
+    /* Modal adjustments */
+    .modal-content,
+    .modal-card {
+        width: 90vw;
+        max-width: 90vw;
+        padding: 20px;
+    }
+    
+    /* Settings form */
+    .field-row {
+        flex-direction: column;
+    }
+}
+
+/* Mobile landscape and below (< 768px) */
+@media (max-width: 768px) {
+    /* Typography scaling */
+    .header h1,
+    .dashboard-header h1 {
+        font-size: 1.3rem;
+    }
+    
+    .products-header h3,
+    .accounts-header h3,
+    .transactions-header h3,
+    .card-header h2 {
+        font-size: 1.1rem;
+    }
+    
+    /* Compact headers */
+    .products-header,
+    .accounts-header,
+    .transactions-header,
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px;
+    }
+    
+    /* Inventory summary to single column */
+    .inventory-summary-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .summary-card:first-child {
+        border-right: none;
+        border-bottom: 1px solid #e5e7eb;
+        padding-bottom: 1rem;
+    }
+    
+    /* Table navigation */
+    .table-nav {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+    
+    .table-nav button {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .pages {
+        width: 100%;
+    }
+    
+    /* Product overview */
+    .overview-content {
+        flex-direction: column;
+        gap: 20px;
+        padding-left: 0;
+    }
+    
+    .product-img-box {
+        width: 100%;
+        height: 200px;
+    }
+    
+    .details-row {
+        flex-direction: column;
+        gap: 5px;
+        align-items: flex-start;
+    }
+    
+    .details-row label {
+        width: 100%;
+    }
+    
+    /* Chart containers */
+    .chart-container {
+        height: 200px;
+    }
+    
+    .chart-placeholder {
+        height: 250px;
+    }
+    
+    /* Legend stacking */
+    .chart-legend,
+    .profit-legend {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+    
+    /* Low stock items */
+    .item-image {
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+    
+    /* Modal actions */
+    .modal-actions,
+    .filter-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .discard-btn,
+    .btn-secondary,
+    .add-product-btn,
+    .btn-primary {
+        width: 100%;
+        margin-right: 0;
+    }
+    
+    /* Overview items stack */
+    .overview-row {
+        flex-direction: column;
+        gap: 15px;
+        margin-left: 10px;
+    }
+    
+    .inventory-paired-flex,
+    .inventory-lowstocks-flex {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .inventory-paired-flex > div {
+        max-width: 100%;
+    }
+    
+    .inventory-stat-divider {
+        display: none;
+    }
+    
+    /* Bestseller tables */
+    .bestseller-row,
+    .product-row,
+    .bestseller-labels,
+    .product-labels {
+        font-size: 0.8rem;
+    }
+    
+    .bestseller-col,
+    .product-col {
+        padding: 8px 4px;
+    }
+}
+
+/* Mobile portrait (< 576px) */
+@media (max-width: 576px) {
+    /* Login page */
+    .main-wrapper {
+        flex-direction: column;
+    }
+    
+    .login-image,
+    .login-form-holder {
+        width: 100%;
+    }
+    
+    .login-image {
+        height: 200px;
+        overflow: hidden;
+    }
+    
+    .login-image img {
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .login-form {
+        width: 90%;
+    }
+    
+    /* Compact padding */
+    .overall-inventory-container,
+    .products,
+    .accounts-container,
+    .transactions-card,
+    .overview-container,
+    .bestseller-container,
+    .profit-container {
+        padding: 16px;
+        margin-top: 60px;
+    }
+    
+    /* Stack inventory stats vertically */
+    .inventory-stat-col {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+    
+    /* Smaller font sizes */
+    .inventory-main-label {
+        font-size: 0.95rem;
+    }
+    
+    .inventory-main-value {
+        font-size: 1rem;
+    }
+    
+    /* Table cells compress */
+    .products-table th,
+    .products-table td,
+    .accounts-table th,
+    .accounts-table td,
+    .transactions-table th,
+    .transactions-table td {
+        padding: 0.6rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    /* Action buttons smaller */
+    .action-btn {
+        padding: 3px;
+        font-size: 12px;
+    }
+    
+    /* Category badges smaller */
+    .category,
+    .payment-badge {
+        font-size: 11px;
+        padding: 0.15em 0.6em;
+    }
+    
+    /* Modal full width */
+    .modal-content,
+    .modal-card {
+        width: 95vw;
+        padding: 16px;
+    }
+    
+    .modal-title {
+        font-size: 1rem;
+        margin-bottom: 15px;
+    }
+    
+    /* Form inputs compact */
+    .form-row input,
+    .form-row select {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+    
+    /* Image preview smaller */
+    .image-preview {
+        width: 100px;
+        height: 100px;
+    }
+    
+    /* Settings header */
+    .header-gradient {
+        padding: 20px;
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .pfp-wrapper,
+    .pfp-wrapper img {
+        width: 70px;
+        height: 70px;
+    }
+    
+    /* Error page */
+    .section .error {
+        font-size: 80px;
+    }
+    
+    /* Back to top button */
+    .bTopButton {
+        bottom: 20px;
+        right: 20px;
+        padding: 8px 12px;
+        font-size: 16px;
+    }
+    
+    /* Filter popup */
+    #categoryOptions,
+    #paymentOptions {
+        max-height: 200px;
+    }
+    
+    /* Topbar */
+    .topbar {
+        top: 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    /* Hide less important table columns on very small screens */
+    .products-table th:nth-child(4),
+    .products-table td:nth-child(4),
+    .accounts-table th:nth-child(3),
+    .accounts-table td:nth-child(3) {
+        display: none;
+    }
+}
+
+/* Extra small devices (< 400px) */
+@media (max-width: 400px) {
+    body {
+        font-size: 14px;
+    }
+    
+    .header,
+    .dashboard-header {
+        height: 70px;
+        padding: 0 10px;
+    }
+    
+    main {
+        padding: 10px;
+    }
+    
+    /* Ultra compact tables */
+    .products-table,
+    .accounts-table,
+    .transactions-table,
+    .dashboard-table {
+        font-size: 0.75rem;
+    }
+    
+    /* Hide even more columns */
+    .products-table th:nth-child(3),
+    .products-table td:nth-child(3),
+    .products-table th:nth-child(5),
+    .products-table td:nth-child(5) {
+        display: none;
+    }
+    
+    /* Minimal modal padding */
+    .modal-content,
+    .modal-card {
+        padding: 12px;
+    }
+    
+    /* Stack all buttons */
+    .weekly-btn {
+        font-size: 0.8rem;
+        padding: 5px 10px;
+    }
+}
+
+/* ========================================
+   HAMBURGER MENU FOR MOBILE
+   ======================================== */
+
+/* Add this button in your HTML near the header */
+.mobile-menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #2c2760;
+    padding: 8px;
+    position: fixed;
+    top: 20px;
+    left: 16px;
+    z-index: 2001;
+}
+
+@media (max-width: 900px) {
+    .mobile-menu-toggle {
+        display: block;
+    }
+    
+    /* Overlay when sidebar is open */
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s, visibility 0.3s;
+        z-index: 1999;
+    }
+    
+    body.sidebar-open::before {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    body.sidebar-open .sidebar {
+        transform: translateX(0);
+    }
+}
+
+/* ========================================
+   UTILITY CLASSES
+   ======================================== */
+
+/* Hide on mobile */
+.hide-mobile {
+    @media (max-width: 768px) {
+        display: none !important;
+    }
+}
+
+/* Show only on mobile */
+.show-mobile {
+    display: none !important;
+    
+    @media (max-width: 768px) {
+        display: block !important;
+    }
+}
+
+/* Responsive text */
+.responsive-text {
+    font-size: clamp(0.875rem, 2vw, 1rem);
+}
+
+/* Responsive spacing */
+.responsive-padding {
+    padding: clamp(1rem, 3vw, 2rem);
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+
+@media print {
+    .sidebar,
+    .header,
+    .dashboard-header,
+    .mobile-menu-toggle,
+    .button-group,
+    .button-accounts,
+    .transactions-actions,
+    .action-btn,
+    .bTopButton,
+    .filter-btn,
+    .download-btn {
+        display: none !important;
+    }
+    
+    main {
+        margin-left: 0;
+        padding: 0;
+    }
+    
+    .products-table,
+    .accounts-table,
+    .transactions-table {
+        page-break-inside: auto;
+    }
+    
+    tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+}

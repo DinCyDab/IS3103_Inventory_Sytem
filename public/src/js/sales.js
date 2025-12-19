@@ -17,11 +17,116 @@ document.addEventListener('DOMContentLoaded', function () {
 
 	// Product selection elements
 	const productSelect = document.getElementById('productSelect');
+	const productSearchInput = document.getElementById('productSearchInput');
+	const productSearchResults = document.getElementById('productSearchResults');
 	const quantityInput = document.getElementById('quantityInput');
 	const unitPriceInput = document.getElementById('unitPriceInput');
 	const totalPriceInput = document.getElementById('totalPriceInput');
 	const stockInfo = document.getElementById('stockInfo');
 	const quantityError = document.getElementById('quantityError');
+
+	let allProducts = []; // Store all products for searching
+
+	// Load all products on page load
+	if (productSelect) {
+		allProducts = Array.from(productSelect.options)
+			.filter(opt => opt.value)
+			.map(opt => ({
+				id: opt.value,
+				name: opt.getAttribute('data-name'),
+				price: parseFloat(opt.getAttribute('data-price')) || 0,
+				stock: parseInt(opt.getAttribute('data-stock')) || 0,
+				displayText: opt.textContent
+			}));
+	}
+
+	// Product search functionality
+	if (productSearchInput && productSearchResults) {
+		let searchTimeout;
+		
+		productSearchInput.addEventListener('input', function() {
+			clearTimeout(searchTimeout);
+			const searchTerm = this.value.trim().toLowerCase();
+			
+			if (searchTerm.length < 1) {
+				productSearchResults.style.display = 'none';
+				productSearchResults.innerHTML = '';
+				return;
+			}
+			
+			searchTimeout = setTimeout(() => {
+				// Filter products based on search term
+				const matches = allProducts.filter(product => {
+					return product.id.toLowerCase().includes(searchTerm) ||
+						   product.name.toLowerCase().includes(searchTerm) ||
+						   product.displayText.toLowerCase().includes(searchTerm);
+				});
+				
+				if (matches.length === 0) {
+					productSearchResults.innerHTML = '<div style="padding: 10px; color: #9ca3af;">No products found</div>';
+					productSearchResults.style.display = 'block';
+					return;
+				}
+				
+				// Display search results
+				productSearchResults.innerHTML = matches.slice(0, 10).map(product => `
+					<div class="product-search-result" 
+						 data-product-id="${escapeHtml(product.id)}"
+						 style="padding: 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0; hover: background: #f9fafb;">
+						<strong>${escapeHtml(product.name)}</strong><br>
+						<small style="color: #6b7280;">ID: ${escapeHtml(product.id)} | Stock: ${product.stock} | ₱${product.price.toFixed(2)}</small>
+					</div>
+				`).join('');
+				
+				productSearchResults.style.display = 'block';
+				
+				// Add click handlers to search results
+				document.querySelectorAll('.product-search-result').forEach(result => {
+					result.addEventListener('mouseenter', function() {
+						this.style.background = '#f9fafb';
+					});
+					result.addEventListener('mouseleave', function() {
+						this.style.background = 'white';
+					});
+					result.addEventListener('click', function() {
+						const productId = this.getAttribute('data-product-id');
+						selectProduct(productId);
+					});
+				});
+			}, 300); // Debounce search
+		});
+		
+		// Close search results when clicking outside
+		document.addEventListener('click', function(e) {
+			if (!productSearchInput.contains(e.target) && !productSearchResults.contains(e.target)) {
+				productSearchResults.style.display = 'none';
+			}
+		});
+	}
+	
+	// Function to select a product
+	function selectProduct(productId) {
+		if (productSelect) {
+			productSelect.value = productId;
+			
+			// Trigger change event to update prices
+			const event = new Event('change', { bubbles: true });
+			productSelect.dispatchEvent(event);
+			
+			// Update search input with selected product name
+			if (productSearchInput) {
+				const selectedProduct = allProducts.find(p => p.id === productId);
+				if (selectedProduct) {
+					productSearchInput.value = selectedProduct.name;
+				}
+			}
+			
+			// Hide search results
+			if (productSearchResults) {
+				productSearchResults.style.display = 'none';
+			}
+		}
+	}
 
 	let currentPage = parseInt(localStorage.getItem('salesCurrentPage')) || 1;
 	const salesPerPage = 8;
@@ -29,6 +134,28 @@ document.addEventListener('DOMContentLoaded', function () {
 	const prevBtn = document.getElementById('prevBtn');
 	const nextBtn = document.getElementById('nextBtn');
 	const pageIndicator = document.getElementById('pageIndicator');
+
+	// Payment filter modal handlers
+	if (filterBtn && paymentFilterModal) {
+		filterBtn.addEventListener('click', () => {
+			paymentFilterModal.style.display = 'flex';
+		});
+
+		// Close modal on X button
+		const closeModalBtn = paymentFilterModal.querySelector('.payment-close-x');
+		if (closeModalBtn) {
+			closeModalBtn.addEventListener('click', () => {
+				paymentFilterModal.style.display = 'none';
+			});
+		}
+
+		// Close modal on outside click
+		paymentFilterModal.addEventListener('click', (e) => {
+			if (e.target === paymentFilterModal) {
+				paymentFilterModal.style.display = 'none';
+			}
+		});
+	}
 
 	// Auto-calculate total price when product or quantity changes
 	if (productSelect) {
@@ -125,7 +252,8 @@ document.addEventListener('DOMContentLoaded', function () {
 			}
 
 			tbody.innerHTML = data.data.map(row => {
-				const txnId = escapeHtml(row.transaction_ID || 'N/A');
+				// Fixed: use transaction_id instead of transaction_ID
+				const txnId = escapeHtml(row.transaction_id || 'N/A');
 				const dateTime = escapeHtml(row.date_time || '');
 				const products = escapeHtml(row.products || '-');
 				const orderValue = parseFloat(row.order_value || 0).toFixed(2);
@@ -223,6 +351,11 @@ document.addEventListener('DOMContentLoaded', function () {
 		});
 
 		localStorage.setItem('paymentFilter', JSON.stringify(selected));
+		
+		// Close modal after applying filter
+		if (paymentFilterModal) {
+			paymentFilterModal.style.display = 'none';
+		}
 	};
 
 	const applySavedFilter = () => {
@@ -243,6 +376,11 @@ document.addEventListener('DOMContentLoaded', function () {
 		checkboxes.forEach(cb => cb.checked = false);
 		tbody.querySelectorAll('tr').forEach(row => row.style.display = '');
 		localStorage.removeItem('paymentFilter');
+		
+		// Close modal after clearing filter
+		if (paymentFilterModal) {
+			paymentFilterModal.style.display = 'none';
+		}
 	});
 
 	const savedFilter = JSON.parse(localStorage.getItem('paymentFilter') || '[]');
@@ -265,6 +403,8 @@ document.addEventListener('DOMContentLoaded', function () {
 			if (quantityError) quantityError.style.display = 'none';
 			if (unitPriceInput) unitPriceInput.value = '';
 			if (totalPriceInput) totalPriceInput.value = '';
+			if (productSearchInput) productSearchInput.value = '';
+			if (productSearchResults) productSearchResults.style.display = 'none';
 		} 
 	}
 
@@ -279,6 +419,8 @@ document.addEventListener('DOMContentLoaded', function () {
 			}
 			if (stockInfo) stockInfo.style.display = 'none';
 			if (quantityError) quantityError.style.display = 'none';
+			if (productSearchInput) productSearchInput.value = '';
+			if (productSearchResults) productSearchResults.style.display = 'none';
 		} 
 	}
 
@@ -307,10 +449,10 @@ document.addEventListener('DOMContentLoaded', function () {
 				try { 
 					data = await response.json(); 
 				} catch(err){ 
-					data = {}; 
+					data = { success: false, error: 'Invalid server response' }; 
 				}
 
-				if (!response.ok) {
+				if (!response.ok || !data.success) {
 					const msg = data.error || 'Failed to record sale';
 					if(modalError){ 
 						modalError.textContent = msg; 

@@ -2,187 +2,207 @@
 require_once __DIR__ . "/../api/config.php";
 
 class ReportsModel {
-
     private $conn;
 
     public function __construct() {
         $this->conn = new Config();
     }
 
-    /* Load the sales report */
     public function loadSalesReport() {
         $sql = "
             SELECT
-                s.transaction_ID,
-                s.date_time,
-                s.products AS product_name,
-                COALESCE(i.productID, 'N/A') AS productID,
-                COALESCE(i.category, 'Unknown') AS category_name,
-                COALESCE(CONCAT(i.quantity, ' ', i.unit), 'N/A') AS remaining_qty,
-                CAST(s.order_value AS DECIMAL(10,2)) AS turnover,
-                CAST(s.quantity_sold AS UNSIGNED) AS increase,
-                s.customer_name,
-                s.payment_method
-            FROM salesreport s
-            LEFT JOIN inventory i ON i.productName = s.products
-            ORDER BY s.date_time DESC
+                st.transaction_id AS transaction_ID,
+                st.date_time,
+                si.product_name,
+                si.product_id AS productID,
+                pc.category_name,
+                CONCAT(i.quantity, ' ', COALESCE(i.unit, 'pcs')) AS remaining_qty,
+                CAST(si.subtotal AS DECIMAL(10,2)) AS turnover,
+                CAST(si.quantity_sold AS UNSIGNED) AS increase,
+                st.customer_name,
+                st.payment_method
+            FROM sales_transactions st
+            JOIN sales_items si ON st.transaction_id = si.transaction_id
+            LEFT JOIN inventory i ON si.product_id = i.productID
+            LEFT JOIN product_categories pc ON i.category_id = pc.category_id
+            WHERE st.status = 'completed'
+            ORDER BY st.date_time DESC
         ";
         $result = $this->conn->read($sql);
         return $result ?: [];
     }
 
-    /* Overview stats */
     public function getOverviewStats() {
-        // Total revenue and profit
-        $sql = "
+        // Total revenue
+        $sqlRevenue = "
             SELECT  
-                SUM(CAST(order_value AS DECIMAL(10,2))) AS revenue,
-                SUM(CAST(order_value AS DECIMAL(10,2)) * 0.30) AS profit,
-                SUM(CAST(order_value AS DECIMAL(10,2))) AS total_sales
-            FROM salesreport
+                SUM(CAST(total_amount AS DECIMAL(10,2))) AS revenue,
+                COUNT(DISTINCT transaction_id) AS total_transactions
+            FROM sales_transactions
+            WHERE status = 'completed'
         ";
-        $row = $this->conn->readOne($sql);
+        $row = $this->conn->readOne($sqlRevenue);
         $revenue = floatval($row['revenue'] ?? 0);
-        $profit  = floatval($row['profit'] ?? 0);
-        $totalSales = intval($row['total_sales'] ?? 0);
 
-        // Net purchase value
-        $sqlPurchase = "
-                SELECT 
-                    SUM(
-                        CAST(COALESCE(i.purchase_price,0) AS DECIMAL(10,2)) *
-                        CAST(COALESCE(s.quantity_sold,0) AS UNSIGNED)
-                    ) AS net_purchase
-                FROM salesreport s
-                LEFT JOIN inventory i 
-                    ON TRIM(LOWER(i.productName)) = TRIM(LOWER(s.products))
-            ";
-        $purchaseRow = $this->conn->readOne($sqlPurchase);
-        $netPurchase = floatval($purchaseRow['net_purchase'] ?? 0);
+        // Total cost calculation using inventory cost_price
+        $sqlCost = "
+            SELECT 
+                SUM(CAST(si.quantity_sold AS UNSIGNED) * CAST(i.cost_price AS DECIMAL(10,2))) AS total_cost
+            FROM sales_items si
+            JOIN sales_transactions st ON si.transaction_id = st.transaction_id
+            JOIN inventory i ON si.product_id = i.productID
+            WHERE st.status = 'completed'
+        ";
+        $costRow = $this->conn->readOne($sqlCost);
+        $totalCost = floatval($costRow['total_cost'] ?? 0);
 
-        $grossProfit = $revenue - $netPurchase;
+        // Gross profit
+        // Fallback: if cost is zero or null, assume 30% profit margin
+        $grossProfit = $totalCost > 0 ? ($revenue - $totalCost) : $revenue * 0.3;
 
-        // MoM profit in peso
-        $sqlMoM = "
-            SELECT
-                SUM(CAST(order_value AS DECIMAL(10,2)) * 0.30) AS current_month_profit
-            FROM salesreport
-            WHERE YEAR(date_time) = YEAR(CURDATE())
+        // Month-over-Month (MoM)
+        $sqlCurrentMonth = "
+            SELECT SUM(total_amount) AS current_month_revenue
+            FROM sales_transactions
+            WHERE status = 'completed'
+            AND YEAR(date_time) = YEAR(CURDATE())
             AND MONTH(date_time) = MONTH(CURDATE())
         ";
-        $currentMonthRow = $this->conn->readOne($sqlMoM);
-        $currentMonthProfit = floatval($currentMonthRow['current_month_profit'] ?? 0);
+        $currentMonth = floatval($this->conn->readOne($sqlCurrentMonth)['current_month_revenue'] ?? 0);
 
-        $sqlPrevMonth = "
-            SELECT
-                SUM(CAST(order_value AS DECIMAL(10,2)) * 0.30) AS prev_month_profit
-            FROM salesreport
-            WHERE YEAR(date_time) = YEAR(CURDATE())
+        $sqlPreviousMonth = "
+            SELECT SUM(total_amount) AS previous_month_revenue
+            FROM sales_transactions
+            WHERE status = 'completed'
+            AND YEAR(date_time) = YEAR(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
             AND MONTH(date_time) = MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
         ";
-        $prevMonthRow = $this->conn->readOne($sqlPrevMonth);
-        $prevMonthProfit = floatval($prevMonthRow['prev_month_profit'] ?? 0);
+        $previousMonth = floatval($this->conn->readOne($sqlPreviousMonth)['previous_month_revenue'] ?? 0);
 
-        $momProfit = $currentMonthProfit;
+        $momProfit = $previousMonth > 0 ? (($currentMonth - $previousMonth) / $previousMonth) * 100 : 0;
 
-        // YoY profit in peso
+        // Year-over-Year (YoY)
         $sqlCurrentYear = "
-            SELECT SUM(CAST(order_value AS DECIMAL(10,2)) * 0.30) AS current_year_profit
-            FROM salesreport
-            WHERE YEAR(date_time) = YEAR(CURDATE())
+            SELECT SUM(total_amount) AS current_year_revenue
+            FROM sales_transactions
+            WHERE status = 'completed'
+            AND YEAR(date_time) = YEAR(CURDATE())
         ";
-        $sqlPrevYear = "
-            SELECT SUM(CAST(order_value AS DECIMAL(10,2)) * 0.30) AS prev_year_profit
-            FROM salesreport
-            WHERE YEAR(date_time) = YEAR(CURDATE())-1
+        $currentYear = floatval($this->conn->readOne($sqlCurrentYear)['current_year_revenue'] ?? 0);
+
+        $sqlPreviousYear = "
+            SELECT SUM(total_amount) AS previous_year_revenue
+            FROM sales_transactions
+            WHERE status = 'completed'
+            AND YEAR(date_time) = YEAR(DATE_SUB(CURDATE(), INTERVAL 1 YEAR))
         ";
-        $currentYearProfit = floatval($this->conn->readOne($sqlCurrentYear)['current_year_profit'] ?? 0);
-        $prevYearProfit = floatval($this->conn->readOne($sqlPrevYear)['prev_year_profit'] ?? 0);
-        $yoyProfit = $currentYearProfit;
+        $previousYear = floatval($this->conn->readOne($sqlPreviousYear)['previous_year_revenue'] ?? 0);
+
+        $yoyProfit = $previousYear > 0 ? (($currentYear - $previousYear) / $previousYear) * 100 : 0;
 
         return [
-            'total_profit' => $profit,
+            'total_profit' => $grossProfit,
             'revenue' => $revenue,
-            'sales' => $totalSales,
-            'net_purchase_value' => $grossProfit,
+            'sales' => $revenue,
+            'net_purchase_value' => $totalCost,
             'net_sales_value' => $revenue,
-            'mom_profit' => $momProfit, // in peso
-            'yoy_profit' => $yoyProfit  // in peso
+            'mom_profit' => $momProfit,
+            'yoy_profit' => $yoyProfit,
+            'current_month_revenue' => $currentMonth,
+            'current_year_revenue' => $currentYear
         ];
     }
 
-    // Top selling products
-    public function getTopSellingProducts($limit = 4) {
-        $sql = "
-            SELECT 
-                s.products AS product_name,
-                COALESCE(i.productID, 'N/A') AS productID,
-                COALESCE(i.category, 'Unknown') AS category,
-                COALESCE(CONCAT(i.quantity, ' ', i.unit), 'N/A') AS remaining_qty,
-                SUM(CAST(s.order_value AS DECIMAL(10,2))) AS turnover,
-                SUM(CAST(s.quantity_sold AS UNSIGNED)) AS total_sold,
-                CASE 
-                    WHEN (i.quantity + SUM(CAST(s.quantity_sold AS UNSIGNED))) > 0 
-                    THEN ROUND((SUM(CAST(s.quantity_sold AS UNSIGNED)) / (i.quantity + SUM(CAST(s.quantity_sold AS UNSIGNED)))) * 100, 2)
-                    ELSE 0
-                END AS increase_percent
-            FROM salesreport s
-            LEFT JOIN inventory i ON i.productName = s.products
-            GROUP BY s.products, i.productID, i.category, i.quantity, i.unit
-            ORDER BY turnover DESC
-            LIMIT $limit
-        ";
-        
-        $result = $this->conn->read($sql);
-        return $result ?: [];
-    }
+        public function getTopSellingProducts($limit = 4) {
+            $sql = "
+                SELECT 
+                    si.product_name,
+                    si.product_id AS productID,
+                    pc.category_name AS category,
+                    CONCAT(i.quantity, ' ', COALESCE(i.unit, 'pcs')) AS remaining_qty,
+                    SUM(CAST(si.subtotal AS DECIMAL(10,2))) AS turnover,
+                    SUM(CAST(si.quantity_sold AS UNSIGNED)) AS total_sold
+                FROM sales_items si
+                JOIN sales_transactions st ON si.transaction_id = st.transaction_id
+                LEFT JOIN inventory i ON si.product_id = i.productID
+                LEFT JOIN product_categories pc ON i.category_id = pc.category_id
+                WHERE st.status = 'completed'
+                GROUP BY si.product_name, si.product_id, pc.category_name, i.quantity, i.unit
+                ORDER BY turnover DESC
+                LIMIT ?
+            ";
+            
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bind_param("i", $limit);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            $products = [];
+            while ($row = $result->fetch_assoc()) {
+                // Calculate increase percent (could be based on previous month or just a placeholder)
+                // For now, using a simple calculation based on total sold
+                $increasePercent = min(100, ($row['total_sold'] / 10) * 5); // Adjust formula as needed
+                
+                $products[] = [
+                    'product_name' => $row['product_name'],
+                    'productID' => $row['productID'],
+                    'category' => $row['category'] ?? 'Uncategorized',
+                    'remaining_qty' => $row['remaining_qty'],
+                    'turnover' => $row['turnover'],
+                    'total_sold' => $row['total_sold'],
+                    'increase_percent' => round($increasePercent, 2)
+                ];
+            }
+            
+            return $products;
+        }
 
-    // Best selling categories
     public function getBestSellingCategories($limit = 3) {
         $sql = "
             SELECT 
-                COALESCE(i.category, 'Unknown') AS category_name,
-                SUM(CAST(s.quantity_sold AS UNSIGNED)) AS total_sold,
-                SUM(CAST(s.order_value AS DECIMAL(10,2))) AS total_revenue,
-                ROUND(
-                    SUM(CAST(s.quantity_sold AS UNSIGNED)) * 100.0 / 
-                    (SELECT SUM(CAST(quantity_sold AS UNSIGNED)) FROM salesreport),
-                2) AS percentage_increase
-            FROM salesreport s
-            LEFT JOIN inventory i ON i.productName = s.products
-            WHERE i.category IS NOT NULL
-            GROUP BY i.category
+                pc.category_name,
+                SUM(CAST(si.quantity_sold AS UNSIGNED)) AS total_sold,
+                SUM(CAST(si.subtotal AS DECIMAL(10,2))) AS total_revenue
+            FROM sales_items si
+            JOIN sales_transactions st ON si.transaction_id = st.transaction_id
+            LEFT JOIN inventory i ON si.product_id = i.productID
+            LEFT JOIN product_categories pc ON i.category_id = pc.category_id
+            WHERE st.status = 'completed' AND pc.category_name IS NOT NULL
+            GROUP BY pc.category_name
             ORDER BY total_revenue DESC
-            LIMIT $limit
+            LIMIT ?
         ";
 
-        $result = $this->conn->read($sql);
-
-        if (empty($result)) {
-            $sql = "
-                SELECT 
-                    'All Products' AS category_name,
-                    SUM(CAST(quantity_sold AS UNSIGNED)) AS total_sold,
-                    SUM(CAST(order_value AS DECIMAL(10,2))) AS total_revenue,
-                    100 AS percentage_increase
-                FROM salesreport
-            ";
-            $result = $this->conn->read($sql);
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("i", $limit);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $categories = [];
+        while ($row = $result->fetch_assoc()) {
+            // Calculate percentage increase (placeholder - could be MoM comparison)
+            $percentageIncrease = min(100, ($row['total_sold'] / 50) * 10); // Adjust formula as needed
+            
+            $categories[] = [
+                'category_name' => $row['category_name'],
+                'total_sold' => $row['total_sold'],
+                'total_revenue' => $row['total_revenue'],
+                'percentage_increase' => round($percentageIncrease, 2)
+            ];
         }
-
-        return $result ?: [];
+        
+        return $categories;
     }
 
-    // Monthly sales chart
     public function getMonthlySalesChart() {
         $sql = "
             SELECT 
-                MONTH(date_time) AS month_number,
-                DATE_FORMAT(date_time, '%M') AS month_name,
-                SUM(CAST(order_value AS DECIMAL(10,2))) AS revenue,
-                SUM(CAST(order_value AS DECIMAL(10,2)) * 0.3) AS profit
-            FROM salesreport
-            WHERE YEAR(date_time) = YEAR(CURDATE())
+                MONTH(st.date_time) AS month_number,
+                DATE_FORMAT(st.date_time, '%M') AS month_name,
+                SUM(CAST(st.total_amount AS DECIMAL(10,2))) AS revenue
+            FROM sales_transactions st
+            WHERE st.status = 'completed'
+            AND YEAR(st.date_time) = YEAR(CURDATE())
             GROUP BY month_number, month_name
             ORDER BY month_number
         ";
@@ -190,15 +210,14 @@ class ReportsModel {
 
         $labels = [];
         $revenue = [];
-        $profit = [];
 
-        if ($rows && is_array($rows)) {
-            foreach ($rows as $row) {
-                $labels[] = $row['month_name'];
-                $revenue[] = floatval($row['revenue']);
-                $profit[] = floatval($row['profit']);
-            }
+        foreach ($rows as $row) {
+            $labels[] = $row['month_name'];
+            $revenue[] = floatval($row['revenue']);
         }
+
+        // Calculate profit as 30% of revenue (adjust this based on your business logic)
+        $profit = array_map(fn($r) => $r * 0.3, $revenue);
 
         return [
             'labels' => $labels,
@@ -207,15 +226,14 @@ class ReportsModel {
         ];
     }
 
-    // Weekly sales chart
     public function getWeeklySalesChart() {
         $sql = "
             SELECT 
-                WEEK(date_time, 1) AS week_number,
-                SUM(CAST(order_value AS DECIMAL(10,2))) AS revenue,
-                SUM(CAST(order_value AS DECIMAL(10,2)) * 0.3) AS profit
-            FROM salesreport
-            WHERE YEAR(date_time) = YEAR(CURDATE())
+                WEEK(st.date_time, 1) AS week_number,
+                SUM(CAST(st.total_amount AS DECIMAL(10,2))) AS revenue
+            FROM sales_transactions st
+            WHERE st.status = 'completed'
+            AND YEAR(st.date_time) = YEAR(CURDATE())
             GROUP BY week_number
             ORDER BY week_number
         ";
@@ -223,15 +241,14 @@ class ReportsModel {
 
         $labels = [];
         $revenue = [];
-        $profit = [];
 
-        if ($rows && is_array($rows)) {
-            foreach ($rows as $row) {
-                $labels[] = "Week " . $row['week_number'];
-                $revenue[] = floatval($row['revenue']);
-                $profit[] = floatval($row['profit']);
-            }
+        foreach ($rows as $row) {
+            $labels[] = "Week " . $row['week_number'];
+            $revenue[] = floatval($row['revenue']);
         }
+
+        // Calculate profit as 30% of revenue
+        $profit = array_map(fn($r) => $r * 0.3, $revenue);
 
         return [
             'labels' => $labels,
@@ -240,29 +257,41 @@ class ReportsModel {
         ];
     }
 
-    // Search products for AJAX search bar
-    public function searchProducts($query){
-        $query = $this->conn->conn->real_escape_string(trim($query));
-
+    public function searchProducts($query) {
+        $searchPattern = "%" . $query . "%";
+        
         $sql = "
             SELECT
-                s.products AS product_name,
-                COALESCE(i.productID, 'N/A') AS productID,
-                COALESCE(i.category, 'Unknown') AS category,
-                COALESCE(CONCAT(i.quantity, ' ', i.unit), 'N/A') AS remaining_qty,
-                CAST(s.order_value AS DECIMAL(10,2)) AS turnover,
-                CAST(s.quantity_sold AS UNSIGNED) AS increase
-            FROM salesreport s
-            LEFT JOIN inventory i ON i.productName = s.products
-            WHERE s.products LIKE '%$query%'
-            OR i.productID LIKE '%$query%'
-            OR i.category LIKE '%$query%'
-            ORDER BY s.date_time DESC
+                si.product_name,
+                si.product_id AS productID,
+                pc.category_name AS category,
+                CONCAT(i.quantity, ' ', COALESCE(i.unit, 'pcs')) AS remaining_qty,
+                SUM(CAST(si.subtotal AS DECIMAL(10,2))) AS turnover,
+                SUM(CAST(si.quantity_sold AS UNSIGNED)) AS increase
+            FROM sales_items si
+            JOIN sales_transactions st ON si.transaction_id = st.transaction_id
+            LEFT JOIN inventory i ON si.product_id = i.productID
+            LEFT JOIN product_categories pc ON i.category_id = pc.category_id
+            WHERE st.status = 'completed'
+            AND (si.product_name LIKE ?
+                 OR si.product_id LIKE ?
+                 OR pc.category_name LIKE ?)
+            GROUP BY si.product_name, si.product_id, pc.category_name, i.quantity, i.unit
+            ORDER BY st.date_time DESC
             LIMIT 20
         ";
 
-        $result = $this->conn->read($sql);
-
-        return $result ?: [];
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("sss", $searchPattern, $searchPattern, $searchPattern);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $products = [];
+        while ($row = $result->fetch_assoc()) {
+            $products[] = $row;
+        }
+        
+        return $products;
     }
 }
+?>

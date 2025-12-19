@@ -8,6 +8,8 @@
         private $lower_limit;
         private $next_disabled;
         private $current_user_role;
+        private $current_page;
+        private $total_pages;
 
         public function __construct(){
             $this->account_controller = new AccountController();
@@ -42,11 +44,21 @@
                                 OR contact_number LIKE '%$search%')";
             }
 
-            $this->lower_limit = $_GET["lower_limit"] ?? 0;
-            $this->upper_limit = $_GET["upper_limit"] ?? 7;
+            $this->lower_limit = isset($_GET["lower_limit"]) ? (int)$_GET["lower_limit"] : 0;
+            $this->upper_limit = 9; // Fixed limit per page
+
+            // Calculate current page
+            $this->current_page = ($this->lower_limit / $this->upper_limit) + 1;
+
+            // Get total count for pagination
+            $countFilter = "";
+            if (!empty($conditions)) {
+                $countFilter = "WHERE " . implode(" AND ", $conditions);
+            }
+            $totalAccounts = $this->account_controller->getTotalAccountsCount($countFilter);
+            $this->total_pages = max(1, ceil($totalAccounts / $this->upper_limit));
 
             $filter = "";
-
             if (!empty($conditions)) {
                 $filter = "WHERE " . implode(" AND ", $conditions);
             }
@@ -56,7 +68,7 @@
             $this->accounts = $this->account_controller->loadAccount($filter);
 
             // Determine if Next button should be disabled
-            $this->next_disabled = count($this->accounts) < 7;
+            $this->next_disabled = count($this->accounts) < $this->upper_limit || $this->current_page >= $this->total_pages;
 
             // End here for filtering
             $this->account_controller->closeConnection();
@@ -166,59 +178,64 @@
                             <?php 
                                 $list_of_accounts = $this->accounts;
 
-                                foreach($list_of_accounts as $account){
-                                    $account_ID = $account["account_ID"];
-                                    $role = $account["role"];
-                                    $first_name = $account["first_name"];
-                                    $last_name = $account["last_name"];
-                                    $email = $account["email"];
-                                    $contact_number = $account["contact_number"];
-                                    $status = $account["status"];
+                                if(empty($list_of_accounts)){
                                     ?>
-                                        <tr>
-                                            <td><?php echo htmlspecialchars($account_ID); ?></td>
-                                            <td><?php echo htmlspecialchars($first_name); ?></td>
-                                            <td><?php echo htmlspecialchars($last_name); ?></td>
-                                            <td><?php echo htmlspecialchars($email); ?></td>
-                                            <td><?php echo htmlspecialchars($contact_number); ?></td>
-                                            <td><?php echo htmlspecialchars($role); ?></td>
-                                            <td><?php echo htmlspecialchars($status); ?></td>
-                                            
-                                            <td>
-                                                <?php if ($this->canModify($role)) : ?>
-                                                    <!-- EDIT BUTTON - Fixed to pass status parameter -->
-                                                    <button class="action-btn edit" title="Edit"
-                                                        onclick="editAccount('<?php echo addslashes($account_ID); ?>', '<?php echo addslashes($first_name); ?>', '<?php echo addslashes($last_name); ?>', '<?php echo addslashes($email); ?>', '<?php echo addslashes($contact_number); ?>', '<?php echo addslashes($role); ?>', '<?php echo addslashes($status); ?>')">
-                                                        <i class="bx bxs-edit"></i>
-                                                    </button>
-
-                                                    <!-- DELETE BUTTON -->
-                                                    <button class="action-btn delete" title="Delete"
-                                                        onclick="deleteAccount('<?php echo addslashes($account_ID); ?>', '<?php echo addslashes($role); ?>')">
-                                                        <i class="bx bx-trash-alt"></i>
-                                                    </button>
-                                                <?php else: ?>
-                                                    <span style="color:#888; font-size:12px;">No Access</span>
-                                                <?php endif; ?>
-                                            </td>
-                                        </tr>
+                                    <tr class="no-accounts">
+                                        <td colspan="8" style="text-align:center; padding:20px;">No accounts found.</td>
+                                    </tr>
                                     <?php
+                                } else {
+                                    foreach($list_of_accounts as $account){
+                                        $account_ID = $account["account_ID"];
+                                        $role = $account["role"];
+                                        $first_name = $account["first_name"];
+                                        $last_name = $account["last_name"];
+                                        $email = $account["email"];
+                                        $contact_number = $account["contact_number"];
+                                        $status = $account["status"];
+                                        ?>
+                                            <tr>
+                                                <td><?php echo htmlspecialchars($account_ID); ?></td>
+                                                <td><?php echo htmlspecialchars($first_name); ?></td>
+                                                <td><?php echo htmlspecialchars($last_name); ?></td>
+                                                <td><?php echo htmlspecialchars($email); ?></td>
+                                                <td><?php echo htmlspecialchars($contact_number); ?></td>
+                                                <td><?php echo htmlspecialchars($role); ?></td>
+                                                <td><?php echo htmlspecialchars($status); ?></td>
+                                                
+                                                <td>
+                                                    <?php if ($this->canModify($role)) : ?>
+                                                        <!-- EDIT BUTTON -->
+                                                        <button class="action-btn edit" title="Edit"
+                                                            onclick="editAccount('<?php echo addslashes($account_ID); ?>', '<?php echo addslashes($first_name); ?>', '<?php echo addslashes($last_name); ?>', '<?php echo addslashes($email); ?>', '<?php echo addslashes($contact_number); ?>', '<?php echo addslashes($role); ?>', '<?php echo addslashes($status); ?>')">
+                                                            <i class="bx bxs-edit"></i>
+                                                        </button>
+
+                                                        <!-- DELETE BUTTON -->
+                                                        <button class="action-btn delete" title="Delete"
+                                                            onclick="deleteAccount('<?php echo addslashes($account_ID); ?>', '<?php echo addslashes($role); ?>')">
+                                                            <i class="bx bx-trash-alt"></i>
+                                                        </button>
+                                                    <?php else: ?>
+                                                        <span style="color:#888; font-size:12px;">No Access</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                            </tr>
+                                        <?php
+                                    }
                                 }
                             ?>
                         </tbody>
                     </table>
                     <?php
-                    $next_lower = $this->lower_limit + 7;
-                    $next_upper = $this->upper_limit + 7;
-
-                    $prev_lower = max($this->lower_limit - 7, 0);
-                    $prev_upper = max($this->upper_limit - 7, 7);
+                    // Calculate next and previous limits
+                    $next_lower = $this->lower_limit + $this->upper_limit;
+                    $prev_lower = max($this->lower_limit - $this->upper_limit, 0);
 
                     // Build query array for Next
                     $query = [
                         "view=accounts",
-                        "lower_limit=$next_lower",
-                        "upper_limit=$next_upper"
+                        "lower_limit=$next_lower"
                     ];
 
                     // Preserve role filters
@@ -244,13 +261,16 @@
 
                     // Previous URL
                     $query[1] = "lower_limit=$prev_lower";
-                    $query[2] = "upper_limit=$prev_upper";
                     $prev_url = "?" . implode("&", $query);
                     ?>
                     <div class="table-nav">
                         <a href="<?=$prev_url?>">
                             <button <?= $this->lower_limit == 0 ? 'disabled' : '' ?>>Previous</button>
                         </a>
+
+                        <div class="pages">
+                            <span class="page-indicator">Page <?php echo $this->current_page; ?> of <?php echo $this->total_pages; ?></span>
+                        </div>
 
                         <a href="<?=$next_url?>">
                             <button <?= $this->next_disabled ? 'disabled' : '' ?>>Next</button>
@@ -448,8 +468,8 @@
                                     Inactive
                                 </label>
 
-                                <button type="submit">Apply Filter</button>
-                                <a href="index.php?view=accounts"><button type="button" style="background: orange;">Clear Filter</button></a>
+                                <button type="submit" class="applyFilter">Apply Filter</button>
+                                <a href="index.php?view=accounts"><button type="button" class="clearFilter">Clear Filter</button></a>
                             </form>
                         </div>
                     </div>

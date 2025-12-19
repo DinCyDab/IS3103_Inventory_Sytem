@@ -1,195 +1,284 @@
 <?php
 class SalesModel {
-	private $db;
+    private mysqli $db;
 
-	public function __construct() {
-		$this->db = new mysqli('127.0.0.1', 'root', '', 'inventory_system');
-		if ($this->db->connect_error) {
-			die("Connection failed: " . $this->db->connect_error);
-		}
-		$this->db->set_charset('utf8mb4');
-	}
+    public function __construct() {
+        $this->db = new mysqli("127.0.0.1", "root", "", "inventory_system");
+        if ($this->db->connect_error) {
+            die("DB connection failed: " . $this->db->connect_error);
+        }
+        $this->db->set_charset("utf8mb4");
+    }
 
-	private function columnExists($table, $column) {
-		$res = $this->db->query("SHOW COLUMNS FROM `{$table}` LIKE '{$column}'");
-		return $res && $res->num_rows > 0;
-	}
+    /* =========================================================
+       GET AVAILABLE PRODUCTS
+    ========================================================= */
+    public function getAllProducts(): array {
+        $sql = "
+            SELECT 
+                productID AS product_ID,
+                productName AS product_name,
+                quantity,
+                price,
+                category_id AS category,
+                unit
+            FROM inventory
+            WHERE quantity > 0
+              AND (status IS NULL OR status != 'deleted')
+            ORDER BY productName
+        ";
 
-	public function insertSalesReport($account_id, $total_price, $product_id, $quantity, $payment_method = null, $customer_name = null) {
-		// Validate inventory
-		$current = $this->getInventoryByProduct($product_id);
-		if ($current === null) return 'no_inventory';
-		if ($current < $quantity) return 'insufficient_stock';
+        $res = $this->db->query($sql);
+        if (!$res) {
+            throw new Exception("MySQL Error in getAllProducts: " . $this->db->error);
+        }
 
-		// Resolve product name from inventory (productID -> productName)
-		$productName = $this->getProductNameById($product_id);
-		if (!$productName) {
-			$productName = "Product #" . $product_id;
-		}
+        return $res->fetch_all(MYSQLI_ASSOC);
+    }
 
-		// Build salesreport row
-		$transactionId = $this->generateTxnId();
-		$dateTime = date('Y-m-d H:i:s');
-		$orderValue = (float)$total_price;
-		$qtySold = (int)$quantity;
-		$custName = $customer_name ?? '';
-		$payMethod = $payment_method ?? 'Cash';
+    /* =========================================================
+       INSERT SALE
+    ========================================================= */
+    public function insertSale(
+        int $account_id,
+        array $products,
+        string $payment_method,
+        ?int $customer_id,
+        ?string $customer_name
+    ): string {
 
-		$stmt = $this->db->prepare(
-			"INSERT INTO salesreport (transaction_ID, date_time, products, order_value, quantity_sold, customer_name, payment_method)
-			 VALUES (?, ?, ?, ?, ?, ?, ?)"
-		);
-		$stmt->bind_param("sssdiss", $transactionId, $dateTime, $productName, $orderValue, $qtySold, $custName, $payMethod);
+        if (empty($products)) {
+            throw new Exception("No products provided");
+        }
 
-		$ok = $stmt->execute();
-		$error = $stmt->error;
-		$stmt->close();
+        foreach ($products as $p) {
+            if (empty($p['product_id']) || $p['product_id'] === '0') {
+                throw new Exception("Invalid product ID");
+            }
+        }
 
-		if ($ok) {
-			$this->decrementInventory($product_id, $quantity);
-			return $transactionId;
-		}
-		error_log("Insert failed: " . $error);
-		return false;
-	}
+        $transactionId = "TXN-" . time();
+        $dateTime = date("Y-m-d H:i:s");
 
-	private function generateTxnId() {
-		$result = $this->db->query("SELECT transaction_ID FROM salesreport ORDER BY transaction_ID DESC LIMIT 1");
-		if ($result && $row = $result->fetch_assoc()) {
-			$lastId = $row['transaction_ID'];
-			if (preg_match('/TXN-(\d+)/', $lastId, $matches)) {
-				$nextNum = intval($matches[1]) + 1;
-				return 'TXN-' . str_pad($nextNum, 5, '0', STR_PAD_LEFT);
-			}
-		}
-		return 'TXN-00001';
-	}
+        $this->db->begin_transaction();
 
-	// Get paginated sales reports
-	public function getSalesReportsPaginated($page = 1, $limit = 8) {
-		$page = max(1, (int)$page);
-		$limit = max(1, (int)$limit);
-		$offset = ($page - 1) * $limit;
+        try {
+            /* ---------- CUSTOMER ---------- */
+            if (!$customer_id && $customer_name) {
+                $stmt = $this->db->prepare(
+                    "SELECT customer_id FROM customers WHERE LOWER(customer_name)=LOWER(?) LIMIT 1"
+                );
+                $stmt->bind_param("s", $customer_name);
+                $stmt->execute();
+                $res = $stmt->get_result();
 
-		$query = "SELECT transaction_ID, date_time, products, order_value, quantity_sold, customer_name, payment_method
-				  FROM salesreport
-				  ORDER BY date_time DESC
-				  LIMIT ? OFFSET ?";
-		
-		$stmt = $this->db->prepare($query);
-		$stmt->bind_param("ii", $limit, $offset);
-		$stmt->execute();
-		$result = $stmt->get_result();
+                if ($row = $res->fetch_assoc()) {
+                    $customer_id = (int)$row['customer_id'];
+                } else {
+                    $stmt2 = $this->db->prepare(
+                        "INSERT INTO customers (customer_name) VALUES (?)"
+                    );
+                    $stmt2->bind_param("s", $customer_name);
+                    $stmt2->execute();
+                    $customer_id = $stmt2->insert_id;
+                    $stmt2->close();
+                }
+                $stmt->close();
+            }
 
-		$sales_data = [];
-		if ($result && $result->num_rows > 0) {
-			while ($row = $result->fetch_assoc()) {
-				$sales_data[] = $row;
-			}
-		}
-		$stmt->close();
-		return $sales_data;
-	}
+            /* ---------- CALCULATE TOTAL ---------- */
+            $totalAmount = 0;
+            foreach ($products as $p) {
+                $info = $this->getProductInfo($p['product_id']);
+                if (!$info) {
+                    throw new Exception("Product ID '{$p['product_id']}' not found");
+                }
+                if ($info['quantity'] < $p['quantity']) {
+                    throw new Exception("Insufficient stock for {$info['productName']}");
+                }
+                $totalAmount += $info['price'] * $p['quantity'];
+            }
 
-	// Get total count of sales reports
-	public function getTotalSalesCount() {
-		$result = $this->db->query("SELECT COUNT(*) as total FROM salesreport");
-		if ($result && $row = $result->fetch_assoc()) {
-			return (int)$row['total'];
-		}
-		return 0;
-	}
+            /* ---------- INSERT TRANSACTION ---------- */
+            $stmt = $this->db->prepare("
+                INSERT INTO sales_transactions
+                (transaction_id, customer_id, customer_name, date_time, total_amount, payment_method, served_by, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'completed')
+            ");
 
-	public function getAllSalesReports() {
-		$query = "SELECT transaction_ID, date_time, products, order_value, quantity_sold, customer_name, payment_method
-				  FROM salesreport
-				  ORDER BY date_time DESC";
-		$result = $this->db->query($query);
+            $stmt->bind_param(
+                "sissdsi",
+                $transactionId,
+                $customer_id,
+                $customer_name,
+                $dateTime,
+                $totalAmount,
+                $payment_method,
+                $account_id
+            );
+            $stmt->execute();
+            $stmt->close();
 
-		$sales_data = [];
-		if ($result && $result->num_rows > 0) {
-			while ($row = $result->fetch_assoc()) {
-				$sales_data[] = $row;
-			}
-			$result->free();
-		}
-		return $sales_data;
-	}
+            /* ---------- INSERT ITEMS ---------- */
+            $stmt = $this->db->prepare("
+                INSERT INTO sales_items
+                (transaction_id, product_id, product_name, quantity_sold, unit_price, subtotal)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ");
 
-	private function getProductNameById($product_id) {
-		$stmt = $this->db->prepare("SELECT productName FROM inventory WHERE productID = ? LIMIT 1");
-		$stmt->bind_param("i", $product_id);
-		$stmt->execute();
-		$res = $stmt->get_result();
-		$name = null;
-		if ($row = $res->fetch_assoc()) $name = $row['productName'];
-		$stmt->close();
-		return $name;
-	}
+            foreach ($products as $p) {
+                $info = $this->getProductInfo($p['product_id']);
+                $qty = (int)$p['quantity'];
+                $unit = (float)$info['price'];
+                $subtotal = $qty * $unit;
 
-	public function getProductIdByName($product_name) {
-		if (is_numeric($product_name)) {
-			$product_id = (int)$product_name;
-			$stmt = $this->db->prepare("SELECT productID FROM inventory WHERE productID = ? LIMIT 1");
-			$stmt->bind_param("i", $product_id);
-		} else {
-			$stmt = $this->db->prepare("SELECT productID FROM inventory WHERE LOWER(productName) = LOWER(?) LIMIT 1");
-			$stmt->bind_param("s", $product_name);
-		}
-		
-		$stmt->execute();
-		$result = $stmt->get_result();
-		$id = null;
-		if ($row = $result->fetch_assoc()) {
-			$id = (int)$row['productID'];
-		}
-		$stmt->close();
-		return $id;
-	}
+                $stmt->bind_param(
+                    "sssidd",
+                    $transactionId,
+                    $info['productID'],
+                    $info['productName'],
+                    $qty,
+                    $unit,
+                    $subtotal
+                );
+                $stmt->execute();
 
-	// Updated to include price
-	public function getAllProducts() {
-		$query = "SELECT productID as product_ID, productName as product_name, quantity, price
-				  FROM inventory
-				  WHERE quantity > 0
-				  ORDER BY productName";
-		$result = $this->db->query($query);
+                $this->decrementInventory($info['productID'], $qty);
+            }
+            $stmt->close();
 
-		$products = [];
-		if ($result && $result->num_rows > 0) {
-			while ($row = $result->fetch_assoc()) {
-				$products[] = $row;
-			}
-			$result->free();
-		}
-		return $products;
-	}
+            $this->db->commit();
+            return $transactionId;
 
-	public function getInventoryByProduct($product_id) {
-		$stmt = $this->db->prepare("SELECT quantity FROM inventory WHERE productID = ? LIMIT 1");
-		$stmt->bind_param("i", $product_id);
-		$stmt->execute();
-		$result = $stmt->get_result();
-		$qty = null;
-		if ($row = $result->fetch_assoc()) {
-			$qty = (int)$row['quantity'];
-		}
-		$stmt->close();
-		return $qty;
-	}
+        } catch (Exception $e) {
+            $this->db->rollback();
+            throw $e;
+        }
+    }
 
-	public function decrementInventory($product_id, $quantity) {
-		$stmt = $this->db->prepare("UPDATE inventory SET quantity = quantity - ? WHERE productID = ?");
-		$stmt->bind_param("ii", $quantity, $product_id);
-		$ok = $stmt->execute();
-		$stmt->close();
-		return $ok;
-	}
+    /* =========================================================
+       GET PRODUCT INFO
+    ========================================================= */
+    public function getProductInfo(string $productID): ?array {
+        $stmt = $this->db->prepare("
+            SELECT 
+                productID,
+                productName,
+                quantity,
+                price,
+                category_id AS category,
+                unit
+            FROM inventory
+            WHERE productID = ?
+              AND (status IS NULL OR status != 'deleted')
+            LIMIT 1
+        ");
 
-	public function deleteAllSales() {
-		$this->db->query("DELETE FROM salesreport");
-		$this->db->query("ALTER TABLE salesreport AUTO_INCREMENT = 1");
-		return true;
-	}
+        $stmt->bind_param("s", $productID);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        if (!$res) {
+            throw new Exception("MySQL Error in getProductInfo: " . $this->db->error);
+        }
+
+        $data = $res->fetch_assoc();
+        $stmt->close();
+
+        return $data ?: null;
+    }
+
+    /* =========================================================
+       UPDATE INVENTORY
+    ========================================================= */
+    private function decrementInventory(string $productID, int $qty): void {
+        $stmt = $this->db->prepare("
+            UPDATE inventory
+            SET quantity = quantity - ?
+            WHERE productID = ?
+        ");
+        $stmt->bind_param("is", $qty, $productID);
+        $stmt->execute();
+        $stmt->close();
+    }
+
+    /* =========================================================
+       SALES REPORT
+    ========================================================= */
+    public function getSalesReportsPaginated(int $page = 1, int $limit = 8): array {
+        $offset = ($page - 1) * $limit;
+
+        $stmt = $this->db->prepare("
+            SELECT 
+                st.transaction_id,
+                st.date_time,
+                GROUP_CONCAT(si.product_name SEPARATOR ', ') AS products,
+                st.total_amount AS order_value,
+                SUM(si.quantity_sold) AS quantity_sold,
+                st.customer_name,
+                st.payment_method
+            FROM sales_transactions st
+            JOIN sales_items si ON st.transaction_id = si.transaction_id
+            WHERE st.status = 'completed'
+            GROUP BY st.transaction_id
+            ORDER BY st.date_time DESC
+            LIMIT ? OFFSET ?
+        ");
+
+        $stmt->bind_param("ii", $limit, $offset);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        if (!$res) {
+            throw new Exception("MySQL Error in getSalesReportsPaginated: " . $this->db->error);
+        }
+
+        $data = $res->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+        return $data;
+    }
+
+    public function getTotalSalesCount(): int {
+        $res = $this->db->query(
+            "SELECT COUNT(*) AS total FROM sales_transactions WHERE status='completed'"
+        );
+
+        if (!$res) {
+            throw new Exception("MySQL Error in getTotalSalesCount: " . $this->db->error);
+        }
+
+        return (int)$res->fetch_assoc()['total'];
+    }
+
+    /* =========================================================
+       SEARCH PRODUCTS
+    ========================================================= */
+    public function searchProducts(string $term): array {
+        $term = "%{$term}%";
+        $stmt = $this->db->prepare("
+            SELECT 
+                productID AS product_ID,
+                productName AS product_name,
+                quantity,
+                price,
+                category_id AS category,
+                unit
+            FROM inventory
+            WHERE (productID LIKE ? OR productName LIKE ?)
+              AND quantity > 0
+              AND (status IS NULL OR status != 'deleted')
+            ORDER BY productName
+            LIMIT 50
+        ");
+
+        $stmt->bind_param("ss", $term, $term);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        if (!$res) {
+            throw new Exception("MySQL Error in searchProducts: " . $this->db->error);
+        }
+
+        $data = $res->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+        return $data;
+    }
 }
 ?>
