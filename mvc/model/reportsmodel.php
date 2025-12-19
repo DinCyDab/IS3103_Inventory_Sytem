@@ -44,21 +44,28 @@ class ReportsModel {
         $row = $this->conn->readOne($sqlRevenue);
         $revenue = floatval($row['revenue'] ?? 0);
 
-        // Total cost calculation using inventory cost_price
-        $sqlCost = "
-            SELECT 
-                SUM(CAST(si.quantity_sold AS UNSIGNED) * CAST(i.cost_price AS DECIMAL(10,2))) AS total_cost
-            FROM sales_items si
-            JOIN sales_transactions st ON si.transaction_id = st.transaction_id
-            JOIN inventory i ON si.product_id = i.productID
-            WHERE st.status = 'completed'
-        ";
-        $costRow = $this->conn->readOne($sqlCost);
-        $totalCost = floatval($costRow['total_cost'] ?? 0);
+        // Check if cost_price exists in inventory table
+        $costPriceExists = !empty($this->conn->read("SHOW COLUMNS FROM inventory LIKE 'cost_price'"));
 
-        // Gross profit
-        // Fallback: if cost is zero or null, assume 30% profit margin
-        $grossProfit = $totalCost > 0 ? ($revenue - $totalCost) : $revenue * 0.3;
+        if ($costPriceExists) {
+            // Total cost using cost_price
+            $sqlCost = "
+                SELECT 
+                    SUM(CAST(si.quantity_sold AS UNSIGNED) * CAST(i.cost_price AS DECIMAL(10,2))) AS total_cost
+                FROM sales_items si
+                JOIN sales_transactions st ON si.transaction_id = st.transaction_id
+                JOIN inventory i ON si.product_id = i.productID
+                WHERE st.status = 'completed'
+            ";
+            $costRow = $this->conn->readOne($sqlCost);
+            $totalCost = floatval($costRow['total_cost'] ?? 0);
+
+            $grossProfit = $revenue - $totalCost;
+        } else {
+            // Fallback if cost_price doesn't exist
+            $totalCost = 0;
+            $grossProfit = $revenue * 0.3; // Assume 30% profit margin
+        }
 
         // Month-over-Month (MoM)
         $sqlCurrentMonth = "

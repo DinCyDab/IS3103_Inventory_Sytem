@@ -1,340 +1,337 @@
--- ============================================
--- NORMALIZED DATABASE SCHEMA
--- Matches your existing category structure
--- ============================================
+-- phpMyAdmin SQL Dump
+-- version 5.1.3
+-- https://www.phpmyadmin.net/
+--
+-- Host: localhost
+-- Generation Time: Dec 19, 2025 at 10:39 AM
+-- Server version: 10.4.21-MariaDB
+-- PHP Version: 7.4.29
 
--- 1. Account Table (Already normalized)
-CREATE TABLE IF NOT EXISTS `account` (
-  `account_ID` INT(11) NOT NULL AUTO_INCREMENT,
-  `first_name` VARCHAR(100) NOT NULL,
-  `last_name` VARCHAR(100) NOT NULL,
-  `password` VARCHAR(255) NOT NULL,
-  `email` VARCHAR(150) NOT NULL UNIQUE,
-  `contact_number` VARCHAR(50) DEFAULT NULL,
-  `role` ENUM('staff','admin','super_admin') NOT NULL DEFAULT 'staff',
-  `status` ENUM('active','inactive') NOT NULL DEFAULT 'active',
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`account_ID`),
-  INDEX `idx_email` (`email`),
-  INDEX `idx_role` (`role`)
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `inventory_system`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `account`
+--
+
+CREATE TABLE `account` (
+  `account_ID` int(11) NOT NULL,
+  `first_name` varchar(100) NOT NULL,
+  `last_name` varchar(100) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `email` varchar(150) NOT NULL,
+  `contact_number` varchar(50) DEFAULT NULL,
+  `role` enum('staff','admin','super_admin') NOT NULL,
+  `status` enum('active','inactive') DEFAULT 'active'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 2. Product Categories Table (Matches your exact categories)
-CREATE TABLE IF NOT EXISTS `product_categories` (
-  `category_id` INT(11) NOT NULL AUTO_INCREMENT,
-  `category_name` VARCHAR(100) NOT NULL UNIQUE,
-  `category_group` VARCHAR(100) NOT NULL,
-  `display_order` INT(11) DEFAULT 0,
-  `description` TEXT DEFAULT NULL,
-  PRIMARY KEY (`category_id`),
-  INDEX `idx_category_group` (`category_group`)
+--
+-- Dumping data for table `account`
+--
+
+INSERT INTO `account` (`account_ID`, `first_name`, `last_name`, `password`, `email`, `contact_number`, `role`, `status`) VALUES
+(1, 'Juan', 'Dela Cruz', '$2y$10$B6DbJWTioOvMKLz/SaxFKutc4E844LP7VL1MQCOFBvrShwlN3/Czy', '1234@gmail.com', '0912 345 6789', 'admin', 'active'),
+(2, 'James', 'Galon', '$2y$10$QXNaKJyJqUz76ZIPuK.k2OpgxQfZrLT63fnkbloXC8wRUg/omKcTi', '24100467@usc.edu.php', '0912 345 6789', 'admin', 'active'),
+(3, 'Dino', 'Dabon', '$2y$10$Sovvezgs/KnYpbsBDAhBr.UuKOiA8BOnkkWhHhbZ5bojNMK..GDQy', '12345@gmail.com', '0921 443 9215', 'super_admin', 'active'),
+(4, 'Miguel', 'Andaya', '$2y$10$JEH3gDnEZXcr.GhvUmQl/.r.xGPdAThpraelZ3jzzKx2dlsRQnTPm', '123@gmail.com', '0912 345 6789', 'staff', 'inactive'),
+(5, 'Remegio', 'Magallanes', '$2y$10$YdJZJwZtY.iMnfZOkr1AzugaJSixMjnEaWzAmteuQdrvcvR.9vrZG', '12@gmail.com', '0912 345 6789', 'staff', 'active'),
+(6, 'Kris', 'Mesola', '$2y$10$2QuNnCVoHCO82RrJwPZCBuV/UkVB2yr.JzGEtc9JD1/TarHPQNRo2', '1@gmail.com', '0912 345 6789', 'staff', 'active'),
+(7, 'Gab', 'Arispe', '$2y$10$LcgWk1IiNLRH6oALdJ/IHOIyAHkTgn/8nm/35sbeP8JX3EuxRJSEm', '123456@gmail.com', '0912 345 6789', 'staff', 'active'),
+(8, 'Maya', 'Maya', '$2y$10$l8C1JdhKH6SBDvXKqkOZv.S2j3tteRlAvWvSCYUoDfiJYCv3.V1gS', '12345678@gmail.com', '0912 345 6789', 'admin', 'active'),
+(9, 'Shiori', 'Morisaka', '$2y$10$e0Zf/MF9oXn8NMPcry94wuJkTtKNR27K5ZRX8eBHfKN6mNmg0Pfim', '123456789@gmail.com', '0912 345 6789', 'admin', 'active'),
+(10, 'Q', 'P', '$2y$10$Py1TQfUmBToGXSW2Ls/5V.dRpkxeemCRtXeImJUgmU2UWJoFNNQUu', '2@gmail.com', '0912 345 6789', 'admin', 'active');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `customers`
+--
+
+CREATE TABLE `customers` (
+  `customer_id` int(11) NOT NULL,
+  `customer_name` varchar(100) NOT NULL,
+  `contact_number` varchar(50) DEFAULT NULL,
+  `email` varchar(150) DEFAULT NULL,
+  `address` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Insert your predefined categories in exact order
-INSERT INTO `product_categories` (`category_name`, `category_group`, `display_order`) VALUES
--- Food & Beverages
-('Softdrinks/Juice/Water', 'Food & Beverages', 1),
-('Chips/Cookies/Candies', 'Food & Beverages', 2),
-('Instant Noodles/Rice/Canned Goods', 'Food & Beverages', 3),
-('Spices/Condiments', 'Food & Beverages', 4),
--- Household & Personal Care
-('Soap/Shampoo/Toothpaste', 'Household & Personal Care', 5),
-('Detergent/Cleaning Supplies', 'Household & Personal Care', 6),
-('Toilet Paper/Sanitary Pad', 'Household & Personal Care', 7),
--- Miscellaneous/Others
-('Cigarettes/Alcohol', 'Miscellaneous/Others', 8),
-('Stationary/Batteries/Small Toys', 'Miscellaneous/Others', 9),
-('Frozen Items or Perishables', 'Miscellaneous/Others', 10);
+--
+-- Dumping data for table `customers`
+--
 
--- 3. Inventory Table (Improved with foreign keys)
-CREATE TABLE IF NOT EXISTS `inventory` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `productID` VARCHAR(100) NOT NULL UNIQUE,
-  `productName` VARCHAR(255) NOT NULL,
-  `quantity` INT(11) NOT NULL DEFAULT 0,
-  `unit` VARCHAR(50) NOT NULL DEFAULT 'pcs',
-  `price` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  `expiryDate` DATE DEFAULT NULL,
-  `category_id` INT(11) DEFAULT NULL,
-  `image` LONGTEXT DEFAULT NULL,
-  `status` VARCHAR(20) DEFAULT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `unique_productID` (`productID`),
-  KEY `idx_productName` (`productName`),
-  KEY `idx_category_id` (`category_id`),
-  KEY `idx_status` (`status`),
-  KEY `idx_quantity` (`quantity`),
-  KEY `idx_expiry` (`expiryDate`),
-  CONSTRAINT `fk_inventory_category` FOREIGN KEY (`category_id`) 
-    REFERENCES `product_categories` (`category_id`) 
-    ON DELETE SET NULL ON UPDATE CASCADE
+INSERT INTO `customers` (`customer_id`, `customer_name`, `contact_number`, `email`, `address`, `created_at`) VALUES
+(6, 'Shiori', NULL, NULL, NULL, '2025-12-19 06:12:46'),
+(7, 'James', NULL, NULL, NULL, '2025-12-19 09:19:36'),
+(8, 'Kris', NULL, NULL, NULL, '2025-12-19 09:25:46'),
+(9, 'Maya', NULL, NULL, NULL, '2025-12-19 09:26:01');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `inventory`
+--
+
+CREATE TABLE `inventory` (
+  `id` int(11) NOT NULL,
+  `productID` varchar(50) NOT NULL,
+  `productName` varchar(255) NOT NULL,
+  `quantity` int(11) NOT NULL DEFAULT 0,
+  `unit` varchar(50) NOT NULL,
+  `price` decimal(10,2) NOT NULL,
+  `expiryDate` date DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `image` longtext DEFAULT NULL,
+  `status` varchar(20) NOT NULL DEFAULT 'active',
+  `category_id` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 4. Customers Table (Separate customer data)
-CREATE TABLE IF NOT EXISTS `customers` (
-  `customer_id` INT(11) NOT NULL AUTO_INCREMENT,
-  `customer_name` VARCHAR(100) NOT NULL,
-  `contact_number` VARCHAR(50) DEFAULT NULL,
-  `email` VARCHAR(150) DEFAULT NULL,
-  `address` TEXT DEFAULT NULL,
-  `total_purchases` DECIMAL(10,2) DEFAULT 0.00,
-  `last_purchase_date` DATETIME DEFAULT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`customer_id`),
-  INDEX `idx_customer_name` (`customer_name`),
-  INDEX `idx_contact` (`contact_number`)
+--
+-- Dumping data for table `inventory`
+--
+
+INSERT INTO `inventory` (`id`, `productID`, `productName`, `quantity`, `unit`, `price`, `expiryDate`, `created_at`, `image`, `status`, `category_id`) VALUES
+(43, '1', 'Red Bull', 20, 'packets', '6767.00', '2025-12-25', '2025-12-02 10:25:01', '69302c01806d8_360_F_431621440_FFG7fwFMxdVlADPCaOPKOkD94nQkL1nQ.jpg', 'active', 33),
+(44, '2', 'Maggi', 3, 'packets', '1245.00', '2028-09-12', '2025-12-03 15:18:26', '693054c2e1e2b_692a6c5d158c9_6926f0fd63b9d_692446b956eb3_MAGGIMAGICSARAP55G_grande.jpg', 'active', 32),
+(45, '3', 'Oreo', 3, 'packets', '6032.00', '2025-09-12', '2025-12-06 06:39:20', '6933cf9870e80_692a6c25cdf1d_6926efab58f1f_69244da329381_100000093360-Oreo-Original-Sandwich-Cookies-Trial-Pack-6x27.6g-230907_dd55cbd0-ac97-4796-bd06-370be62d9a01.jpg', 'active', 31),
+(46, '4', 'Ariel', 1, 'packets', '4095.00', '2028-09-12', '2025-12-06 06:40:37', '6933cfe54d5db_692c626e89b72_6927b73d1aad7_692456da98c47_105034909_1024x.png', 'active', 34),
+(47, '5', 'Coca Cola', 0, 'packets', '6032.00', '2028-09-12', '2025-12-08 10:16:38', '6936a58632a71_692c62915878e_6926f12487559_692447236b86a_istockphoto-487787108-612x612.jpg', 'active', 33),
+(48, '6', 'Oreo', 1, 'packets', '6032.00', '2025-09-12', '2025-12-08 15:01:13', '6936e839ca348_692a6c25cdf1d_6926efab58f1f_69244da329381_100000093360-Oreo-Original-Sandwich-Cookies-Trial-Pack-6x27.6g-230907_dd55cbd0-ac97-4796-bd06-370be62d9a01.jpg', 'active', 31),
+(49, 'PRD-0001', 'Red Bull', 43, 'packets', '100000.00', '2025-09-12', '2025-12-10 02:23:31', '6938d9a3d916e_360_F_431621440_FFG7fwFMxdVlADPCaOPKOkD94nQkL1nQ.jpg', 'active', 33),
+(50, 'PRD-0002', 'Maggi', 31, 'packets', '4095.00', '2028-12-25', '2025-12-18 10:28:09', '6943d739d435a_692a6c5d158c9_6926f0fd63b9d_692446b956eb3_MAGGIMAGICSARAP55G_grande.jpg', 'active', 32),
+(51, 'PRD-0003', 'Oreo', 23, 'packets', '4095.00', '2028-12-25', '2025-12-19 03:33:45', '6944c7992553e_692c63b39b625_692c61eba832b_692a6c25cdf1d_6926efab58f1f_69244da329381_100000093360-Oreo-Original-Sandwich-Cookies-Trial-Pack-6x27.6g-230907_dd55cbd0-ac97-4796-bd06-370be62d9a01.jpg', 'active', 31);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `product_categories`
+--
+
+CREATE TABLE `product_categories` (
+  `category_id` int(11) NOT NULL,
+  `category_name` varchar(100) NOT NULL,
+  `category_group` varchar(100) NOT NULL,
+  `display_order` int(11) DEFAULT 0,
+  `description` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 5. Sales Transactions Table (Header table)
-CREATE TABLE IF NOT EXISTS `sales_transactions` (
-  `transaction_id` VARCHAR(20) NOT NULL,
-  `customer_id` INT(11) DEFAULT NULL,
-  `customer_name` VARCHAR(100) DEFAULT NULL,
-  `date_time` DATETIME NOT NULL,
-  `total_amount` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  `payment_method` VARCHAR(50) DEFAULT NULL,
-  `served_by` INT(11) DEFAULT NULL,
-  `status` ENUM('completed','cancelled','refunded') DEFAULT 'completed',
-  `notes` TEXT DEFAULT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`transaction_id`),
-  KEY `idx_date_time` (`date_time`),
-  KEY `idx_customer_id` (`customer_id`),
-  KEY `idx_served_by` (`served_by`),
-  KEY `idx_status` (`status`),
-  CONSTRAINT `fk_sales_customer` FOREIGN KEY (`customer_id`) 
-    REFERENCES `customers` (`customer_id`) 
-    ON DELETE SET NULL ON UPDATE CASCADE,
-  CONSTRAINT `fk_sales_account` FOREIGN KEY (`served_by`) 
-    REFERENCES `account` (`account_ID`) 
-    ON DELETE SET NULL ON UPDATE CASCADE
+--
+-- Dumping data for table `product_categories`
+--
+
+INSERT INTO `product_categories` (`category_id`, `category_name`, `category_group`, `display_order`, `description`) VALUES
+(31, 'Snacks', 'Miscellaneous', 99, NULL),
+(32, 'Spices', 'Miscellaneous', 99, NULL),
+(33, 'Beverage', 'Miscellaneous', 99, NULL),
+(34, 'Cleaning Supplies', 'Miscellaneous', 99, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `sales_items`
+--
+
+CREATE TABLE `sales_items` (
+  `sale_item_id` int(11) NOT NULL,
+  `transaction_id` varchar(20) NOT NULL,
+  `product_id` varchar(100) NOT NULL,
+  `product_name` varchar(255) NOT NULL,
+  `quantity_sold` int(11) NOT NULL,
+  `unit_price` decimal(10,2) NOT NULL,
+  `subtotal` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 6. Sales Items Table (Detail table - replaces salesreport)
-CREATE TABLE IF NOT EXISTS `sales_items` (
-  `sale_item_id` INT(11) NOT NULL AUTO_INCREMENT,
-  `transaction_id` VARCHAR(20) NOT NULL,
-  `product_id` VARCHAR(100) NOT NULL,
-  `product_name` VARCHAR(255) NOT NULL,
-  `category_name` VARCHAR(100) DEFAULT NULL,
-  `quantity_sold` INT(11) NOT NULL,
-  `unit_price` DECIMAL(10,2) NOT NULL,
-  `subtotal` DECIMAL(10,2) NOT NULL,
-  PRIMARY KEY (`sale_item_id`),
-  KEY `idx_transaction_id` (`transaction_id`),
-  KEY `idx_product_id` (`product_id`),
-  KEY `idx_category` (`category_name`),
-  CONSTRAINT `fk_sale_transaction` FOREIGN KEY (`transaction_id`) 
-    REFERENCES `sales_transactions` (`transaction_id`) 
-    ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_sale_product` FOREIGN KEY (`product_id`) 
-    REFERENCES `inventory` (`productID`) 
-    ON DELETE RESTRICT ON UPDATE CASCADE
+--
+-- Dumping data for table `sales_items`
+--
+
+INSERT INTO `sales_items` (`sale_item_id`, `transaction_id`, `product_id`, `product_name`, `quantity_sold`, `unit_price`, `subtotal`) VALUES
+(1, 'TXN-00002', '1', 'Red Bull', 5, '6767.00', '33835.00'),
+(2, 'TXN-00003', '1', 'Red Bull', 3, '6767.00', '20301.00'),
+(3, 'TXN-00001', '2', 'Maggi', 12, '1245.00', '14940.00'),
+(4, 'TXN-00004', '2', 'Maggi', 12, '1245.00', '14940.00'),
+(5, 'TXN-00005', '2', 'Maggi', 14, '1245.00', '17430.00'),
+(6, 'TXN-00007', '3', 'Oreo', 40, '6032.00', '241280.00'),
+(7, 'TXN-00010', '3', 'Oreo', 40, '6032.00', '241280.00'),
+(8, 'TXN-00012', '3', 'Oreo', 1, '6032.00', '6032.00'),
+(9, 'TXN-00013', '3', 'Oreo', 3, '6032.00', '18096.00'),
+(10, 'TXN-00006', '4', 'Ariel', 40, '4095.00', '163800.00'),
+(11, 'TXN-00008', '5', 'Coca Cola', 35, '6032.00', '211120.00'),
+(12, 'TXN-00009', '5', 'Coca Cola', 4, '6032.00', '24128.00'),
+(13, 'TXN-00011', '5', 'Coca Cola', 5, '6032.00', '30160.00'),
+(14, 'TXN-00007', '6', 'Oreo', 40, '6032.00', '241280.00'),
+(15, 'TXN-00010', '6', 'Oreo', 40, '6032.00', '241280.00'),
+(16, 'TXN-00012', '6', 'Oreo', 1, '6032.00', '6032.00'),
+(17, 'TXN-00013', '6', 'Oreo', 3, '6032.00', '18096.00'),
+(18, 'TXN-00002', 'PRD-0001', 'Red Bull', 5, '100000.00', '500000.00'),
+(19, 'TXN-00003', 'PRD-0001', 'Red Bull', 3, '100000.00', '300000.00'),
+(20, 'TXN-00001', 'PRD-0002', 'Maggi', 12, '4095.00', '49140.00'),
+(21, 'TXN-00004', 'PRD-0002', 'Maggi', 12, '4095.00', '49140.00'),
+(22, 'TXN-00005', 'PRD-0002', 'Maggi', 14, '4095.00', '57330.00'),
+(32, 'TXN-00014', '4', 'Ariel', 10, '4095.00', '40950.00'),
+(34, 'TXN-1766135524', 'PRD-0003', 'Oreo', 20, '4095.00', '81900.00'),
+(35, 'TXN-1766135976', 'PRD-0002', 'Maggi', 10, '4095.00', '40950.00'),
+(36, 'TXN-1766136346', '4', 'Ariel', 1, '4095.00', '4095.00'),
+(37, 'TXN-1766136361', '5', 'Coca Cola', 1, '6032.00', '6032.00');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `sales_transactions`
+--
+
+CREATE TABLE `sales_transactions` (
+  `transaction_id` varchar(20) NOT NULL,
+  `customer_id` int(11) DEFAULT NULL,
+  `customer_name` varchar(100) DEFAULT NULL,
+  `date_time` datetime NOT NULL,
+  `total_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `payment_method` varchar(50) DEFAULT NULL,
+  `served_by` int(11) DEFAULT NULL,
+  `status` enum('completed','cancelled','refunded') DEFAULT 'completed',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ============================================
--- MIGRATION SCRIPT (If you have existing data)
--- ============================================
+--
+-- Dumping data for table `sales_transactions`
+--
 
--- Step 1: Migrate category data from old inventory
--- Update inventory records to use category_id based on exact name matches
-UPDATE `inventory` i
-JOIN `product_categories` pc ON i.`category` = pc.`category_name`
-SET i.`category_id` = pc.`category_id`
-WHERE i.`category` IS NOT NULL;
+INSERT INTO `sales_transactions` (`transaction_id`, `customer_id`, `customer_name`, `date_time`, `total_amount`, `payment_method`, `served_by`, `status`, `created_at`) VALUES
+('TXN-00001', NULL, 'James', '2025-12-05 07:58:18', '6767.00', 'GCash', NULL, 'completed', '2025-12-19 03:12:07'),
+('TXN-00002', NULL, 'Dino', '2025-12-05 10:00:23', '9999.00', 'Cash', NULL, 'completed', '2025-12-19 03:12:07'),
+('TXN-00003', NULL, 'Kris', '2025-12-05 10:05:40', '1200.00', 'GCash', NULL, 'completed', '2025-12-19 03:12:07'),
+('TXN-00004', NULL, 'Migs', '2025-12-05 10:20:46', '867.00', 'Card', NULL, 'completed', '2025-12-19 03:12:07'),
+('TXN-00005', NULL, 'Remegio', '2025-12-05 10:22:37', '1023.00', 'GCash', NULL, 'completed', '2025-12-19 03:12:07'),
+('TXN-00006', NULL, 'James', '2025-12-06 06:41:20', '4000.00', 'Cash', NULL, 'completed', '2025-12-19 03:12:07'),
+('TXN-00007', NULL, 'James', '2025-12-06 06:42:40', '6000.00', 'Card', NULL, 'completed', '2025-12-19 03:12:07'),
+('TXN-00008', NULL, 'James', '2025-12-08 10:17:16', '8000.00', 'Cash', NULL, 'completed', '2025-12-19 03:12:07'),
+('TXN-00009', NULL, 'James', '2025-12-08 14:32:33', '50.00', 'GCash', NULL, 'completed', '2025-12-19 03:12:07'),
+('TXN-00010', NULL, 'James', '2025-12-09 09:54:47', '9000.00', 'Cash', NULL, 'completed', '2025-12-19 03:12:07'),
+('TXN-00011', NULL, 'Kris', '2025-12-09 10:38:51', '10.00', 'GCash', NULL, 'completed', '2025-12-19 03:12:07'),
+('TXN-00012', NULL, 'Miguelito', '2025-12-10 10:47:36', '6032.00', 'Card', NULL, 'completed', '2025-12-19 03:12:07'),
+('TXN-00013', NULL, 'gab', '2025-12-10 11:08:32', '18096.00', 'Cash', NULL, 'completed', '2025-12-19 03:12:07'),
+('TXN-00014', 6, 'Shiori', '2025-12-19 06:12:46', '40950.00', 'GCash', 1, 'completed', '2025-12-19 06:12:46'),
+('TXN-1766135524', 6, 'Shiori', '2025-12-19 09:12:04', '81900.00', 'GCash', 3, 'completed', '2025-12-19 09:12:04'),
+('TXN-1766135976', 7, 'James', '2025-12-19 09:19:36', '40950.00', 'Card', 3, 'completed', '2025-12-19 09:19:36'),
+('TXN-1766136346', 8, 'Kris', '2025-12-19 09:25:46', '4095.00', 'GCash', 3, 'completed', '2025-12-19 09:25:46'),
+('TXN-1766136361', 9, 'Maya', '2025-12-19 09:26:01', '6032.00', 'GCash', 3, 'completed', '2025-12-19 09:26:01');
 
--- Handle old category names that need mapping (if any)
--- Beverage -> Softdrinks/Juice/Water
-UPDATE `inventory` 
-SET `category_id` = (SELECT category_id FROM product_categories WHERE category_name = 'Softdrinks/Juice/Water')
-WHERE `category` = 'Beverage';
+--
+-- Indexes for dumped tables
+--
 
--- Snacks -> Chips/Cookies/Candies
-UPDATE `inventory` 
-SET `category_id` = (SELECT category_id FROM product_categories WHERE category_name = 'Chips/Cookies/Candies')
-WHERE `category` = 'Snacks';
+--
+-- Indexes for table `account`
+--
+ALTER TABLE `account`
+  ADD PRIMARY KEY (`account_ID`),
+  ADD UNIQUE KEY `email` (`email`);
 
--- Groceries -> Instant Noodles/Rice/Canned Goods
-UPDATE `inventory` 
-SET `category_id` = (SELECT category_id FROM product_categories WHERE category_name = 'Instant Noodles/Rice/Canned Goods')
-WHERE `category` = 'Groceries';
+--
+-- Indexes for table `customers`
+--
+ALTER TABLE `customers`
+  ADD PRIMARY KEY (`customer_id`),
+  ADD KEY `idx_customer_name` (`customer_name`);
 
--- Spices -> Spices/Condiments
-UPDATE `inventory` 
-SET `category_id` = (SELECT category_id FROM product_categories WHERE category_name = 'Spices/Condiments')
-WHERE `category` = 'Spices';
+--
+-- Indexes for table `inventory`
+--
+ALTER TABLE `inventory`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `productID` (`productID`);
 
--- Personal Care -> Soap/Shampoo/Toothpaste
-UPDATE `inventory` 
-SET `category_id` = (SELECT category_id FROM product_categories WHERE category_name = 'Soap/Shampoo/Toothpaste')
-WHERE `category` = 'Personal Care';
+--
+-- Indexes for table `product_categories`
+--
+ALTER TABLE `product_categories`
+  ADD PRIMARY KEY (`category_id`),
+  ADD UNIQUE KEY `category_name` (`category_name`),
+  ADD KEY `idx_category_group` (`category_group`);
 
--- Cleaning Supplies -> Detergent/Cleaning Supplies
-UPDATE `inventory` 
-SET `category_id` = (SELECT category_id FROM product_categories WHERE category_name = 'Detergent/Cleaning Supplies')
-WHERE `category` = 'Cleaning Supplies';
+--
+-- Indexes for table `sales_items`
+--
+ALTER TABLE `sales_items`
+  ADD PRIMARY KEY (`sale_item_id`),
+  ADD KEY `idx_transaction_id` (`transaction_id`),
+  ADD KEY `idx_product_id` (`product_id`);
 
--- Toilet Sanitaries -> Toilet Paper/Sanitary Pad
-UPDATE `inventory` 
-SET `category_id` = (SELECT category_id FROM product_categories WHERE category_name = 'Toilet Paper/Sanitary Pad')
-WHERE `category` = 'Toilet Sanitaries';
+--
+-- Indexes for table `sales_transactions`
+--
+ALTER TABLE `sales_transactions`
+  ADD PRIMARY KEY (`transaction_id`),
+  ADD KEY `idx_date_time` (`date_time`),
+  ADD KEY `idx_customer_id` (`customer_id`),
+  ADD KEY `idx_served_by` (`served_by`);
 
--- Cigar/Alcohol -> Cigarettes/Alcohol
-UPDATE `inventory` 
-SET `category_id` = (SELECT category_id FROM product_categories WHERE category_name = 'Cigarettes/Alcohol')
-WHERE `category` = 'Cigar/Alcohol';
+--
+-- AUTO_INCREMENT for dumped tables
+--
 
--- Stationaries -> Stationary/Batteries/Small Toys
-UPDATE `inventory` 
-SET `category_id` = (SELECT category_id FROM product_categories WHERE category_name = 'Stationary/Batteries/Small Toys')
-WHERE `category` = 'Stationaries';
+--
+-- AUTO_INCREMENT for table `account`
+--
+ALTER TABLE `account`
+  MODIFY `account_ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
--- Frozen Items -> Frozen Items or Perishables
-UPDATE `inventory` 
-SET `category_id` = (SELECT category_id FROM product_categories WHERE category_name = 'Frozen Items or Perishables')
-WHERE `category` = 'Frozen Items';
+--
+-- AUTO_INCREMENT for table `customers`
+--
+ALTER TABLE `customers`
+  MODIFY `customer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
--- Step 2: Migrate sales data (if salesreport exists)
-INSERT INTO `sales_transactions` (`transaction_id`, `customer_name`, `date_time`, `total_amount`, `payment_method`)
-SELECT DISTINCT 
-  `transaction_ID`,
-  `customer_name`,
-  `date_time`,
-  `order_value`,
-  `payment_method`
-FROM `salesreport`
-WHERE `transaction_ID` IS NOT NULL
-ON DUPLICATE KEY UPDATE 
-  `customer_name` = VALUES(`customer_name`),
-  `total_amount` = VALUES(`total_amount`);
+--
+-- AUTO_INCREMENT for table `inventory`
+--
+ALTER TABLE `inventory`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
 
--- Step 3: Migrate individual sale items
-INSERT INTO `sales_items` (`transaction_id`, `product_id`, `product_name`, `category_name`, `quantity_sold`, `unit_price`, `subtotal`)
-SELECT 
-  sr.`transaction_ID`,
-  COALESCE(i.`productID`, CONCAT('LEGACY-', sr.`products`)),
-  sr.`products`,
-  pc.`category_name`,
-  sr.`quantity_sold`,
-  COALESCE(i.`price`, 0),
-  (sr.`quantity_sold` * COALESCE(i.`price`, 0))
-FROM `salesreport` sr
-LEFT JOIN `inventory` i ON LOWER(TRIM(i.`productName`)) = LOWER(TRIM(sr.`products`))
-LEFT JOIN `product_categories` pc ON i.`category_id` = pc.`category_id`
-WHERE sr.`transaction_ID` IS NOT NULL;
+--
+-- AUTO_INCREMENT for table `product_categories`
+--
+ALTER TABLE `product_categories`
+  MODIFY `category_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
 
--- ============================================
--- VIEWS FOR BACKWARD COMPATIBILITY
--- ============================================
+--
+-- AUTO_INCREMENT for table `sales_items`
+--
+ALTER TABLE `sales_items`
+  MODIFY `sale_item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
--- View that mimics old salesreport structure
-CREATE OR REPLACE VIEW `salesreport_view` AS
-SELECT 
-  si.`sale_item_id`,
-  st.`transaction_id` AS `transaction_ID`,
-  st.`date_time`,
-  si.`product_name` AS `products`,
-  si.`quantity_sold`,
-  st.`total_amount` AS `order_value`,
-  st.`customer_name`,
-  st.`payment_method`
-FROM `sales_items` si
-JOIN `sales_transactions` st ON si.`transaction_id` = st.`transaction_id`
-WHERE st.`status` = 'completed';
+--
+-- Constraints for dumped tables
+--
 
--- View for inventory with category details
-CREATE OR REPLACE VIEW `inventory_with_categories` AS
-SELECT 
-  i.`id`,
-  i.`productID`,
-  i.`productName`,
-  i.`quantity`,
-  i.`unit`,
-  i.`price`,
-  i.`expiryDate`,
-  pc.`category_id`,
-  pc.`category_name`,
-  pc.`category_group`,
-  i.`image`,
-  i.`status`,
-  i.`created_at`,
-  i.`updated_at`,
-  CASE 
-    WHEN i.`quantity` < 5 AND i.`quantity` > 0 THEN 'Low Stock'
-    WHEN i.`quantity` = 0 THEN 'Out of Stock'
-    ELSE 'Available'
-  END AS `stock_status`
-FROM `inventory` i
-LEFT JOIN `product_categories` pc ON i.`category_id` = pc.`category_id`;
+--
+-- Constraints for table `sales_items`
+--
+ALTER TABLE `sales_items`
+  ADD CONSTRAINT `fk_sale_product` FOREIGN KEY (`product_id`) REFERENCES `inventory` (`productID`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_sale_transaction` FOREIGN KEY (`transaction_id`) REFERENCES `sales_transactions` (`transaction_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
--- View for sales summary by category
-CREATE OR REPLACE VIEW `sales_by_category` AS
-SELECT 
-  pc.`category_group`,
-  pc.`category_name`,
-  COUNT(DISTINCT si.`transaction_id`) AS `total_transactions`,
-  SUM(si.`quantity_sold`) AS `total_quantity_sold`,
-  SUM(si.`subtotal`) AS `total_revenue`
-FROM `sales_items` si
-JOIN `inventory` i ON si.`product_id` = i.`productID`
-JOIN `product_categories` pc ON i.`category_id` = pc.`category_id`
-JOIN `sales_transactions` st ON si.`transaction_id` = st.`transaction_id`
-WHERE st.`status` = 'completed'
-GROUP BY pc.`category_group`, pc.`category_name`
-ORDER BY pc.`display_order`;
+--
+-- Constraints for table `sales_transactions`
+--
+ALTER TABLE `sales_transactions`
+  ADD CONSTRAINT `fk_sales_account` FOREIGN KEY (`served_by`) REFERENCES `account` (`account_ID`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_sales_customer` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`customer_id`) ON DELETE SET NULL ON UPDATE CASCADE;
+COMMIT;
 
--- ============================================
--- TRIGGERS FOR DATA INTEGRITY
--- ============================================
-
--- Trigger: Update inventory quantity after sale
-DELIMITER $$
-CREATE TRIGGER `after_sale_insert` 
-AFTER INSERT ON `sales_items`
-FOR EACH ROW
-BEGIN
-  UPDATE `inventory` 
-  SET `quantity` = `quantity` - NEW.`quantity_sold`
-  WHERE `productID` = NEW.`product_id`;
-END$$
-
--- Trigger: Update customer stats after purchase
-CREATE TRIGGER `after_transaction_insert` 
-AFTER INSERT ON `sales_transactions`
-FOR EACH ROW
-BEGIN
-  IF NEW.`customer_id` IS NOT NULL THEN
-    UPDATE `customers`
-    SET 
-      `total_purchases` = `total_purchases` + NEW.`total_amount`,
-      `last_purchase_date` = NEW.`date_time`
-    WHERE `customer_id` = NEW.`customer_id`;
-  END IF;
-END$$
-
--- Trigger: Calculate subtotal automatically
-CREATE TRIGGER `before_sale_item_insert` 
-BEFORE INSERT ON `sales_items`
-FOR EACH ROW
-BEGIN
-  SET NEW.`subtotal` = NEW.`quantity_sold` * NEW.`unit_price`;
-END$$
-
-DELIMITER ;
-
--- ============================================
--- USEFUL QUERIES
--- ============================================
-
--- Get low stock items by category
--- SELECT * FROM inventory_with_categories WHERE stock_status = 'Low Stock' ORDER BY category_group, category_name;
-
--- Get top selling products
--- SELECT product_name, SUM(quantity_sold) as total_sold, SUM(subtotal) as revenue 
--- FROM sales_items GROUP BY product_name ORDER BY total_sold DESC LIMIT 10;
-
--- Get sales summary by category group
--- SELECT category_group, SUM(total_revenue) as revenue 
--- FROM sales_by_category GROUP BY category_group;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
